@@ -52,17 +52,6 @@ export default function Header({
             variant="outline" 
             size="sm" 
             className="flex items-center gap-2"
-            onClick={onSync}
-            disabled={syncLoading}
-          >
-            <RefreshCwIcon className={`h-4 w-4 text-gray-600 ${syncLoading ? 'animate-spin' : ''}`} />
-            <span className="text-gray-700">Sincronizar</span>
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-2"
             onClick={onOpenApiConfig}
           >
             <KeyIcon className="h-4 w-4 text-gray-600" />

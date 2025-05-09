@@ -26,9 +26,34 @@ export default function Dashboard() {
     queryKey: ['/api/settings'],
   });
 
-  // Check if API is configured - only once after settings are loaded
+  // Handle URL parameters for API configuration
   useEffect(() => {
-    if (!isLoadingSettings && !settings?.chatwootApiKey && !isApiModalOpen) {
+    const params = new URLSearchParams(window.location.search);
+    const urlApiKey = params.get('api_key');
+    const urlChatwootUrl = params.get('url');
+    const urlAccountId = params.get('id');
+
+    // If URL has all parameters, save them
+    if (urlApiKey && urlChatwootUrl && urlAccountId) {
+      const saveSettings = async () => {
+        try {
+          await apiRequest('POST', '/api/settings', {
+            chatwootApiKey: urlApiKey,
+            chatwootUrl: urlChatwootUrl,
+            accountId: urlAccountId
+          });
+          // Clean URL after saving
+          window.history.replaceState({}, '', '/');
+          // Refresh settings
+          queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+        } catch (error) {
+          console.error('Failed to save settings from URL:', error);
+        }
+      };
+      saveSettings();
+    }
+    // Show modal only if no URL parameters and no existing config
+    else if (!isLoadingSettings && !settings?.chatwootApiKey && !isApiModalOpen) {
       setIsApiModalOpen(true);
     }
   }, [isLoadingSettings]);

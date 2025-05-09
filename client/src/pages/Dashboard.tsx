@@ -123,18 +123,20 @@ export default function Dashboard() {
         syncLoading={syncMutation.isPending}
       />
       
-      <div className="flex flex-1">
-        <main className="flex-1 overflow-y-auto bg-gray-50 px-4">
-          <FilterBar 
-            onFilterChange={updateFilters}
-            activeFilters={filters}
-          />
-          
-          {viewMode === "kanban" ? (
-            <KanbanBoard pipelineStages={pipelineStages} />
-          ) : (
-            <ListView pipelineStages={pipelineStages} />
-          )}
+      <div className="flex flex-1 overflow-hidden">
+        <main className="flex-1 bg-gray-50 px-4 pt-6">
+          <div className="h-full overflow-y-auto">
+            <FilterBar 
+              onFilterChange={updateFilters}
+              activeFilters={filters}
+            />
+            
+            {viewMode === "kanban" ? (
+              <KanbanBoard pipelineStages={pipelineStages} />
+            ) : (
+              <ListView pipelineStages={pipelineStages} />
+            )}
+          </div>
         </main>
       </div>
       

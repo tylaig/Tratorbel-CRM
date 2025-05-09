@@ -26,7 +26,8 @@ import {
   FileTextIcon,
   ClipboardListIcon,
   PlusCircleIcon,
-  PlusIcon
+  PlusIcon,
+  TrashIcon
 } from "lucide-react";
 import {
   Tabs,
@@ -50,9 +51,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const [stageId, setStageId] = useState("");
   const [value, setValue] = useState("");
   const [status, setStatus] = useState("in_progress");
-  
+
   const { toast } = useToast();
-  
+
   // Carregar dados do deal quando o modal abrir
   useEffect(() => {
     if (deal) {
@@ -63,11 +64,11 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setStatus(deal.status || "in_progress");
     }
   }, [deal]);
-  
+
   const updateDealMutation = useMutation({
     mutationFn: async () => {
       if (!deal) return null;
-      
+
       const payload = {
         name,
         companyName,
@@ -96,7 +97,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       console.error("Update deal error:", error);
     }
   });
-  
+
   const deleteDealMutation = useMutation({
     mutationFn: async () => {
       if (!deal) return null;
@@ -121,7 +122,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       console.error("Delete deal error:", error);
     }
   });
-  
+
   const handleSave = () => {
     if (!name || !stageId) {
       toast({
@@ -131,16 +132,16 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       });
       return;
     }
-    
+
     updateDealMutation.mutate();
   };
-  
+
   const handleDelete = () => {
     if (confirm("Tem certeza que deseja excluir este negócio?")) {
       deleteDealMutation.mutate();
     }
   };
-  
+
   const resetForm = () => {
     setName("");
     setCompanyName("");
@@ -148,42 +149,48 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     setValue("");
     setStatus("in_progress");
   };
-  
+
   // Format currency input
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/[^\d]/g, "");
     const numericValue = parseInt(rawValue) / 100;
-    
+
     if (!isNaN(numericValue)) {
       setValue(formatCurrency(numericValue));
     } else if (rawValue === "") {
       setValue("");
     }
   };
-  
+
   const [activeTab, setActiveTab] = useState("details");
   const [newActivity, setNewActivity] = useState("");
   const [quoteItems, setQuoteItems] = useState<{description: string, quantity: number, unitPrice: number}[]>([
     { description: "", quantity: 1, unitPrice: 0 }
   ]);
-  
+
   // Adicionar novo item na cotação
   const addQuoteItem = () => {
     setQuoteItems([...quoteItems, { description: "", quantity: 1, unitPrice: 0 }]);
   };
-  
+
   // Atualizar item de cotação
   const updateQuoteItem = (index: number, field: 'description' | 'quantity' | 'unitPrice', value: string | number) => {
     const newItems = [...quoteItems];
     newItems[index] = { ...newItems[index], [field]: value };
     setQuoteItems(newItems);
   };
-  
+
   // Calcular total da cotação
   const calculateQuoteTotal = () => {
     return quoteItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   };
-  
+
+    const removeQuoteItem = (index: number) => {
+    const newItems = [...quoteItems];
+    newItems.splice(index, 1);
+    setQuoteItems(newItems);
+  };
+
   // Mock de atividades para demonstração
   const mockActivities = [
     { 
@@ -199,7 +206,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       date: new Date(2025, 4, 8) 
     }
   ];
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[700px]">
@@ -212,7 +219,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             Gerencie todos os detalhes do negócio.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="details" className="flex items-center gap-1">
@@ -228,7 +235,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
               <span>Cotação</span>
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="details" className="p-1">
             <div className="grid gap-4 py-2">
               <div className="grid gap-2">
@@ -240,7 +247,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   placeholder="Digite o nome do negócio"
                 />
               </div>
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="deal-company">Empresa</Label>
                 <Input
@@ -250,7 +257,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   placeholder="Digite o nome da empresa"
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="deal-stage">Etapa</Label>
@@ -267,7 +274,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="grid gap-2">
                   <Label htmlFor="deal-status">Status</Label>
                   <Select value={status} onValueChange={setStatus}>
@@ -283,7 +290,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   </Select>
                 </div>
               </div>
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="deal-value">Valor (R$)</Label>
                 <Input
@@ -295,7 +302,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="activities" className="p-1">
             <div className="space-y-4">
               <div className="grid gap-2">
@@ -314,7 +321,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   </Button>
                 </div>
               </div>
-              
+
               <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                 <h3 className="text-sm font-medium text-gray-500">Histórico de Atividades</h3>
                 {mockActivities.map(activity => (
@@ -337,7 +344,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="quote" className="p-1">
             <div className="space-y-4">
               <div className="space-y-2">
@@ -348,7 +355,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                     <span>Adicionar Item</span>
                   </Button>
                 </div>
-                
+
                 <div className="border rounded-md">
                   <div className="grid grid-cols-12 gap-2 p-2 bg-gray-50 border-b text-xs font-medium text-gray-600">
                     <div className="col-span-6">Descrição</div>
@@ -356,7 +363,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                     <div className="col-span-2 text-center">Preço Unitário</div>
                     <div className="col-span-2 text-right">Subtotal</div>
                   </div>
-                  
+
                   <div className="max-h-[250px] overflow-y-auto">
                     {quoteItems.map((item, index) => (
                       <div key={index} className="grid grid-cols-12 gap-2 p-2 border-b last:border-0 items-center">
@@ -394,7 +401,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end p-2">
                   <div className="text-right">
                     <div className="text-sm font-medium text-gray-700">Total da Cotação:</div>
@@ -405,7 +412,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             </div>
           </TabsContent>
         </Tabs>
-        
+
         <DialogFooter className="flex justify-between">
           <Button 
             variant="destructive" 

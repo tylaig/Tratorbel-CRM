@@ -62,6 +62,35 @@ export const insertDealSchema = createInsertSchema(deals).pick({
 export type InsertDeal = z.infer<typeof insertDealSchema>;
 export type Deal = typeof deals.$inferSelect;
 
+// Quote Items
+export const quoteItems = pgTable("quote_items", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  description: text("description").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: doublePrecision("unit_price").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertQuoteItemSchema = createInsertSchema(quoteItems).pick({
+  dealId: true,
+  description: true,
+  quantity: true,
+  unitPrice: true,
+});
+
+export type InsertQuoteItem = z.infer<typeof insertQuoteItemSchema>;
+export type QuoteItem = typeof quoteItems.$inferSelect;
+
+// Stage History
+export const stageHistory = pgTable("stage_history", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  stageId: integer("stage_id").notNull(),
+  enteredAt: timestamp("entered_at").notNull().defaultNow(),
+  leftAt: timestamp("left_at"),
+});
+
 // Settings
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),

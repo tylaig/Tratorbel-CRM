@@ -67,15 +67,23 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
       return await apiRequest('POST', '/api/chatwoot/sync', {});
     },
     onSuccess: (data) => {
-      toast({
-        title: "Sincronização concluída",
-        description: `Os contatos foram sincronizados com seu CRM.`,
-        variant: "default",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
-      // Importante: fechar a modal apenas após a conclusão da sincronização
-      onClose();
+      // Aguardar um momento para garantir que os dados foram processados
+      setTimeout(() => {
+        // Forçar nova consulta para buscar os dados atualizados
+        queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+        
+        // Mostrar mensagem apenas quando os dados já estiverem atualizados no cache
+        toast({
+          title: "Sincronização concluída",
+          description: `Os contatos foram sincronizados com sucesso. Novos leads disponíveis.`,
+          variant: "default",
+        });
+        
+        // Importante: fechar a modal apenas após a conclusão da sincronização
+        onClose();
+      }, 500);
     },
     onError: (error) => {
       toast({
@@ -97,7 +105,13 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
       return;
     }
     
+    // Salvando configurações
     saveSettingsMutation.mutate();
+    
+    // Iniciar a sincronização de dados após salvar configurações
+    setTimeout(() => {
+      syncMutation.mutate();
+    }, 500);
   };
   
   const toggleShowApiKey = () => {

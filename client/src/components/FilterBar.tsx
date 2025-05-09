@@ -125,10 +125,10 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
   
   // Status options with colors
   const statusOptions = [
-    { value: "in_progress", label: "Em andamento", color: "blue" },
-    { value: "waiting", label: "Aguardando", color: "amber" },
-    { value: "completed", label: "Concluído", color: "green" },
-    { value: "canceled", label: "Cancelado", color: "red" },
+    { value: "in_progress", label: "Em andamento", color: "blue", bgColor: "bg-blue-100", borderColor: "border-blue-200", textColor: "text-blue-800" },
+    { value: "waiting", label: "Aguardando", color: "yellow", bgColor: "bg-yellow-100", borderColor: "border-yellow-200", textColor: "text-yellow-800" },
+    { value: "completed", label: "Concluído", color: "green", bgColor: "bg-green-100", borderColor: "border-green-200", textColor: "text-green-800" },
+    { value: "canceled", label: "Cancelado", color: "red", bgColor: "bg-red-100", borderColor: "border-red-200", textColor: "text-red-800" },
   ];
   
   // Format active filter count
@@ -284,12 +284,12 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
                   key={status.value}
                   className={`p-2 rounded-md cursor-pointer flex items-center justify-between ${
                     localFilters.status.includes(status.value) 
-                      ? `bg-${status.color}-100 border border-${status.color}-200` 
+                      ? `${status.bgColor} border ${status.borderColor}` 
                       : 'border border-gray-200 hover:bg-gray-50'
                   }`}
                   onClick={() => toggleStatus(status.value)}
                 >
-                  <span className={localFilters.status.includes(status.value) ? `text-${status.color}-800` : 'text-gray-700'}>
+                  <span className={localFilters.status.includes(status.value) ? status.textColor : 'text-gray-700'}>
                     {status.label}
                   </span>
                   {localFilters.status.includes(status.value) && (

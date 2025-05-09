@@ -148,33 +148,32 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
     const dealId = parseInt(draggableId);
     const targetStageId = parseInt(destination.droppableId);
     
-    // Atualização otimista da interface (atualizando localmente antes da resposta do servidor)
-    if (deals) {
-      // Crie uma cópia dos dados para fazer uma atualização otimista
-      const updatedDeals = deals.map(deal => {
-        if (deal.id === dealId) {
-          return { ...deal, stageId: targetStageId };
-        }
-        return deal;
-      });
-      
-      // Atualize a UI imediatamente com a nova posição
-      const stagesWithDeals = pipelineStages.map(stage => {
-        const stageDeals = updatedDeals.filter(deal => deal.stageId === stage.id);
-        const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
-        
-        return {
-          ...stage,
-          deals: stageDeals,
-          totalValue
-        };
-      });
-      
-      setBoardData(stagesWithDeals);
-    }
+    // Mostrar feedback de transição para o usuário
+    toast({
+      title: "Negócio movido",
+      description: "Negócio movido com sucesso para nova etapa.",
+      variant: "default",
+      duration: 1500,
+    });
     
     // Update the deal's stage in the database
     updateDealMutation.mutate({ dealId, stageId: targetStageId });
+    
+    // Reorganizar o board imediatamente para feedback visual
+    const currentDeals = queryClient.getQueryData<Deal[]>(['/api/deals']) || [];
+    const updatedDealsData = currentDeals.map(deal => {
+      if (deal.id === dealId) {
+        // Mantemos o mesmo tipo de Date para updatedAt
+        return { ...deal, stageId: targetStageId };
+      }
+      return deal;
+    });
+    
+    // Atualizar o queryClient para refletir a mudança
+    queryClient.setQueryData(['/api/deals'], updatedDealsData);
+    
+    // Forçar a reorganização visual do board
+    organizeBoardData();
   };
   
   // Get status badge based on deal status

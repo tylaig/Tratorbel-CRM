@@ -38,7 +38,7 @@ export function usePipeline() {
     
     // Apply status filter
     if (filters.status.length > 0) {
-      result = result.filter(deal => filters.status.includes(deal.status));
+      result = result.filter(deal => deal.status && filters.status.includes(deal.status));
     }
     
     // Apply stage filter

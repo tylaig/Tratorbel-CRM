@@ -126,7 +126,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   };
   
   // Get status badge based on deal status
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null | undefined) => {
     switch (status) {
       case 'in_progress':
         return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200">Em andamento</Badge>;
@@ -137,7 +137,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
       case 'canceled':
         return <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-200">Cancelado</Badge>;
       default:
-        return <Badge variant="secondary">Indefinido</Badge>;
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200">Em andamento</Badge>;
     }
   };
   
@@ -220,7 +220,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
                               </div>
                             )}
                             <div className="mt-2 flex items-center justify-between">
-                              {getStatusBadge(deal.status)}
+                              {getStatusBadge(deal.status || 'in_progress')}
                               <span className="text-xs text-gray-500">Atualizado: {formatTimeAgo(new Date(deal.updatedAt))}</span>
                             </div>
                           </Card>

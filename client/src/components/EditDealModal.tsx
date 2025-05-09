@@ -43,7 +43,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setCompanyName(deal.companyName || "");
       setStageId(deal.stageId.toString());
       setValue(formatCurrency(deal.value || 0));
-      setStatus(deal.status);
+      setStatus(deal.status || "in_progress");
     }
   }, [deal]);
   

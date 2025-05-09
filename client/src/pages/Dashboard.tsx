@@ -73,7 +73,6 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col h-screen">
       <Header 
-        toggleSidebar={toggleSidebar} 
         viewMode={viewMode} 
         toggleViewMode={toggleViewMode}
         onOpenApiConfig={() => setIsApiModalOpen(true)}
@@ -83,8 +82,6 @@ export default function Dashboard() {
       />
       
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={sidebarOpen} />
-        
         <main className="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50">
           <FilterBar />
           

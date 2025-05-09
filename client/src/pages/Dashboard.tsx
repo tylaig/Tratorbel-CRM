@@ -44,8 +44,9 @@ export default function Dashboard() {
             accountId: urlAccountId
           });
           
-          // Clean URL after saving
+          // Clean URL and refresh page
           window.history.replaceState({}, '', '/');
+          window.location.reload();
           
           // Refresh settings first and wait for it
           await queryClient.invalidateQueries({ queryKey: ['/api/settings'] });

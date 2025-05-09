@@ -125,19 +125,17 @@ export default function Dashboard() {
       />
       
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 bg-gray-50 px-4 pt-6">
-          <div className="h-full overflow-y-auto">
-            <FilterBar 
-              onFilterChange={updateFilters}
-              activeFilters={filters}
-            />
-            
-            {viewMode === "kanban" ? (
-              <KanbanBoard pipelineStages={pipelineStages} />
-            ) : (
-              <ListView pipelineStages={pipelineStages} />
-            )}
-          </div>
+        <main className="flex-1 bg-gray-50 px-4 pt-6 overflow-y-auto">
+          <FilterBar 
+            onFilterChange={updateFilters}
+            activeFilters={filters}
+          />
+          
+          {viewMode === "kanban" ? (
+            <KanbanBoard pipelineStages={pipelineStages} />
+          ) : (
+            <ListView pipelineStages={pipelineStages} />
+          )}
         </main>
       </div>
       

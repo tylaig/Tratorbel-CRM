@@ -54,21 +54,56 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
     mutationFn: async ({ dealId, stageId }: { dealId: number; stageId: number }) => {
       return await apiRequest('PUT', `/api/deals/${dealId}`, { stageId });
     },
-    onSuccess: () => {
-      // Invalidar a consulta e atualizar instantaneamente o quadro
-      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+    onMutate: async ({ dealId, stageId }) => {
+      // Lógica de atualização otimista é movida para aqui
+      // Cancelar consultas de fundo para evitar sobrescrever a atualização otimista
+      await queryClient.cancelQueries({ queryKey: ['/api/deals'] });
       
-      // Atualização visual otimista já aconteceu, agora atualizamos o modelo de dados
-      // Isso cria uma experiência mais fluida para o usuário
+      // Salvar o estado anterior para poder fazer rollback se necessário
+      const previousDeals = queryClient.getQueryData<Deal[]>(['/api/deals']);
+      
+      // Atualização otimista da UI com a alteração
       if (deals) {
-        // Atualizar o board imediatamente com os dados locais
+        const updatedDeals = deals.map(deal => 
+          deal.id === dealId ? { ...deal, stageId } : deal
+        );
+        
+        // Atualizar o cache com a nova lista otimista
+        queryClient.setQueryData(['/api/deals'], updatedDeals);
+        
+        // Reorganizar o board com os dados atualizados
+        const stagesWithDeals = pipelineStages.map(stage => {
+          const stageDeals = updatedDeals.filter(deal => deal.stageId === stage.id);
+          const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+          
+          return {
+            ...stage,
+            deals: stageDeals,
+            totalValue
+          };
+        });
+        
+        setBoardData(stagesWithDeals);
+      }
+      
+      // Retornar o contexto para usar em caso de erro
+      return { previousDeals };
+    },
+    onSuccess: () => {
+      // Invalidar a consulta para buscar os dados atualizados do servidor
+      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+    },
+    onError: (error, _, context) => {
+      // Em caso de erro, reverter para o estado anterior
+      if (context?.previousDeals) {
+        queryClient.setQueryData(['/api/deals'], context.previousDeals);
+        // Reorganizar o board com os dados anteriores
         organizeBoardData();
       }
-    },
-    onError: (error) => {
+      
       toast({
         title: "Erro ao mover negócio",
-        description: "Não foi possível mover o negócio para outra etapa.",
+        description: "Não foi possível mover o negócio para outra etapa. Tentando novamente.",
         variant: "destructive",
       });
       console.error("Move deal error:", error);
@@ -216,9 +251,25 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-gray-800">{stage.name}</h3>
                   <div className="flex items-center">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVerticalIcon className="h-4 w-4 text-gray-400" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVerticalIcon className="h-4 w-4 text-gray-400" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            setSelectedStage(stage);
+                            setIsEditStageModalOpen(true);
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Edit2Icon className="h-4 w-4" />
+                          <span>Editar Estágio</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-1">

@@ -37,17 +37,27 @@ export default function Dashboard() {
     if (urlApiKey && urlChatwootUrl && urlAccountId) {
       const saveSettings = async () => {
         try {
+          // Save settings
           await apiRequest('POST', '/api/settings', {
             chatwootApiKey: urlApiKey,
             chatwootUrl: urlChatwootUrl,
             accountId: urlAccountId
           });
+          
           // Clean URL after saving
           window.history.replaceState({}, '', '/');
-          // Refresh settings and sync contacts
+          
+          // Refresh settings first
           await queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
-          await apiRequest('POST', '/api/chatwoot/sync', {});
-          queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+          
+          // Wait for sync to complete
+          const syncResponse = await apiRequest('POST', '/api/chatwoot/sync', {});
+          
+          // Only after sync completes, refresh the deals
+          if (syncResponse.success) {
+            await queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+            await queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+          }
         } catch (error) {
           console.error('Failed to save settings from URL:', error);
         }

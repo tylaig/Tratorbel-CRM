@@ -233,16 +233,18 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
         pipelineStages={pipelineStages}
       />
       
-      <div className="relative h-full flex overflow-x-auto py-4 px-2 board-container" style={{ overflowY: 'hidden', height: 'calc(100vh - 130px)' }}>
-        {/* Botão de adicionar estágio */}
-        <Button
-          variant="outline"
-          className="absolute right-4 top-0 flex items-center gap-2"
-          onClick={() => setIsAddStageModalOpen(true)}
-        >
-          <PlusIcon className="h-4 w-4" />
-          <span>Adicionar Estágio</span>
-        </Button>
+      <div className="flex flex-col h-full">
+        <div className="flex justify-end px-4 py-2">
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => setIsAddStageModalOpen(true)}
+          >
+            <PlusIcon className="h-4 w-4" />
+            <span>Adicionar Estágio</span>
+          </Button>
+        </div>
+        <div className="flex overflow-x-auto px-2 board-container" style={{ overflowY: 'hidden', height: 'calc(100vh - 170px)' }}>
         {boardData.map((stage) => (
           <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full">
             <div className="flex flex-col bg-white rounded-t-lg border border-gray-200">
@@ -334,6 +336,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
             </Droppable>
           </div>
         ))}
+      </div>
       </div>
     </DragDropContext>
   );

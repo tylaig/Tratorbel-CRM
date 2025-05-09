@@ -37,7 +37,7 @@ export default function Dashboard() {
     if (urlApiKey && urlChatwootUrl && urlAccountId) {
       const saveSettings = async () => {
         try {
-          // Save settings
+          // Save settings and get response
           await apiRequest('POST', '/api/settings', {
             chatwootApiKey: urlApiKey,
             chatwootUrl: urlChatwootUrl,
@@ -47,16 +47,21 @@ export default function Dashboard() {
           // Clean URL after saving
           window.history.replaceState({}, '', '/');
           
-          // Refresh settings first
+          // Refresh settings first and wait for it
           await queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+          await queryClient.refetchQueries({ queryKey: ['/api/settings'] });
           
           // Wait for sync to complete
           const syncResponse = await apiRequest('POST', '/api/chatwoot/sync', {});
           
-          // Only after sync completes, refresh the deals
+          // Only after sync completes, refresh the deals and wait for the refetch
           if (syncResponse.success) {
             await queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
             await queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+            await queryClient.refetchQueries({ queryKey: ['/api/deals'] });
+            await queryClient.refetchQueries({ queryKey: ['/api/pipeline-stages'] });
+            // Force a state update to trigger re-render
+            refreshPipelineData();
           }
         } catch (error) {
           console.error('Failed to save settings from URL:', error);

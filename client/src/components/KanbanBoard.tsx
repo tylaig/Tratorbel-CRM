@@ -244,7 +244,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
             <span>Adicionar Estágio</span>
           </Button>
         </div>
-        <div className="flex overflow-x-auto px-2 board-container" style={{ overflowY: 'auto', height: 'calc(100vh - 170px)' }}>
+        <div className="flex overflow-x-auto px-2 board-container" style={{ minHeight: 'calc(100vh - 170px)' }}>
         {boardData.map((stage) => (
           <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full">
             <div className="flex flex-col bg-white rounded-t-lg border border-gray-200">

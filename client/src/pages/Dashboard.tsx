@@ -118,8 +118,8 @@ export default function Dashboard() {
         syncLoading={syncMutation.isPending}
       />
       
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50 px-4">
+      <div className="flex flex-1">
+        <main className="flex-1 overflow-y-auto bg-gray-50 px-4">
           <FilterBar 
             onFilterChange={updateFilters}
             activeFilters={filters}

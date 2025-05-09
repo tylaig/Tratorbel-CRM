@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -73,31 +74,32 @@ export default function Header({
               <PlusIcon className="h-4 w-4 mr-1" />
               <span className="font-medium">Novo Negócio</span>
             </Button>
-        </div>
-      </div>
-      
-      <div className="container mx-auto px-4 border-b border-gray-200">
-        <div className="flex items-center justify-between py-4">
-          <div className="flex space-x-1">
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant={viewMode === "kanban" ? "default" : "ghost"} 
-              size="icon"
-              onClick={() => toggleViewMode("kanban")}
-              className="h-9 w-9 rounded"
-            >
-              <LayoutIcon className="h-5 w-5" />
-            </Button>
-            <Button 
-              variant={viewMode === "list" ? "default" : "ghost"} 
-              size="icon"
-              onClick={() => toggleViewMode("list")}
-              className="h-9 w-9 rounded"
-            >
-              <ListIcon className="h-5 w-5" />
-            </Button>
+        </div>
+      
+        <div className="border-t border-gray-200">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex space-x-1">
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant={viewMode === "kanban" ? "default" : "ghost"} 
+                size="icon"
+                onClick={() => toggleViewMode("kanban")}
+                className="h-9 w-9 rounded"
+              >
+                <LayoutIcon className="h-5 w-5" />
+              </Button>
+              <Button 
+                variant={viewMode === "list" ? "default" : "ghost"} 
+                size="icon"
+                onClick={() => toggleViewMode("list")}
+                className="h-9 w-9 rounded"
+              >
+                <ListIcon className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

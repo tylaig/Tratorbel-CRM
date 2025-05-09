@@ -244,7 +244,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
             <span>Adicionar Estágio</span>
           </Button>
         </div>
-        <div className="flex overflow-x-auto px-2 board-container" style={{ overflowY: 'hidden', height: 'calc(100vh - 170px)' }}>
+        <div className="flex overflow-x-auto px-2 board-container" style={{ overflowY: 'auto', height: 'calc(100vh - 170px)' }}>
         {boardData.map((stage) => (
           <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full">
             <div className="flex flex-col bg-white rounded-t-lg border border-gray-200">
@@ -285,7 +285,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`flex-1 min-h-[200px] max-h-[calc(100vh-220px)] rounded-b-lg border-x border-b border-gray-200 p-2 overflow-y-auto ${snapshot.isDraggingOver ? 'bg-gray-200' : 'bg-gray-100'}`}
+                  className={`flex-1 min-h-[200px] rounded-b-lg border-x border-b border-gray-200 p-2 overflow-y-auto ${snapshot.isDraggingOver ? 'bg-gray-200' : 'bg-gray-100'}`}
                 >
                   {stage.deals.length > 0 ? (
                     stage.deals.map((deal, index) => (

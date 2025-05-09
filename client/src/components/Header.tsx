@@ -42,7 +42,7 @@ export default function Header({
             <MenuIcon className="h-5 w-5" />
           </Button>
           <div className="flex items-center">
-            <h1 className="text-lg font-semibold text-primary">CRM Chatwoot</h1>
+            <h1 className="text-lg font-semibold text-primary">CRM TratorBel</h1>
             <span className="ml-2 text-xs py-1 px-2 bg-gray-100 rounded-full text-gray-600">Beta</span>
           </div>
         </div>
@@ -84,15 +84,16 @@ export default function Header({
       <div className="container mx-auto px-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex space-x-1">
-            <Button variant="ghost" className="px-4 py-3 text-primary border-b-2 border-primary font-medium">
-              Pipeline
-            </Button>
-            <Button variant="ghost" className="px-4 py-3 text-gray-500 hover:text-gray-700 font-medium">
-              Contatos
-            </Button>
-            <Button variant="ghost" className="px-4 py-3 text-gray-500 hover:text-gray-700 font-medium">
-              Relatórios
-            </Button>
+            <Link href="/">
+              <Button variant="ghost" className="px-4 py-3 text-primary border-b-2 border-primary font-medium">
+                Pipeline
+              </Button>
+            </Link>
+            <Link href="/reports">
+              <Button variant="ghost" className="px-4 py-3 text-gray-500 hover:text-gray-700 font-medium">
+                Relatórios
+              </Button>
+            </Link>
           </div>
           
           <div className="flex items-center space-x-2">

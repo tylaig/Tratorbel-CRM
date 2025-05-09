@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Edit2Icon, MoreVerticalIcon, Building } from "lucide-react";
+import EditDealModal from "@/components/EditDealModal";
 
 interface KanbanBoardProps {
   pipelineStages: PipelineStage[];
@@ -22,6 +23,8 @@ interface StageWithDeals extends PipelineStage {
 
 export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   const [boardData, setBoardData] = useState<StageWithDeals[]>([]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const { toast } = useToast();
   
   // Get deals
@@ -151,6 +154,17 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   
   return (
     <DragDropContext onDragEnd={onDragEnd}>
+      {/* Modal de edição */}
+      <EditDealModal 
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedDeal(null);
+        }}
+        deal={selectedDeal}
+        pipelineStages={pipelineStages}
+      />
+        
       <div className="h-full flex overflow-x-auto py-4 px-2 board-container">
         {boardData.map((stage) => (
           <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full">
@@ -187,6 +201,11 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             className={`p-3 mb-2 cursor-move ${snapshot.isDragging ? 'opacity-50 shadow-lg' : 'hover:shadow-md'} transition-shadow`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDeal(deal);
+                              setIsEditModalOpen(true);
+                            }}
                           >
                             <div className="flex justify-between items-start">
                               <h4 className="font-medium text-gray-800">{deal.name}</h4>

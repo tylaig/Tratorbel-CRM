@@ -155,7 +155,8 @@ export class MemStorage implements IStorage {
     const now = new Date();
     const updated = { 
       ...deal, 
-      ...updatedDeal, 
+      ...updatedDeal,
+      quoteItems: updatedDeal.quoteItems || deal.quoteItems || [],
       updatedAt: now
     };
     this.dealsList.set(id, updated);

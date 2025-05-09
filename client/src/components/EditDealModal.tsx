@@ -76,6 +76,11 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         stageId: parseInt(stageId),
         value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
         quoteValue: quoteTotal,
+        quoteItems: quoteItems.map(item => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice
+        })),
         status
       };
       return await apiRequest('PUT', `/api/deals/${deal.id}`, payload);

@@ -33,14 +33,7 @@ export default function Header({
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto flex items-center justify-between px-4 py-2">
         <div className="flex items-center space-x-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="lg:hidden" 
-            onClick={toggleSidebar}
-          >
-            <MenuIcon className="h-5 w-5" />
-          </Button>
+          
           <div className="flex items-center">
             <h1 className="text-lg font-semibold text-primary">CRM TratorBel</h1>
             <span className="ml-2 text-xs py-1 px-2 bg-gray-100 rounded-full text-gray-600">Beta</span>

@@ -1,182 +1,308 @@
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { 
   FilterIcon, 
-  ListOrdered, 
-  TagIcon, 
-  SearchIcon, 
-  Download, 
-  FolderInput 
+  Search, 
+  SortDesc, 
+  Tag, 
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-export default function FilterBar() {
-  const [statusFilters, setStatusFilters] = useState<Record<string, boolean>>({
-    in_progress: false,
-    waiting: false,
-    completed: false,
-    canceled: false,
-  });
+export interface FilterOptions {
+  search: string;
+  status: string[];
+  sortBy: "name" | "value" | "date" | "company";
+  sortOrder: "asc" | "desc";
+  stageId?: number;
+}
+
+interface FilterBarProps {
+  onFilterChange: (filters: FilterOptions) => void;
+  activeFilters: FilterOptions;
+}
+
+export default function FilterBar({ onFilterChange, activeFilters }: FilterBarProps) {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [localFilters, setLocalFilters] = useState<FilterOptions>(activeFilters);
   
-  const [sortOption, setSortOption] = useState<string | null>(null);
+  const { toast } = useToast();
   
-  const handleStatusFilterChange = (status: string) => {
-    setStatusFilters(prev => ({
-      ...prev,
-      [status]: !prev[status]
-    }));
+  // Aplicar filtros
+  const applyFilters = () => {
+    onFilterChange(localFilters);
+    setIsFilterOpen(false);
+    toast({
+      title: "Filtros aplicados",
+      description: "Os negócios foram filtrados conforme suas preferências.",
+      variant: "default",
+    });
+  };
+  
+  // Limpar filtros
+  const clearFilters = () => {
+    const defaultFilters: FilterOptions = {
+      search: "",
+      status: [],
+      sortBy: "date",
+      sortOrder: "desc"
+    };
+    
+    setLocalFilters(defaultFilters);
+    onFilterChange(defaultFilters);
+    setIsFilterOpen(false);
+    toast({
+      title: "Filtros limpos",
+      description: "Todos os filtros foram removidos.",
+      variant: "default",
+    });
+  };
+  
+  // Aplicar ordenação
+  const applySorting = (sortBy: "name" | "value" | "date" | "company", sortOrder: "asc" | "desc") => {
+    const newFilters = { ...localFilters, sortBy, sortOrder };
+    setLocalFilters(newFilters);
+    onFilterChange(newFilters);
+    setIsSortOpen(false);
+  };
+  
+  // Toggle status filter
+  const toggleStatus = (status: string) => {
+    let newStatusFilters: string[];
+    
+    if (localFilters.status.includes(status)) {
+      newStatusFilters = localFilters.status.filter(s => s !== status);
+    } else {
+      newStatusFilters = [...localFilters.status, status];
+    }
+    
+    const newFilters = { ...localFilters, status: newStatusFilters };
+    setLocalFilters(newFilters);
+    onFilterChange(newFilters);
+  };
+  
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchTerm = e.target.value;
+    setLocalFilters(prev => ({ ...prev, search: searchTerm }));
+    
+    // Debounce search for better performance
+    const timer = setTimeout(() => {
+      onFilterChange({ ...localFilters, search: searchTerm });
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  };
+  
+  // Status options with colors
+  const statusOptions = [
+    { value: "in_progress", label: "Em andamento", color: "blue" },
+    { value: "waiting", label: "Aguardando", color: "amber" },
+    { value: "completed", label: "Concluído", color: "green" },
+    { value: "canceled", label: "Cancelado", color: "red" },
+  ];
+  
+  // Format active filter count
+  const getActiveFilterCount = (): number => {
+    let count = 0;
+    if (localFilters.search) count++;
+    if (localFilters.status.length > 0) count++;
+    if (localFilters.sortBy !== "date" || localFilters.sortOrder !== "desc") count++;
+    return count;
   };
   
   return (
-    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 flex items-center gap-2">
-                <FilterIcon className="h-4 w-4 text-gray-400" />
-                <span>Filtros</span>
+    <div className="flex items-center space-x-2 mb-4">
+      {/* Filtros */}
+      <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="flex items-center gap-2 relative">
+            <FilterIcon className="h-4 w-4" />
+            <span>Filtros</span>
+            {getActiveFilterCount() > 0 && (
+              <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">
+                {getActiveFilterCount()}
+              </Badge>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <div className="space-y-4">
+            <h4 className="font-medium">Filtrar negócios</h4>
+            
+            <div className="space-y-2">
+              <Label htmlFor="filter-search">Busca</Label>
+              <Input
+                id="filter-search"
+                placeholder="Nome, empresa, etc."
+                value={localFilters.search}
+                onChange={handleSearchChange}
+              />
+            </div>
+            
+            <div className="flex justify-between pt-2">
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                Limpar
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuCheckboxItem
-                checked={statusFilters.in_progress}
-                onCheckedChange={() => handleStatusFilterChange('in_progress')}
-              >
-                Valor acima de R$ 1.000
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={statusFilters.waiting}
-                onCheckedChange={() => handleStatusFilterChange('waiting')}
-              >
-                Valor abaixo de R$ 1.000
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={statusFilters.completed}
-                onCheckedChange={() => handleStatusFilterChange('completed')}
-              >
-                Sem empresa
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={statusFilters.canceled}
-                onCheckedChange={() => handleStatusFilterChange('canceled')}
-              >
-                Sem contato
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 flex items-center gap-2">
-                <ListOrdered className="h-4 w-4 text-gray-400" />
-                <span>Ordenar</span>
+              <Button size="sm" onClick={applyFilters}>
+                Aplicar
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuCheckboxItem
-                checked={sortOption === 'name_asc'}
-                onCheckedChange={() => setSortOption('name_asc')}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+      
+      {/* Ordenação */}
+      <Popover open={isSortOpen} onOpenChange={setIsSortOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="flex items-center gap-2">
+            <SortDesc className="h-4 w-4" />
+            <span>Ordenar</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-56">
+          <div className="space-y-4">
+            <h4 className="font-medium">Ordenar por</h4>
+            
+            <div className="grid gap-2">
+              <Button 
+                variant={localFilters.sortBy === "name" && localFilters.sortOrder === "asc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("name", "asc")}
               >
                 Nome (A-Z)
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={sortOption === 'name_desc'}
-                onCheckedChange={() => setSortOption('name_desc')}
+              </Button>
+              
+              <Button 
+                variant={localFilters.sortBy === "name" && localFilters.sortOrder === "desc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("name", "desc")}
               >
                 Nome (Z-A)
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={sortOption === 'value_asc'}
-                onCheckedChange={() => setSortOption('value_asc')}
-              >
-                Valor (menor para maior)
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={sortOption === 'value_desc'}
-                onCheckedChange={() => setSortOption('value_desc')}
-              >
-                Valor (maior para menor)
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={sortOption === 'updated_asc'}
-                onCheckedChange={() => setSortOption('updated_asc')}
-              >
-                Atualizado (mais antigo)
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={sortOption === 'updated_desc'}
-                onCheckedChange={() => setSortOption('updated_desc')}
-              >
-                Atualizado (mais recente)
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 flex items-center gap-2">
-                <TagIcon className="h-4 w-4 text-gray-400" />
-                <span>Status</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuCheckboxItem
-                checked={statusFilters.in_progress}
-                onCheckedChange={() => handleStatusFilterChange('in_progress')}
+              
+              <Button 
+                variant={localFilters.sortBy === "value" && localFilters.sortOrder === "desc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("value", "desc")}
               >
-                Em andamento
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={statusFilters.waiting}
-                onCheckedChange={() => handleStatusFilterChange('waiting')}
+                Maior valor
+              </Button>
+              
+              <Button 
+                variant={localFilters.sortBy === "value" && localFilters.sortOrder === "asc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("value", "asc")}
               >
-                Aguardando
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={statusFilters.completed}
-                onCheckedChange={() => handleStatusFilterChange('completed')}
+                Menor valor
+              </Button>
+              
+              <Button 
+                variant={localFilters.sortBy === "date" && localFilters.sortOrder === "desc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("date", "desc")}
               >
-                Concluído
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={statusFilters.canceled}
-                onCheckedChange={() => handleStatusFilterChange('canceled')}
+                Mais recentes
+              </Button>
+              
+              <Button 
+                variant={localFilters.sortBy === "date" && localFilters.sortOrder === "asc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("date", "asc")}
               >
-                Cancelado
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <div className="relative flex-grow max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <SearchIcon className="h-4 w-4 text-gray-400" />
+                Mais antigos
+              </Button>
+              
+              <Button 
+                variant={localFilters.sortBy === "company" && localFilters.sortOrder === "asc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("company", "asc")}
+              >
+                Empresa (A-Z)
+              </Button>
             </div>
-            <Input 
-              type="text" 
-              placeholder="Buscar negócios..." 
-              className="pl-10 h-9"
-            />
           </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-9 flex items-center gap-2">
-            <Download className="h-4 w-4 text-gray-400" />
-            <span>Exportar</span>
+        </PopoverContent>
+      </Popover>
+      
+      {/* Status */}
+      <Popover open={isStatusOpen} onOpenChange={setIsStatusOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="flex items-center gap-2 relative">
+            <Tag className="h-4 w-4" />
+            <span>Status</span>
+            {localFilters.status.length > 0 && (
+              <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">
+                {localFilters.status.length}
+              </Badge>
+            )}
           </Button>
-          
-          <Button variant="outline" size="sm" className="h-9 flex items-center gap-2">
-            <FolderInput className="h-4 w-4 text-gray-400" />
-            <span>Importar</span>
-          </Button>
-        </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-56">
+          <div className="space-y-4">
+            <h4 className="font-medium">Filtrar por status</h4>
+            
+            <div className="grid gap-2">
+              {statusOptions.map(status => (
+                <div
+                  key={status.value}
+                  className={`p-2 rounded-md cursor-pointer flex items-center justify-between ${
+                    localFilters.status.includes(status.value) 
+                      ? `bg-${status.color}-100 border border-${status.color}-200` 
+                      : 'border border-gray-200 hover:bg-gray-50'
+                  }`}
+                  onClick={() => toggleStatus(status.value)}
+                >
+                  <span className={localFilters.status.includes(status.value) ? `text-${status.color}-800` : 'text-gray-700'}>
+                    {status.label}
+                  </span>
+                  {localFilters.status.includes(status.value) && (
+                    <X className="h-4 w-4" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+      
+      {/* Busca */}
+      <div className="flex-1 relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Buscar negócios"
+          className="pl-10"
+          value={localFilters.search}
+          onChange={handleSearchChange}
+        />
       </div>
     </div>
   );

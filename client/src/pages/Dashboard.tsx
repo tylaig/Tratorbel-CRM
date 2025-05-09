@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import KanbanBoard from "@/components/KanbanBoard";
 import ListView from "@/components/ListView";
-import FilterBar from "@/components/FilterBar";
+import FilterBar, { FilterOptions } from "@/components/FilterBar";
 import ApiConfigModal from "@/components/ApiConfigModal";
 import AddDealModal from "@/components/AddDealModal";
 import { usePipeline } from "@/hooks/usePipeline";
@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
   
   const { toast } = useToast();
-  const { pipelineStages, refreshPipelineData } = usePipeline();
+  const { pipelineStages, refreshPipelineData, filters, updateFilters } = usePipeline();
   
   // Get settings
   const { data: settings, isLoading: isLoadingSettings } = useQuery<Settings | undefined>({
@@ -73,6 +73,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col h-screen">
       <Header 
+        toggleSidebar={toggleSidebar}
         viewMode={viewMode} 
         toggleViewMode={toggleViewMode}
         onOpenApiConfig={() => setIsApiModalOpen(true)}
@@ -83,7 +84,10 @@ export default function Dashboard() {
       
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50">
-          <FilterBar />
+          <FilterBar 
+            onFilterChange={updateFilters}
+            activeFilters={filters}
+          />
           
           {viewMode === "kanban" ? (
             <KanbanBoard pipelineStages={pipelineStages} />

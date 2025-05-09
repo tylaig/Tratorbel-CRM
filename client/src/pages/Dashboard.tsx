@@ -23,16 +23,16 @@ export default function Dashboard() {
   const { pipelineStages, refreshPipelineData } = usePipeline();
   
   // Get settings
-  const { data: settings } = useQuery<Settings | undefined>({
+  const { data: settings, isLoading: isLoadingSettings } = useQuery<Settings | undefined>({
     queryKey: ['/api/settings'],
   });
 
-  // Check if API is configured
+  // Check if API is configured - only once after settings are loaded
   useEffect(() => {
-    if (!settings?.chatwootApiKey && !isApiModalOpen) {
+    if (!isLoadingSettings && !settings?.chatwootApiKey && !isApiModalOpen) {
       setIsApiModalOpen(true);
     }
-  }, [settings, isApiModalOpen]);
+  }, [isLoadingSettings]);
   
   // Sync with Chatwoot
   const syncMutation = useMutation({

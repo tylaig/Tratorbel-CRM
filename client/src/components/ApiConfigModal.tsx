@@ -66,13 +66,15 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
     mutationFn: async () => {
       return await apiRequest('POST', '/api/chatwoot/sync', {});
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
-        title: "Sincronização iniciada",
-        description: "Os contatos estão sendo sincronizados com seu CRM.",
+        title: "Sincronização concluída",
+        description: `Os contatos foram sincronizados com seu CRM.`,
         variant: "default",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+      // Importante: fechar a modal apenas após a conclusão da sincronização
       onClose();
     },
     onError: (error) => {

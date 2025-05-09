@@ -29,9 +29,9 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
   const [chatwootUrl, setChatwootUrl] = useState(existingSettings?.chatwootUrl || "");
   const [accountId, setAccountId] = useState(existingSettings?.accountId || "");
   const [showApiKey, setShowApiKey] = useState(false);
-  
+
   const { toast } = useToast();
-  
+
   const saveSettingsMutation = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -48,7 +48,7 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
         variant: "default",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
-      
+
       // Trigger sync automatically
       syncMutation.mutate();
     },
@@ -61,7 +61,7 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
       console.error("Save settings error:", error);
     }
   });
-  
+
   const syncMutation = useMutation({
     mutationFn: async () => {
       return await apiRequest('POST', '/api/chatwoot/sync', {});
@@ -73,14 +73,14 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
         queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
         queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
         queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
-        
+
         // Mostrar mensagem apenas quando os dados já estiverem atualizados no cache
         toast({
           title: "Sincronização concluída",
           description: `Os contatos foram sincronizados com sucesso. Novos leads disponíveis.`,
           variant: "default",
         });
-        
+
         // Importante: fechar a modal apenas após a conclusão da sincronização
         onClose();
       }, 500);
@@ -94,30 +94,31 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
       console.error("Sync error:", error);
     }
   });
-  
-  const handleSave = () => {
-    if (!apiKey || !chatwootUrl || !accountId) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Todos os campos são obrigatórios para configurar a integração.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Salvando configurações
-    saveSettingsMutation.mutate();
-    
-    // Iniciar a sincronização de dados após salvar configurações
-    setTimeout(() => {
-      syncMutation.mutate();
-    }, 500);
-  };
-  
+
+  const handleSave = async () => {
+      if (!apiKey || !chatwootUrl || !accountId) {
+        toast({
+          title: "Campos obrigatórios",
+          description: "Todos os campos são obrigatórios para configurar a integração.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        // Salvando configurações e aguardando
+        await saveSettingsMutation.mutateAsync();
+        // Iniciando sincronização e aguardando
+        await syncMutation.mutateAsync();
+      } catch (error) {
+        console.error('Error during save and sync:', error);
+      }
+    };
+
   const toggleShowApiKey = () => {
     setShowApiKey(!showApiKey);
   };
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -130,7 +131,7 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
             Insira sua chave de API do Chatwoot para sincronizar contatos e negócios automaticamente.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="api-key">Chave de API</Label>
@@ -158,7 +159,7 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
               </Button>
             </div>
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="chatwoot-url">URL do Chatwoot</Label>
             <Input
@@ -169,7 +170,7 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
               placeholder="https://sua-instancia.chatwoot.com"
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="account-id">ID da Conta</Label>
             <Input
@@ -181,7 +182,7 @@ export default function ApiConfigModal({ isOpen, onClose, existingSettings }: Ap
             />
           </div>
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancelar

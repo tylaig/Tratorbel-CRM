@@ -44,8 +44,10 @@ export default function Dashboard() {
           });
           // Clean URL after saving
           window.history.replaceState({}, '', '/');
-          // Refresh settings
-          queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+          // Refresh settings and sync contacts
+          await queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+          await apiRequest('POST', '/api/chatwoot/sync', {});
+          queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
         } catch (error) {
           console.error('Failed to save settings from URL:', error);
         }

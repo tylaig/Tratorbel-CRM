@@ -30,47 +30,49 @@ export default function Header({
   syncLoading
 }: HeaderProps) {
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="container mx-auto flex items-center justify-between px-4 py-2">
-        <div className="flex items-center space-x-4">
-          
+    <header className="bg-white border-b border-gray-200">
+      <div className="container mx-auto px-4">
+        <div className="h-16 flex items-center justify-between">
           <div className="flex items-center">
-            <h1 className="text-lg font-semibold text-primary">CRM TratorBel</h1>
-            <span className="ml-2 text-xs py-1 px-2 bg-gray-100 rounded-full text-gray-600">Beta</span>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              CRM TratorBel
+            </h1>
+            <span className="ml-3 text-[10px] font-medium py-1 px-2 bg-primary/10 text-primary rounded-full">
+              Beta
+            </span>
           </div>
-        </div>
-        
-        <div className="flex items-center space-x-3">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-2"
-            onClick={onSync}
-            disabled={syncLoading}
-          >
-            <RefreshCwIcon className={`h-4 w-4 text-gray-600 ${syncLoading ? 'animate-spin' : ''}`} />
-            <span className="text-gray-700">Sincronizar</span>
-          </Button>
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-2"
-            onClick={onOpenApiConfig}
-          >
-            <KeyIcon className="h-4 w-4 text-gray-600" />
-            <span className="text-gray-700">Configurar API</span>
-          </Button>
-          
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="flex items-center gap-2"
-            onClick={onAddDeal}
-          >
-            <PlusIcon className="h-4 w-4" />
-            <span>Adicionar Negócio</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost"
+              size="sm"
+              className="relative group"
+              onClick={onSync}
+              disabled={syncLoading}
+            >
+              <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-gray-600 group-hover:text-primary transition-colors'}`} />
+              <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Sincronizar</span>
+            </Button>
+            
+            <Button 
+              variant="ghost"
+              size="sm"
+              className="group"
+              onClick={onOpenApiConfig}
+            >
+              <KeyIcon className="h-4 w-4 text-gray-600 group-hover:text-primary transition-colors" />
+              <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Configurar API</span>
+            </Button>
+            
+            <Button 
+              variant="default"
+              size="sm"
+              className="bg-primary hover:bg-primary/90 text-white shadow-sm ml-2"
+              onClick={onAddDeal}
+            >
+              <PlusIcon className="h-4 w-4 mr-1" />
+              <span className="font-medium">Novo Negócio</span>
+            </Button>
         </div>
       </div>
       

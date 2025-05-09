@@ -9,8 +9,22 @@ import { formatCurrency, formatTimeAgo } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Edit2Icon, MoreVerticalIcon, Building } from "lucide-react";
+import { 
+  Edit2Icon, 
+  MoreVerticalIcon, 
+  Building, 
+  PlusIcon,
+  PlusCircleIcon 
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import EditDealModal from "@/components/EditDealModal";
+import EditStageModal from "@/components/EditStageModal";
+import AddStageModal from "@/components/AddStageModal";
 
 interface KanbanBoardProps {
   pipelineStages: PipelineStage[];
@@ -23,8 +37,11 @@ interface StageWithDeals extends PipelineStage {
 
 export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   const [boardData, setBoardData] = useState<StageWithDeals[]>([]);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
+  const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
+  const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [selectedStage, setSelectedStage] = useState<PipelineStage | null>(null);
   const { toast } = useToast();
   
   // Get deals
@@ -154,18 +171,44 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      {/* Modal de edição */}
+      {/* Modal de edição de negócio */}
       <EditDealModal 
-        isOpen={isEditModalOpen}
+        isOpen={isEditDealModalOpen}
         onClose={() => {
-          setIsEditModalOpen(false);
+          setIsEditDealModalOpen(false);
           setSelectedDeal(null);
         }}
         deal={selectedDeal}
         pipelineStages={pipelineStages}
       />
-        
-      <div className="h-full flex overflow-x-auto py-4 px-2 board-container">
+      
+      {/* Modal de edição de estágio */}
+      <EditStageModal 
+        isOpen={isEditStageModalOpen}
+        onClose={() => {
+          setIsEditStageModalOpen(false);
+          setSelectedStage(null);
+        }}
+        stage={selectedStage}
+      />
+      
+      {/* Modal de adição de estágio */}
+      <AddStageModal 
+        isOpen={isAddStageModalOpen}
+        onClose={() => setIsAddStageModalOpen(false)}
+        pipelineStages={pipelineStages}
+      />
+      
+      <div className="relative h-full flex overflow-x-auto py-4 px-2 board-container">
+        {/* Botão de adicionar estágio */}
+        <Button
+          variant="outline"
+          className="absolute right-4 top-0 flex items-center gap-2"
+          onClick={() => setIsAddStageModalOpen(true)}
+        >
+          <PlusIcon className="h-4 w-4" />
+          <span>Adicionar Estágio</span>
+        </Button>
         {boardData.map((stage) => (
           <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full">
             <div className="flex flex-col bg-white rounded-t-lg border border-gray-200">
@@ -204,7 +247,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedDeal(deal);
-                              setIsEditModalOpen(true);
+                              setIsEditDealModalOpen(true);
                             }}
                           >
                             <div className="flex justify-between items-start">

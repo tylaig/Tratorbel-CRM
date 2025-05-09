@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import KanbanBoard from "@/components/KanbanBoard";
 import ListView from "@/components/ListView";
 import FilterBar, { FilterOptions } from "@/components/FilterBar";
@@ -83,7 +82,7 @@ export default function Dashboard() {
       />
       
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50">
+        <main className="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50 px-4">
           <FilterBar 
             onFilterChange={updateFilters}
             activeFilters={filters}

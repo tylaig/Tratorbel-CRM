@@ -84,16 +84,9 @@ export default function Header({
       <div className="container mx-auto px-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex space-x-1">
-            <Link href="/">
-              <Button variant="ghost" className="px-4 py-3 text-primary border-b-2 border-primary font-medium">
-                Pipeline
-              </Button>
-            </Link>
-            <Link href="/reports">
-              <Button variant="ghost" className="px-4 py-3 text-gray-500 hover:text-gray-700 font-medium">
-                Relatórios
-              </Button>
-            </Link>
+            <Button variant="ghost" className="px-4 py-3 text-primary border-b-2 border-primary font-medium">
+              Pipeline
+            </Button>
           </div>
           
           <div className="flex items-center space-x-2">

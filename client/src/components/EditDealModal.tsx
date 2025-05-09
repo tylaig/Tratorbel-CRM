@@ -69,11 +69,13 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     mutationFn: async () => {
       if (!deal) return null;
 
+      const quoteTotal = calculateQuoteTotal();
       const payload = {
         name,
         companyName,
         stageId: parseInt(stageId),
         value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
+        quoteValue: quoteTotal,
         status
       };
       return await apiRequest('PUT', `/api/deals/${deal.id}`, payload);

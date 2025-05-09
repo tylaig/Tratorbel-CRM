@@ -319,10 +319,10 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
                                 {getStatusBadge(deal.status || 'in_progress')}
                                 <div className="text-right">
                                   <div className="text-xs text-gray-500">
-                                    Cotação: {formatCurrency(deal.quoteValue || 0)}
+                                    <span className="font-medium">Cotação:</span> {formatCurrency(deal.quoteValue || 0)}
                                   </div>
-                                  <div className="text-xs text-gray-500">
-                                    Total: {formatCurrency((deal.value || 0) + (deal.quoteValue || 0))}
+                                  <div className="text-xs font-medium text-gray-700">
+                                    <span>Total:</span> {formatCurrency((deal.value || 0) + (deal.quoteValue || 0))}
                                   </div>
                                 </div>
                               </div>

@@ -84,9 +84,9 @@ export default function Header({
       <div className="container mx-auto px-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex space-x-1">
-            <Button variant="ghost" className="px-4 py-3 text-primary border-b-2 border-primary font-medium">
-              Pipeline
-            </Button>
+            <div className="px-4 py-3 text-primary font-medium text-xl">
+              CRM TratorBel
+            </div>
           </div>
           
           <div className="flex items-center space-x-2">

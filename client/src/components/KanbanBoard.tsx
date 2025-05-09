@@ -234,7 +234,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
         pipelineStages={pipelineStages}
       />
       
-      <div className="relative h-full flex overflow-x-auto py-4 px-2 board-container">
+      <div className="relative h-full flex overflow-x-auto py-4 px-2 board-container" style={{ overflowY: 'hidden', height: 'calc(100vh - 130px)' }}>
         {/* Botão de adicionar estágio */}
         <Button
           variant="outline"
@@ -284,7 +284,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`flex-1 min-h-[200px] rounded-b-lg border-x border-b border-gray-200 p-2 overflow-y-auto ${snapshot.isDraggingOver ? 'bg-gray-200' : 'bg-gray-100'}`}
+                  className={`flex-1 min-h-[200px] max-h-[calc(100vh-220px)] rounded-b-lg border-x border-b border-gray-200 p-2 overflow-y-auto ${snapshot.isDraggingOver ? 'bg-gray-200' : 'bg-gray-100'}`}
                 >
                   {stage.deals.length > 0 ? (
                     stage.deals.map((deal, index) => (

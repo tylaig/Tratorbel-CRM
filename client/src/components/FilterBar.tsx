@@ -100,6 +100,14 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
     const newFilters = { ...localFilters, status: newStatusFilters };
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
+    
+    // Fechar o popover após alteração
+    setTimeout(() => {
+      // Usando um pequeno atraso para garantir que a interface seja atualizada
+      if (newStatusFilters.length === 0) {
+        setIsStatusOpen(false);
+      }
+    }, 300);
   };
   
   // Handle search input change

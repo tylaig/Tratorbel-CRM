@@ -43,6 +43,7 @@ export const deals = pgTable("deals", {
   chatwootContactId: text("chatwoot_contact_id"),
   stageId: integer("stage_id").notNull(),
   value: doublePrecision("value").default(0),
+  quoteValue: doublePrecision("quote_value").default(0),
   status: text("status").default("in_progress"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

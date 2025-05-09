@@ -317,9 +317,14 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
                             <div className="mt-2 flex flex-col gap-1">
                               <div className="flex items-center justify-between">
                                 {getStatusBadge(deal.status || 'in_progress')}
-                                <span className="text-xs text-gray-500">
-                                  {deal.value > 0 ? formatCurrency(deal.value) : 'Sem valor'}
-                                </span>
+                                <div className="text-right">
+                                  <div className="text-xs text-gray-500">
+                                    Cotação: {formatCurrency(deal.quoteValue || 0)}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Total: {formatCurrency((deal.value || 0) + (deal.quoteValue || 0))}
+                                  </div>
+                                </div>
                               </div>
                               <div className="flex items-center justify-between text-xs text-gray-500">
                                 <span>Nesta etapa: {formatTimeAgo(new Date(deal.stageStartedAt || deal.updatedAt))}</span>

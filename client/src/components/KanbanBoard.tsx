@@ -35,7 +35,15 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
       return await apiRequest('PUT', `/api/deals/${dealId}`, { stageId });
     },
     onSuccess: () => {
+      // Invalidar a consulta e atualizar instantaneamente o quadro
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      
+      // Atualização visual otimista já aconteceu, agora atualizamos o modelo de dados
+      // Isso cria uma experiência mais fluida para o usuário
+      if (deals) {
+        // Atualizar o board imediatamente com os dados locais
+        organizeBoardData();
+      }
     },
     onError: (error) => {
       toast({
@@ -47,8 +55,8 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
     }
   });
   
-  // Organize deals by stage
-  useEffect(() => {
+  // Função para organizar dados do quadro
+  const organizeBoardData = () => {
     if (pipelineStages.length > 0 && deals) {
       const stagesWithDeals = pipelineStages.map(stage => {
         const stageDeals = deals.filter(deal => deal.stageId === stage.id);
@@ -63,6 +71,11 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
       
       setBoardData(stagesWithDeals);
     }
+  };
+  
+  // Organize deals by stage quando os dados mudam
+  useEffect(() => {
+    organizeBoardData();
   }, [pipelineStages, deals]);
   
   // Handle drag and drop
@@ -79,6 +92,31 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
     // Get the deal ID and target stage ID
     const dealId = parseInt(draggableId);
     const targetStageId = parseInt(destination.droppableId);
+    
+    // Atualização otimista da interface (atualizando localmente antes da resposta do servidor)
+    if (deals) {
+      // Crie uma cópia dos dados para fazer uma atualização otimista
+      const updatedDeals = deals.map(deal => {
+        if (deal.id === dealId) {
+          return { ...deal, stageId: targetStageId };
+        }
+        return deal;
+      });
+      
+      // Atualize a UI imediatamente com a nova posição
+      const stagesWithDeals = pipelineStages.map(stage => {
+        const stageDeals = updatedDeals.filter(deal => deal.stageId === stage.id);
+        const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+        
+        return {
+          ...stage,
+          deals: stageDeals,
+          totalValue
+        };
+      });
+      
+      setBoardData(stagesWithDeals);
+    }
     
     // Update the deal's stage in the database
     updateDealMutation.mutate({ dealId, stageId: targetStageId });

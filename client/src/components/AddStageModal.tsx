@@ -39,7 +39,8 @@ export default function AddStageModal({ isOpen, onClose, pipelineStages }: AddSt
         name,
         order: nextOrder
       };
-      return await apiRequest('POST', '/api/pipeline-stages', payload);
+      // Corrigindo a ordem dos parâmetros para corresponder à função apiRequest
+      return await apiRequest('/api/pipeline-stages', 'POST', payload);
     },
     onSuccess: () => {
       toast({

@@ -56,30 +56,32 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private stages: Map<number, PipelineStage>;
-  private dealsList: Map<number, Deal>;
-  private clientMachinesList: Map<number, ClientMachine>;
-  private lossReasonsList: Map<number, LossReason>;
-  private quoteItemsList: Map<number, QuoteItem>;
+  private users: Map<number, User> = new Map();
+  private stages: Map<number, PipelineStage> = new Map();
+  private dealsList: Map<number, Deal> = new Map();
+  private clientMachinesList: Map<number, ClientMachine> = new Map();
+  private lossReasonsList: Map<number, LossReason> = new Map();
+  private quoteItemsList: Map<number, QuoteItem> = new Map();
   private appSettings: Settings | undefined;
   
-  userCurrentId: number;
-  stageCurrentId: number;
-  dealCurrentId: number;
-  clientMachineCurrentId: number;
-  lossReasonCurrentId: number;
-  quoteItemCurrentId: number;
-  settingsCurrentId: number;
+  userCurrentId: number = 0;
+  stageCurrentId: number = 0;
+  dealCurrentId: number = 0;
+  clientMachineCurrentId: number = 0;
+  lossReasonCurrentId: number = 0;
+  quoteItemCurrentId: number = 0;
+  settingsCurrentId: number = 0;
 
   constructor() {
-    this.users = new Map();
-    this.stages = new Map();
-    this.dealsList = new Map();
+    // Os Maps já estão inicializados acima, não precisamos inicializar novamente
     
+    // Ajustar IDs para começar em 1 e não em 0
     this.userCurrentId = 1;
     this.stageCurrentId = 1;
     this.dealCurrentId = 1;
+    this.clientMachineCurrentId = 1;
+    this.lossReasonCurrentId = 1;
+    this.quoteItemCurrentId = 1;
     this.settingsCurrentId = 1;
     
     // Initialize with default pipeline stages

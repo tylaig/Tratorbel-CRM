@@ -54,6 +54,11 @@ export interface IStorage {
   // Settings
   getSettings(): Promise<Settings | undefined>;
   updateSettings(settings: InsertSettings): Promise<Settings>;
+  
+  // Lead Activities
+  getLeadActivities(dealId: number): Promise<LeadActivity[]>;
+  createLeadActivity(activity: InsertLeadActivity): Promise<LeadActivity>;
+  deleteLeadActivity(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -63,6 +68,7 @@ export class MemStorage implements IStorage {
   private clientMachinesList: Map<number, ClientMachine> = new Map();
   private lossReasonsList: Map<number, LossReason> = new Map();
   private quoteItemsList: Map<number, QuoteItem> = new Map();
+  private leadActivitiesList: Map<number, LeadActivity> = new Map();
   private appSettings: Settings | undefined;
   
   userCurrentId: number = 0;
@@ -71,6 +77,7 @@ export class MemStorage implements IStorage {
   clientMachineCurrentId: number = 0;
   lossReasonCurrentId: number = 0;
   quoteItemCurrentId: number = 0;
+  leadActivityCurrentId: number = 0;
   settingsCurrentId: number = 0;
 
   constructor() {
@@ -438,6 +445,29 @@ export class MemStorage implements IStorage {
       };
     }
     return this.appSettings;
+  }
+
+  // Lead Activities methods
+  async getLeadActivities(dealId: number): Promise<LeadActivity[]> {
+    return Array.from(this.leadActivitiesList.values())
+      .filter(activity => activity.dealId === dealId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createLeadActivity(activity: InsertLeadActivity): Promise<LeadActivity> {
+    const id = this.leadActivityCurrentId++;
+    const now = new Date();
+    const newActivity: LeadActivity = {
+      ...activity,
+      id,
+      createdAt: now
+    };
+    this.leadActivitiesList.set(id, newActivity);
+    return newActivity;
+  }
+
+  async deleteLeadActivity(id: number): Promise<boolean> {
+    return this.leadActivitiesList.delete(id);
   }
 }
 

@@ -198,6 +198,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Lead Activities routes
+  apiRouter.get("/lead-activities/:dealId", async (req: Request, res: Response) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
+      
+      const activities = await storage.getLeadActivities(dealId);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error getting lead activities:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  apiRouter.post("/lead-activities", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertLeadActivitySchema.parse(req.body);
+      const activity = await storage.createLeadActivity(validatedData);
+      res.status(201).json(activity);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        console.error("Error creating lead activity:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+  
+  apiRouter.delete("/lead-activities/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const success = await storage.deleteLeadActivity(id);
+      if (!success) {
+        return res.status(404).json({ message: "Activity not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting lead activity:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   apiRouter.put("/loss-reasons/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);

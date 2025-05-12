@@ -22,8 +22,6 @@ import { Card } from "@/components/ui/card";
 export interface FilterOptions {
   search: string;
   status: string[];
-  sortBy: "name" | "value" | "date" | "company";
-  sortOrder: "asc" | "desc";
   stageId?: number;
   hideClosed?: boolean; // Ocultar negócios vencidos/perdidos do pipeline
 }
@@ -81,8 +79,6 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
     const defaultFilters: FilterOptions = {
       search: "",
       status: [],
-      sortBy: "date",
-      sortOrder: "desc",
       hideClosed: true
     };
     
@@ -106,18 +102,6 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
     { value: "canceled", label: "Cancelado", color: "bg-red-100 text-red-700 border-red-200" }
   ];
   
-  // Opções de ordenação
-  const sortOptions = [
-    { value: "name-asc", label: "Nome (A-Z)" },
-    { value: "name-desc", label: "Nome (Z-A)" },
-    { value: "value-desc", label: "Maior valor" },
-    { value: "value-asc", label: "Menor valor" },
-    { value: "date-desc", label: "Mais recentes" },
-    { value: "date-asc", label: "Mais antigos" },
-    { value: "company-asc", label: "Empresa (A-Z)" },
-    { value: "company-desc", label: "Empresa (Z-A)" }
-  ];
-  
   // Verificar quantos filtros estão ativos
   const getActiveFilterCount = (): number => {
     let count = 0;
@@ -127,7 +111,6 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
       console.log("Status ativos:", filters.status);
     }
     if (filters.hideClosed === false) count++;
-    if (filters.sortBy !== "date" || filters.sortOrder !== "desc") count++;
     return count;
   };
   
@@ -142,19 +125,6 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
     
     return () => clearTimeout(timer);
   };
-  
-  // Processar mudança na ordenação
-  const handleSortChange = (value: string) => {
-    const [sortBy, sortOrder] = value.split("-") as [
-      "name" | "value" | "date" | "company", 
-      "asc" | "desc"
-    ];
-    
-    updateFilter({ sortBy, sortOrder });
-  };
-  
-  // Valor atual de ordenação
-  const currentSortValue = `${filters.sortBy}-${filters.sortOrder}`;
   
   return (
     <div className="mb-4">
@@ -171,22 +141,20 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
           />
         </div>
         
-        {/* Ordenação sempre visível */}
-        <Select
-          value={currentSortValue}
-          onValueChange={handleSortChange}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Ordenação" />
-          </SelectTrigger>
-          <SelectContent>
-            {sortOptions.map(option => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Status filter */}
+        <div className="flex gap-1">
+          {statusOptions.map(option => (
+            <Badge 
+              key={option.value}
+              variant={filters.status.includes(option.value) ? "default" : "outline"}
+              className={filters.status.includes(option.value) ? option.color : ""}
+              onClick={() => toggleStatus(option.value)}
+              style={{ cursor: "pointer" }}
+            >
+              {option.label}
+            </Badge>
+          ))}
+        </div>
         
         {/* Botão limpar filtros */}
         {filters.search && (

@@ -126,25 +126,54 @@ export default function SalesResultStages({ pipelineStages, filters }: SalesResu
     <div className="flex flex-col gap-6 pb-6">
       {/* Seção de Vendas Ganhas */}
       <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border stage-completed">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-green-600 dark:text-green-400 flex items-center gap-2">
-            <span className="bg-green-600 dark:bg-green-500 h-3 w-3 rounded-full"></span>
-            Vendas Realizadas
-          </h2>
-          <Select 
-            value={salePerformanceFilter} 
-            onValueChange={setSalePerformanceFilter}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filtrar por performance" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as performances</SelectItem>
-              <SelectItem value="below_quote">Abaixo da cotação</SelectItem>
-              <SelectItem value="according_to_quote">De acordo com a cotação</SelectItem>
-              <SelectItem value="above_quote">Acima da cotação</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-bold text-green-600 dark:text-green-400 flex items-center gap-2">
+              <span className="bg-green-600 dark:bg-green-500 h-3 w-3 rounded-full"></span>
+              Vendas Realizadas
+            </h2>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {getFilteredDeals('won').length} negócios encontrados
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-sm font-medium">Filtrar por performance:</span>
+            <div className="flex gap-1 flex-wrap">
+              <Badge 
+                variant={salePerformanceFilter === "all" ? "default" : "outline"}
+                className={salePerformanceFilter === "all" ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
+                onClick={() => setSalePerformanceFilter("all")}
+                style={{ cursor: "pointer" }}
+              >
+                Todas
+              </Badge>
+              <Badge 
+                variant={salePerformanceFilter === "below_quote" ? "default" : "outline"}
+                className={salePerformanceFilter === "below_quote" ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
+                onClick={() => setSalePerformanceFilter("below_quote")}
+                style={{ cursor: "pointer" }}
+              >
+                Abaixo da cotação
+              </Badge>
+              <Badge 
+                variant={salePerformanceFilter === "according_to_quote" ? "default" : "outline"}
+                className={salePerformanceFilter === "according_to_quote" ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : ""}
+                onClick={() => setSalePerformanceFilter("according_to_quote")}
+                style={{ cursor: "pointer" }}
+              >
+                De acordo com a cotação
+              </Badge>
+              <Badge 
+                variant={salePerformanceFilter === "above_quote" ? "default" : "outline"}
+                className={salePerformanceFilter === "above_quote" ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}
+                onClick={() => setSalePerformanceFilter("above_quote")}
+                style={{ cursor: "pointer" }}
+              >
+                Acima da cotação
+              </Badge>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

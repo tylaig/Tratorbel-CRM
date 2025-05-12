@@ -42,13 +42,22 @@ export default function AddStageModal({ isOpen, onClose, pipelineStages }: AddSt
       // Corrigindo a ordem dos parâmetros para corresponder à função apiRequest
       return await apiRequest('/api/pipeline-stages', 'POST', payload);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Estágio criado",
         description: "O novo estágio foi adicionado com sucesso.",
         variant: "default",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+      // Invalidar e forçar recarregamento imediato
+      await queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/pipeline-stages'] });
+      
+      // Esperar um momento para garantir que tudo foi recarregado
+      setTimeout(() => {
+        // Também invalidar os negócios relacionados para garantir consistência
+        queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      }, 100);
+      
       setName("");
       onClose();
     },

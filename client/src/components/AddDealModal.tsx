@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatPhoneNumber } from "@/lib/formatters";
-import { type PipelineStage } from "@shared/schema";
+import { type PipelineStage, type Deal } from "@shared/schema";
 import ClientCities from "@/components/ClientCities";
 import {
   Dialog,
@@ -161,17 +161,16 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
         variant: "default",
       });
       
-      // Atualizar imediatamente o cache para garantir que o novo negócio apareça
+      // Abordagem 1: Adicionar o novo deal diretamente ao cache para atualização instantânea
+      queryClient.setQueryData<any[]>(['/api/deals'], (oldData = []) => {
+        return [...oldData, data];
+      });
+      
+      // Abordagem 2: Também invalidar e forçar recarregamento para garantir consistência
       await Promise.all([
-        // Invalidar o cache de deals
         queryClient.invalidateQueries({ queryKey: ['/api/deals'] }),
-        
-        // Forçar atualização e recarregamento do cache
         queryClient.refetchQueries({ queryKey: ['/api/deals'] })
       ]);
-      
-      // Tanto invalidamos quanto forçamos o recarregamento do cache para garantir
-      // que os dados estejam atualizados em todos os componentes
       
       resetForm();
       onClose();

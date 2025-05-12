@@ -44,12 +44,13 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   const [selectedStage, setSelectedStage] = useState<PipelineStage | null>(null);
   const { toast } = useToast();
   
-  // Get deals com configurações para garantir atualização imediata
+  // Get deals com configurações para garantir atualização imediata e tempo real
   const { data: deals, isLoading } = useQuery<Deal[]>({
     queryKey: ['/api/deals'],
     refetchOnMount: true,         // Recarregar ao montar
     refetchOnWindowFocus: true,   // Recarregar quando a janela ganhar foco
     staleTime: 0,                 // Considerar dados obsoletos imediatamente (sempre buscar dados frescos)
+    refetchInterval: 2000,        // Recarregar a cada 2 segundos para garantir dados atualizados
   });
   
   // Update deal stage or order when dragged

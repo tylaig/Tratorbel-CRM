@@ -195,7 +195,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
         };
         
         console.log("Dados do deal a ser criado:", payload);
-        const result = await apiRequest('POST', '/api/deals', payload);
+        const result = await apiRequest('/api/deals', 'POST', payload);
         console.log("Deal criado com sucesso:", result);
         return result;
       } catch (error) {

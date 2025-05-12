@@ -1114,6 +1114,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rotas para Sale Performance Reasons
+  apiRouter.get("/sale-performance-reasons", async (req: Request, res: Response) => {
+    try {
+      // Buscar motivos de desempenho de vendas
+      const salePerformanceReasons = await storage.db.query.salePerformanceReasons.findMany({
+        orderBy: (salePerformanceReasons, { asc }) => [asc(salePerformanceReasons.reason)]
+      });
+      res.json(salePerformanceReasons);
+    } catch (error) {
+      res.status(500).json({ error: `Erro ao buscar motivos de desempenho: ${error}` });
+    }
+  });
+
+  apiRouter.post("/sale-performance-reasons", async (req: Request, res: Response) => {
+    try {
+      // Validar dados
+      const validatedData = insertSalePerformanceReasonSchema.parse(req.body);
+      
+      // Criar motivo de desempenho
+      const newReason = await storage.db.insert(salePerformanceReasons).values({
+        reason: validatedData.reason,
+        value: validatedData.value,
+        description: validatedData.description || null,
+        active: validatedData.active || true,
+        isSystem: validatedData.isSystem || false,
+      }).returning();
+      
+      res.status(201).json(newReason[0]);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: `Erro ao criar motivo de desempenho: ${error}` });
+    }
+  });
+
+  apiRouter.put("/sale-performance-reasons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Validar dados
+      const validatedData = insertSalePerformanceReasonSchema.partial().parse(req.body);
+      
+      // Atualizar motivo de desempenho
+      const updatedReason = await storage.db.update(salePerformanceReasons)
+        .set(validatedData)
+        .where(eq(salePerformanceReasons.id, id))
+        .returning();
+      
+      if (!updatedReason.length) {
+        return res.status(404).json({ error: "Motivo de desempenho não encontrado" });
+      }
+      
+      res.json(updatedReason[0]);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: `Erro ao atualizar motivo de desempenho: ${error}` });
+    }
+  });
+
+  apiRouter.delete("/sale-performance-reasons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Verificar se é um motivo do sistema
+      const reason = await storage.db.query.salePerformanceReasons.findFirst({
+        where: eq(salePerformanceReasons.id, id)
+      });
+      
+      if (!reason) {
+        return res.status(404).json({ error: "Motivo de desempenho não encontrado" });
+      }
+      
+      if (reason.isSystem) {
+        return res.status(403).json({ error: "Não é possível excluir um motivo de desempenho do sistema" });
+      }
+      
+      // Excluir motivo de desempenho
+      await storage.db.delete(salePerformanceReasons).where(eq(salePerformanceReasons.id, id));
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: `Erro ao excluir motivo de desempenho: ${error}` });
+    }
+  });
+
   app.use("/api", apiRouter);
   
   const httpServer = createServer(app);

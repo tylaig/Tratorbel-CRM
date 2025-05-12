@@ -21,7 +21,7 @@ import {
   BuildingIcon
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings as SettingsType, PipelineStage, LossReason, MachineBrand } from "@shared/schema";
+import { Settings as SettingsType, PipelineStage, LossReason, MachineBrand, SalePerformanceReason } from "@shared/schema";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -53,6 +53,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     queryKey: ['/api/machine-brands'],
     enabled: activeTab === "machine-brands",
   });
+  
+  // Consulta para carregar motivos de desempenho de vendas
+  const { data: performanceReasons = [] } = useQuery<SalePerformanceReason[]>({
+    queryKey: ['/api/sale-performance-reasons'],
+    enabled: activeTab === "sale-performance",
+  });
 
   // Campos para a configuração do Chatwoot
   const [chatwootUrl, setChatwootUrl] = useState(settings?.chatwootUrl || "");
@@ -71,6 +77,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [newBrandName, setNewBrandName] = useState("");
   const [newBrandDescription, setNewBrandDescription] = useState("");
   const [editingBrand, setEditingBrand] = useState<{ id: number, name: string, description: string | null } | null>(null);
+  
+  // Estados para edição de motivos de desempenho de vendas
+  const [newPerformanceReason, setNewPerformanceReason] = useState("");
+  const [newPerformanceValue, setNewPerformanceValue] = useState("");
+  const [newPerformanceDescription, setNewPerformanceDescription] = useState("");
+  const [editingPerformance, setEditingPerformance] = useState<{ id: number, reason: string, value: string, description: string | null } | null>(null);
 
   // Mutation para salvar configurações
   const saveChatwootMutation = useMutation({
@@ -303,6 +315,82 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       toast({
         title: "Erro ao excluir",
         description: `Ocorreu um erro ao excluir a marca: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Mutation para criar motivo de desempenho
+  const createPerformanceReasonMutation = useMutation({
+    mutationFn: async (data: { reason: string, value: string, description: string }) => {
+      return await apiRequest('/api/sale-performance-reasons', 'POST', {
+        reason: data.reason,
+        value: data.value,
+        description: data.description || null,
+        active: true
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sale-performance-reasons'] });
+      setNewPerformanceReason("");
+      setNewPerformanceValue("");
+      setNewPerformanceDescription("");
+      toast({
+        title: "Motivo criado",
+        description: "O motivo de desempenho foi criado com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar",
+        description: `Ocorreu um erro ao criar o motivo de desempenho: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation para atualizar motivo de desempenho
+  const updatePerformanceReasonMutation = useMutation({
+    mutationFn: async (data: { id: number, reason: string, value: string, description: string }) => {
+      return await apiRequest(`/api/sale-performance-reasons/${data.id}`, 'PUT', {
+        reason: data.reason,
+        value: data.value,
+        description: data.description
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sale-performance-reasons'] });
+      setEditingPerformance(null);
+      toast({
+        title: "Motivo atualizado",
+        description: "O motivo de desempenho foi atualizado com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar",
+        description: `Ocorreu um erro ao atualizar o motivo: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation para excluir motivo de desempenho
+  const deletePerformanceReasonMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/sale-performance-reasons/${id}`, 'DELETE');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sale-performance-reasons'] });
+      toast({
+        title: "Motivo excluído",
+        description: "O motivo de desempenho foi excluído com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao excluir",
+        description: `Ocorreu um erro ao excluir o motivo: ${error}`,
         variant: "destructive",
       });
     }

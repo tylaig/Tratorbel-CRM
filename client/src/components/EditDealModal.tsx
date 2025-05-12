@@ -38,6 +38,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import DealOutcomeForm from "@/components/DealOutcomeForm";
+import LeadActivities from "@/components/LeadActivities";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 
@@ -173,7 +174,6 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   };
 
   const [activeTab, setActiveTab] = useState("details");
-  const [newActivity, setNewActivity] = useState("");
   const [quoteItems, setQuoteItems] = useState<{description: string, quantity: number, unitPrice: number}[]>([
     { description: "", quantity: 1, unitPrice: 0 }
   ]);
@@ -201,21 +201,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     setQuoteItems(newItems);
   };
 
-  // Mock de atividades para demonstração
-  const mockActivities = [
-    { 
-      id: 1, 
-      type: 'message', 
-      text: 'Cliente solicitou orçamento para peças de trator', 
-      date: new Date(2025, 4, 7) 
-    },
-    { 
-      id: 2, 
-      type: 'note', 
-      text: 'Enviado catálogo de peças por e-mail', 
-      date: new Date(2025, 4, 8) 
-    }
-  ];
+  // Todas as atividades agora são gerenciadas pelo componente LeadActivities
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -318,45 +304,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
           </TabsContent>
 
           <TabsContent value="activities" className="p-1">
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="new-activity">Nova Atividade</Label>
-                <div className="flex gap-2">
-                  <Textarea
-                    id="new-activity"
-                    value={newActivity}
-                    onChange={(e) => setNewActivity(e.target.value)}
-                    placeholder="Adicione uma nova atividade..."
-                    className="flex-1"
-                  />
-                  <Button className="self-end flex gap-1" disabled={!newActivity.trim()}>
-                    <PlusCircleIcon className="h-4 w-4" />
-                    <span>Adicionar</span>
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                <h3 className="text-sm font-medium text-gray-500">Histórico de Atividades</h3>
-                {mockActivities.map(activity => (
-                  <Card key={activity.id} className="p-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-start gap-2">
-                        {activity.type === 'message' ? (
-                          <MessageCircleIcon className="h-4 w-4 text-blue-500 mt-1" />
-                        ) : (
-                          <ClipboardListIcon className="h-4 w-4 text-green-500 mt-1" />
-                        )}
-                        <div>
-                          <p className="text-sm text-gray-800">{activity.text}</p>
-                          <p className="text-xs text-gray-500">{formatDate(activity.date)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            <LeadActivities deal={deal} />
           </TabsContent>
 
           <TabsContent value="quote" className="p-1">

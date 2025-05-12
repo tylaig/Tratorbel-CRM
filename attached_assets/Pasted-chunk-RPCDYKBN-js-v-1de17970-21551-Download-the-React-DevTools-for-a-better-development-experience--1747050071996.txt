@@ -1,0 +1,140 @@
+chunk-RPCDYKBN.js?v=1de17970:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-RPCDYKBN.js?v=1de17970:521 Warning: Connect(Droppable): Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.
+    at div
+    at div
+    at div
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=1de17970:945:20)
+    at App (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=1de17970:7462:25)
+    at ErrorBoundary2 (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=1de17970:1959:35)
+    at DragDropContext (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=1de17970:7582:19)
+    at KanbanBoard (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/components/KanbanBoard.tsx:45:39)
+    at main
+    at div
+    at div
+    at Dashboard (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/pages/Dashboard.tsx:34:41)
+    at Route (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=1de17970:323:16)
+    at Switch (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=1de17970:379:17)
+    at App
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7SUNRGEF.js?v=1de17970:38:15)
+    at TooltipProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=1de17970:59:5)
+    at QueryClientProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=1de17970:2805:3)
+printWarning @ chunk-RPCDYKBN.js?v=1de17970:521
+error @ chunk-RPCDYKBN.js?v=1de17970:505
+updateMemoComponent @ chunk-RPCDYKBN.js?v=1de17970:14382
+beginWork @ chunk-RPCDYKBN.js?v=1de17970:15977
+beginWork$1 @ chunk-RPCDYKBN.js?v=1de17970:19753
+performUnitOfWork @ chunk-RPCDYKBN.js?v=1de17970:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=1de17970:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=1de17970:19116
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=1de17970:18678
+workLoop @ chunk-RPCDYKBN.js?v=1de17970:197
+flushWork @ chunk-RPCDYKBN.js?v=1de17970:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=1de17970:384
+queryClient.ts:15 
+            
+            
+           POST https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/api/deals 400 (Bad Request)
+apiRequest @ queryClient.ts:15
+mutationFn @ AddDealModal.tsx:155
+fn @ @tanstack_react-query.js?v=1de17970:1189
+run @ @tanstack_react-query.js?v=1de17970:494
+start @ @tanstack_react-query.js?v=1de17970:536
+execute @ @tanstack_react-query.js?v=1de17970:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=1de17970:2630
+(anonymous) @ @tanstack_react-query.js?v=1de17970:3295
+handleSave @ AddDealModal.tsx:198
+callCallback2 @ chunk-RPCDYKBN.js?v=1de17970:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=1de17970:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=1de17970:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=1de17970:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=1de17970:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=1de17970:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=1de17970:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=1de17970:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=1de17970:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=1de17970:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=1de17970:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=1de17970:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=1de17970:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=1de17970:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=1de17970:5449
+AddDealModal.tsx:184 Add deal error: Error: 400: {"message":"Invalid data","errors":[{"code":"invalid_type","expected":"number","received":"undefined","path":["leadId"],"message":"Required"}]}
+    at throwIfResNotOk (queryClient.ts:6:11)
+    at async apiRequest (queryClient.ts:22:3)
+    at async Object.mutationFn (AddDealModal.tsx:155:14)
+onError @ AddDealModal.tsx:184
+execute @ @tanstack_react-query.js?v=1de17970:1254
+await in execute
+mutate @ @tanstack_react-query.js?v=1de17970:2630
+(anonymous) @ @tanstack_react-query.js?v=1de17970:3295
+handleSave @ AddDealModal.tsx:198
+callCallback2 @ chunk-RPCDYKBN.js?v=1de17970:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=1de17970:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=1de17970:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=1de17970:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=1de17970:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=1de17970:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=1de17970:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=1de17970:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=1de17970:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=1de17970:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=1de17970:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=1de17970:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=1de17970:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=1de17970:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=1de17970:5449
+queryClient.ts:15 
+            
+            
+           POST https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/api/deals 400 (Bad Request)
+apiRequest @ queryClient.ts:15
+mutationFn @ AddDealModal.tsx:155
+fn @ @tanstack_react-query.js?v=1de17970:1189
+run @ @tanstack_react-query.js?v=1de17970:494
+start @ @tanstack_react-query.js?v=1de17970:536
+execute @ @tanstack_react-query.js?v=1de17970:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=1de17970:2630
+(anonymous) @ @tanstack_react-query.js?v=1de17970:3295
+handleSave @ AddDealModal.tsx:198
+callCallback2 @ chunk-RPCDYKBN.js?v=1de17970:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=1de17970:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=1de17970:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=1de17970:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=1de17970:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=1de17970:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=1de17970:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=1de17970:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=1de17970:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=1de17970:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=1de17970:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=1de17970:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=1de17970:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=1de17970:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=1de17970:5449
+AddDealModal.tsx:184 Add deal error: Error: 400: {"message":"Invalid data","errors":[{"code":"invalid_type","expected":"number","received":"undefined","path":["leadId"],"message":"Required"}]}
+    at throwIfResNotOk (queryClient.ts:6:11)
+    at async apiRequest (queryClient.ts:22:3)
+    at async Object.mutationFn (AddDealModal.tsx:155:14)
+onError @ AddDealModal.tsx:184
+execute @ @tanstack_react-query.js?v=1de17970:1254
+await in execute
+mutate @ @tanstack_react-query.js?v=1de17970:2630
+(anonymous) @ @tanstack_react-query.js?v=1de17970:3295
+handleSave @ AddDealModal.tsx:198
+callCallback2 @ chunk-RPCDYKBN.js?v=1de17970:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=1de17970:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=1de17970:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=1de17970:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=1de17970:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=1de17970:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=1de17970:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=1de17970:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=1de17970:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=1de17970:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=1de17970:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=1de17970:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=1de17970:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=1de17970:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=1de17970:5449

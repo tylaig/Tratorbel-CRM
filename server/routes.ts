@@ -291,8 +291,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Chatwoot API not configured" });
       }
       
+      // Verificar se existe um termo de busca na query
+      const searchQuery = req.query.q as string;
+      let chatwootApiUrl = `${settings.chatwootUrl}/api/v1/accounts/${settings.accountId}/contacts`;
+      
+      // Se tiver um termo de busca, adicionar à URL da API Chatwoot
+      if (searchQuery && searchQuery.trim()) {
+        chatwootApiUrl += `?q=${encodeURIComponent(searchQuery.trim())}`;
+      }
+      
       const response = await axios.get(
-        `${settings.chatwootUrl}/api/v1/accounts/${settings.accountId}/contacts`,
+        chatwootApiUrl,
         {
           headers: {
             'api_access_token': settings.chatwootApiKey
@@ -310,6 +319,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ message: "Internal server error" });
       }
+    }
+  });
+  
+  // Busca avançada de leads/contatos
+  apiRouter.get("/leads/search", async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      
+      if (!query || query.trim().length < 2) {
+        return res.status(400).json({ 
+          message: "O termo de busca deve ter pelo menos 2 caracteres",
+          results: []
+        });
+      }
+      
+      const results = await storage.searchLeads(query.trim());
+      res.json({ results });
+    } catch (error) {
+      console.error("Erro ao buscar leads:", error);
+      res.status(500).json({ 
+        message: "Erro ao buscar leads", 
+        results: [] 
+      });
     }
   });
   

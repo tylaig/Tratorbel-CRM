@@ -316,35 +316,20 @@ function processStateData(deals: Deal[]) {
     'RO': { count: 0, value: 0 }
   };
   
-  // Para demonstração, adicionamos dados a alguns estados para que haja algo visível
+  // Processar dados reais dos deals para análise geográfica
   deals.forEach(deal => {
-    // Determinar estado com base no ID para demonstração
-    let state = 'SP';
-    
-    // Usar o estado do registro se existir
+    // Usar apenas dados com estado definido para garantir análise geográfica precisa
     if (deal.state) {
-      state = deal.state.toUpperCase();
-    } else {
-      // Caso não tenha estado, atribuir a um estado por ID para demonstração
-      const stateList = Object.keys(stateData);
-      state = stateList[deal.id % stateList.length];
-    }
-    
-    if (stateData[state]) {
-      stateData[state].count += 1;
-      stateData[state].value += (deal.value || 0);
+      const state = deal.state.toUpperCase();
+      
+      if (stateData[state]) {
+        stateData[state].count += 1;
+        stateData[state].value += (deal.value || 0);
+      }
     }
   });
   
-  // Adicionar alguns dados para demonstração se não tiver nenhum
-  if (deals.length === 0) {
-    stateData['SP'].count = 5;
-    stateData['SP'].value = 50000;
-    stateData['MG'].count = 3;
-    stateData['MG'].value = 30000;
-    stateData['RJ'].count = 2;
-    stateData['RJ'].value = 25000;
-  }
+  // Não adicionamos dados fictícios, apenas utilizamos dados reais dos negócios
   
   return Object.entries(stateData)
     .map(([name, data]) => ({ name, ...data }))
@@ -389,13 +374,9 @@ function processCityData(deals: Deal[]) {
       cityData[key].count += 1;
       cityData[key].value += (deal.value || 0);
     } else {
-      // Para demonstração, distribui os registros sem cidade nas principais cidades
-      const index = deal.id % defaultCities.length;
-      const { city, state } = defaultCities[index];
-      const key = `${city}, ${state}`;
-      
-      cityData[key].count += 1;
-      cityData[key].value += (deal.value || 0);
+      // Se não tiver cidade/estado, não incluir no cálculo geográfico
+      // para garantir que apenas dados reais apareçam no mapa
+      return;
     }
   });
   

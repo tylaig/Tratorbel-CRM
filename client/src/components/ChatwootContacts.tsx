@@ -18,18 +18,7 @@ import {
 } from "lucide-react";
 import AddDealModal from "@/components/AddDealModal";
 import { toast } from "@/hooks/use-toast";
-
-// Função para formatar o número de telefone, removendo o formato +123456
-const formatPhoneNumber = (phone: string | undefined): string => {
-  if (!phone) return "";
-  
-  // Remove o símbolo + do início do número, se existir
-  if (phone.startsWith("+")) {
-    return phone.substring(1);
-  }
-  
-  return phone;
-};
+import { formatPhoneNumber } from "@/lib/formatters";
 
 interface ChatwootContactsProps {
   pipelineStages: PipelineStage[];

@@ -22,12 +22,16 @@ export const pipelineStages = pgTable("pipeline_stages", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   order: integer("order").notNull(),
+  isDefault: boolean("is_default").default(false), // Indica se o estágio é padrão para contatos importados
+  isHidden: boolean("is_hidden").default(false),   // Indica se o estágio está oculto na visualização normal
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertPipelineStageSchema = createInsertSchema(pipelineStages).pick({
   name: true,
   order: true,
+  isDefault: true,
+  isHidden: true,
 });
 
 export type InsertPipelineStage = z.infer<typeof insertPipelineStageSchema>;

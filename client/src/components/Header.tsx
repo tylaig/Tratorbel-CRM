@@ -16,6 +16,7 @@ import {
   Settings as SettingsIcon
 } from "lucide-react";
 import SettingsModal from "./SettingsModal";
+import tbcLogo from "../assets/tbc-logo.png";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -45,7 +46,7 @@ export default function Header({
       <div className="container mx-auto px-4">
         <div className="h-16 flex items-center justify-between">
           <div className="flex items-center">
-            <img src="/src/assets/tbc-logo.png" alt="Grupo TBC Logo" className="h-12" />
+            <img src={tbcLogo} alt="Grupo TBC Logo" className="h-10" />
             <span className="ml-3 text-[10px] font-medium py-1 px-2 bg-primary/10 text-primary rounded-full">
               Beta
             </span>

@@ -115,12 +115,13 @@ export class MemStorage implements IStorage {
   
   private initDefaultStages() {
     const defaultStages = [
-      { name: "Fornecedor", order: 1 },
-      { name: "Retirada", order: 2 },
-      { name: "Separação", order: 3 },
-      { name: "Faturamento", order: 4 },
-      { name: "Transportes", order: 5 },
-      { name: "Concluído", order: 6 }
+      { name: "Fornecedor", order: 1, isDefault: false, isHidden: false },
+      { name: "Retirada", order: 2, isDefault: false, isHidden: false },
+      { name: "Separação", order: 3, isDefault: false, isHidden: false },
+      { name: "Faturamento", order: 4, isDefault: false, isHidden: false },
+      { name: "Transportes", order: 5, isDefault: false, isHidden: false },
+      { name: "Concluído", order: 6, isDefault: false, isHidden: false },
+      { name: "Contatos Chatwoot", order: 7, isDefault: true, isHidden: true }
     ];
     
     defaultStages.forEach(stage => {

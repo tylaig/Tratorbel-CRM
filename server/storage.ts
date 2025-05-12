@@ -267,6 +267,12 @@ export class MemStorage implements IStorage {
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
   
+  async getDealsByContactId(contactId: string): Promise<Deal[]> {
+    return Array.from(this.dealsList.values())
+      .filter(deal => deal.chatwootContactId === contactId)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+  
   // Client Machines methods
   async getClientMachines(dealId: number): Promise<ClientMachine[]> {
     return Array.from(this.clientMachinesList.values())

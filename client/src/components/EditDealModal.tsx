@@ -51,6 +51,7 @@ import DealOutcomeForm from "@/components/DealOutcomeForm";
 import LeadActivities from "@/components/LeadActivities";
 import ClientMachines from "@/components/ClientMachines";
 import ClientCities from "@/components/ClientCities";
+import RelatedDeals from "@/components/RelatedDeals";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 

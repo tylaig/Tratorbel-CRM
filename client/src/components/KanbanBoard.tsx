@@ -82,16 +82,27 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       // Filtrar estágios que não estão ocultos (isHidden === false)
       const visibleStages = pipelineStages.filter(stage => !stage.isHidden);
       
-      // Filtrar deals ativos (nem ganhos nem perdidos)
-      const activeDeals = deals.filter(deal => 
-        deal.saleStatus !== 'won' && 
-        deal.saleStatus !== 'lost'
-      );
-      
       const stagesWithDeals = visibleStages.map(stage => {
-        // Apenas mostrar deals ativos para cada estágio
-        const stageDeals = activeDeals.filter(deal => deal.stageId === stage.id);
-        // Calcular o total apenas baseado no valor do deal (que já inclui o valor da cotação quando apropriado)
+        let stageDeals: Deal[] = [];
+        
+        // Para estágios normais, mostrar apenas deals em negociação
+        if (stage.stageType === "normal") {
+          stageDeals = deals.filter(deal => 
+            deal.stageId === stage.id && 
+            deal.saleStatus !== 'won' && 
+            deal.saleStatus !== 'lost'
+          );
+        }
+        // Para o estágio de vendas realizadas, mostrar deals marcados como ganhos
+        else if (stage.stageType === "completed") {
+          stageDeals = deals.filter(deal => deal.saleStatus === 'won');
+        } 
+        // Para o estágio de vendas perdidas, mostrar deals marcados como perdidos
+        else if (stage.stageType === "lost") {
+          stageDeals = deals.filter(deal => deal.saleStatus === 'lost');
+        }
+        
+        // Calcular o total baseado no valor do deal
         const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
         
         return {
@@ -354,117 +365,136 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
           </Button>
         </div>
         <div className="flex overflow-x-auto px-2 board-container" style={{ minHeight: 'calc(100vh - 170px)' }}>
-        {boardData.map((stage) => (
-          <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full">
-            <div className="flex flex-col bg-white rounded-t-lg border border-gray-200">
-              <div className="p-3 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-800">{stage.name}</h3>
-                  <div className="flex items-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVerticalIcon className="h-4 w-4 text-gray-400" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            setSelectedStage(stage);
-                            setIsEditStageModalOpen(true);
-                          }}
-                          className="flex items-center gap-2"
-                        >
-                          <Edit2Icon className="h-4 w-4" />
-                          <span>Editar Estágio</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-sm text-gray-500">{stage.deals.length} negócios</span>
-                  <span className="text-sm font-mono font-medium text-gray-700">{formatCurrency(stage.totalValue)}</span>
-                </div>
-              </div>
-            </div>
+          {boardData.map((stage) => {
+            // Definir classes e estilos específicos com base no tipo de estágio
+            let stageClass = "";
+            if (stage.stageType === "completed") {
+              stageClass = "border-green-500 bg-green-50 dark:bg-green-900/20";
+            } else if (stage.stageType === "lost") {
+              stageClass = "border-red-500 bg-red-50 dark:bg-red-900/20";
+            }
             
-            <Droppable droppableId={stage.id.toString()}>
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={`flex-1 min-h-[200px] rounded-b-lg border-x border-b border-gray-200 p-2 overflow-y-auto ${snapshot.isDraggingOver ? 'bg-gray-200' : 'bg-gray-100'}`}
-                >
-                  {stage.deals.length > 0 ? (
-                    stage.deals.map((deal, index) => (
-                      <Draggable key={deal.id} draggableId={deal.id.toString()} index={index}>
-                        {(provided, snapshot) => (
-                          <Card
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`p-3 mb-2 cursor-move ${snapshot.isDragging ? 'opacity-50 shadow-lg' : 'hover:shadow-md'} transition-shadow`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedDeal(deal);
-                              setIsEditDealModalOpen(true);
-                            }}
-                          >
-                            <div className="flex justify-between items-start">
-                              <h4 className="font-medium text-gray-800">{deal.name}</h4>
-                              <span className="font-mono text-sm font-medium text-gray-700">{formatCurrency(deal.value || 0)}</span>
-                            </div>
-                            {deal.companyName && (
-                              <div className="mt-2">
-                                <div className="flex items-center text-sm text-gray-600">
-                                  <Building className="mr-2 h-4 w-4 text-gray-400" />
-                                  <span>{deal.companyName}</span>
-                                </div>
-                              </div>
-                            )}
-                            <div className="mt-2 flex flex-col gap-1">
-                              <div className="flex items-center justify-between">
-                                {getStatusBadge(deal.status || 'in_progress')}
-                                <div className="text-right">
-                                  <div className="text-xs text-gray-500">
-                                    <span className="font-medium">Cotação:</span> {formatCurrency(deal.quoteValue || 0)}
-                                  </div>
-                                  <div className="text-xs font-medium text-gray-700">
-                                    <span>Total:</span> {formatCurrency(deal.value || 0)}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center justify-between text-xs text-gray-500">
-                                <span>Nesta etapa: {formatTimeAgo(new Date(deal.updatedAt))}</span>
-                                <span>Total: {formatTimeAgo(new Date(deal.createdAt))}</span>
-                              </div>
-                              {deal.chatwootAgentName && (
-                                <div className="mt-2 flex items-center text-xs text-gray-600">
-                                  <UserCircle className="mr-1 h-3 w-3 text-gray-400" />
-                                  <span>Agente: {deal.chatwootAgentName}</span>
-                                </div>
-                              )}
-                            </div>
-                          </Card>
+            return (
+              <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full">
+                <div className={`flex flex-col bg-white dark:bg-gray-900 rounded-t-lg border ${stageClass}`}>
+                  <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {stage.stageType === "completed" && (
+                          <span className="h-3 w-3 bg-green-600 dark:bg-green-500 rounded-full"></span>
                         )}
-                      </Draggable>
-                    ))
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                      <div className="text-center p-4">
-                        <p>Arraste para cá,</p>
-                        <p>para adicionar negócios nessa etapa</p>
+                        {stage.stageType === "lost" && (
+                          <span className="h-3 w-3 bg-red-600 dark:bg-red-500 rounded-full"></span>
+                        )}
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-200">{stage.name}</h3>
+                      </div>
+                      <div className="flex items-center">
+                        {!stage.isSystem && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVerticalIcon className="h-4 w-4 text-gray-400" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setSelectedStage(stage);
+                                  setIsEditStageModalOpen(true);
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <Edit2Icon className="h-4 w-4" />
+                                <span>Editar Estágio</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                     </div>
-                  )}
-                  {provided.placeholder}
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{stage.deals.length} negócios</span>
+                      <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">{formatCurrency(stage.totalValue)}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </Droppable>
-          </div>
-        ))}
-      </div>
+                
+                <Droppable droppableId={stage.id.toString()}>
+                  {(provided, snapshot) => (
+                    <div
+                      className={`deal-list p-2 flex-grow rounded-b-lg overflow-y-auto ${
+                        snapshot.isDraggingOver
+                          ? "bg-yellow-50 dark:bg-yellow-900/20"
+                          : "bg-gray-50 dark:bg-gray-800"
+                      }`}
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                    >
+                      {stage.deals.map((deal, index) => (
+                        <Draggable
+                          key={deal.id.toString()}
+                          draggableId={deal.id.toString()}
+                          index={index}
+                        >
+                          {(provided, snapshot) => (
+                            <Card
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`mb-2 p-3 group ${
+                                snapshot.isDragging
+                                  ? "shadow-lg dark:bg-gray-700"
+                                  : "shadow-sm hover:shadow-md bg-white dark:bg-gray-800"
+                              } cursor-pointer`}
+                              onClick={() => {
+                                setSelectedDeal(deal);
+                                setIsEditDealModalOpen(true);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">{deal.name}</div>
+                                </div>
+                                <div>
+                                  {getStatusBadge(deal.status)}
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                <div className="col-span-2">
+                                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                    <Building className="w-3.5 h-3.5 mr-1.5" />
+                                    <span className="truncate">{"Empresa não definida"}</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                  <UserCircle className="w-3.5 h-3.5 mr-1.5" />
+                                  <span className="truncate">{"Não atribuído"}</span>
+                                </div>
+                                
+                                <div className="text-sm font-medium text-right text-gray-900 dark:text-white">
+                                  {formatCurrency(deal.value || 0)}
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  Atualizado {formatTimeAgo(deal.updatedAt)}
+                                </span>
+                              </div>
+                            </Card>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </DragDropContext>
   );

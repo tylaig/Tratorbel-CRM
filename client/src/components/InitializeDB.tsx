@@ -27,13 +27,15 @@ export default function InitializeDB() {
 
       // Criar estágios do pipeline
       const defaultStages = [
-        { name: "Fornecedor", order: 1, isDefault: false, isHidden: false },
-        { name: "Retirada", order: 2, isDefault: false, isHidden: false },
-        { name: "Separação", order: 3, isDefault: false, isHidden: false },
-        { name: "Faturamento", order: 4, isDefault: false, isHidden: false },
-        { name: "Transportes", order: 5, isDefault: false, isHidden: false },
-        { name: "Concluído", order: 6, isDefault: false, isHidden: false },
-        { name: "Contatos Chatwoot", order: 7, isDefault: true, isHidden: true }
+        { name: "Fornecedor", order: 1, isDefault: false, isHidden: false, isSystem: false, stageType: "normal" },
+        { name: "Retirada", order: 2, isDefault: false, isHidden: false, isSystem: false, stageType: "normal" },
+        { name: "Separação", order: 3, isDefault: false, isHidden: false, isSystem: false, stageType: "normal" },
+        { name: "Faturamento", order: 4, isDefault: false, isHidden: false, isSystem: false, stageType: "normal" },
+        { name: "Transportes", order: 5, isDefault: false, isHidden: false, isSystem: false, stageType: "normal" },
+        { name: "Contatos Chatwoot", order: 6, isDefault: true, isHidden: true, isSystem: false, stageType: "normal" },
+        // Estágios do sistema que não podem ser excluídos
+        { name: "Vendas Realizadas", order: 98, isDefault: false, isHidden: false, isSystem: true, stageType: "completed" },
+        { name: "Vendas Perdidas", order: 99, isDefault: false, isHidden: false, isSystem: true, stageType: "lost" }
       ];
 
       for (const stage of defaultStages) {

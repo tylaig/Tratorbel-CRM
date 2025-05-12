@@ -92,6 +92,8 @@ export const pipelineStages = pgTable("pipeline_stages", {
   order: integer("order").notNull(),
   isDefault: boolean("is_default").default(false), // Indica se o estágio é padrão para contatos importados
   isHidden: boolean("is_hidden").default(false),   // Indica se o estágio está oculto na visualização normal
+  isSystem: boolean("is_system").default(false),   // Indica se o estágio é do sistema (não pode ser excluído)
+  stageType: text("stage_type").default("normal"), // normal, completed, lost
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -100,6 +102,8 @@ export const insertPipelineStageSchema = createInsertSchema(pipelineStages).pick
   order: true,
   isDefault: true,
   isHidden: true,
+  isSystem: true,
+  stageType: true,
 });
 
 export type InsertPipelineStage = z.infer<typeof insertPipelineStageSchema>;

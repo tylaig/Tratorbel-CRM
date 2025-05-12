@@ -104,11 +104,14 @@
 
 /* Custom styles for the Kanban board */
 .kanban-column {
-  min-height: calc(100vh - 200px);
+  height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
 }
 
 .board-container {
-  min-height: calc(100vh - 170px);
+  height: calc(100vh - 170px);
+  overflow-y: hidden;
 }
 
 .deal-card {

@@ -24,6 +24,11 @@
   --ring: 47 95% 50%;
   --radius: 0.5rem;
   
+  /* Header colors */
+  --header-background: 235 66% 15%;  /* Azul escuro #101b4d */
+  --header-foreground: 0 0% 100%;
+  --header-border: 235 66% 20%;
+  
   /* Chart colors */
   --chart-1: 47 95% 50%;  /* Amarelo */
   --chart-2: 0 0% 0%;     /* Preto */
@@ -32,13 +37,13 @@
   --chart-5: 0 0% 85%;    /* Cinza claro */
   
   /* Sidebar colors */
-  --sidebar-background: 0 0% 15%;  /* Fundo escuro como na imagem */
+  --sidebar-background: 235 66% 15%;  /* Azul escuro igual ao header */
   --sidebar-foreground: 0 0% 100%;
   --sidebar-primary: 47 95% 50%;
   --sidebar-primary-foreground: 0 0% 0%;
   --sidebar-accent: 0 0% 0%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 0 0% 20%;
+  --sidebar-border: 235 66% 20%;
   --sidebar-ring: 47 95% 50%;
 }
 
@@ -64,6 +69,11 @@
   --ring: 47 95% 50%;
   --radius: 0.5rem;
   
+  /* Header colors */
+  --header-background: 235 66% 10%;  /* Azul escuro mais escuro para dark mode */
+  --header-foreground: 0 0% 100%;
+  --header-border: 235 66% 15%;
+  
   /* Chart colors */
   --chart-1: 47 95% 50%;  /* Amarelo */
   --chart-2: 0 0% 100%;   /* Branco */
@@ -72,13 +82,13 @@
   --chart-5: 0 0% 45%;    /* Cinza escuro */
   
   /* Sidebar colors */
-  --sidebar-background: 0 0% 10%;
+  --sidebar-background: 235 66% 10%;  /* Mesmo azul escuro do header */
   --sidebar-foreground: 0 0% 98%;
   --sidebar-primary: 47 95% 50%;
   --sidebar-primary-foreground: 0 0% 0%;
   --sidebar-accent: 0 0% 98%;
   --sidebar-accent-foreground: 0 0% 0%;
-  --sidebar-border: 0 0% 20%;
+  --sidebar-border: 235 66% 15%;
   --sidebar-ring: 47 95% 50%;
 }
 
@@ -121,21 +131,7 @@
   @apply opacity-50 shadow-lg;
 }
 
-.sidebar-link {
-  @apply flex items-center px-3 py-2 text-sm rounded-md;
-}
-
-.sidebar-link.active {
-  @apply bg-primary bg-opacity-10 text-primary font-medium;
-}
-
-.sidebar-link:not(.active) {
-  @apply text-gray-900 hover:bg-gray-100;
-}
-
-.dark .sidebar-link:not(.active) {
-  @apply text-gray-200 hover:bg-gray-800;
-}
+/* Novas classes para os itens da sidebar estão definidas diretamente no Sidebar.tsx */
 
 /* Resultado de vendas */
 .stage-completed {

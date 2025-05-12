@@ -45,12 +45,12 @@ export default function Header({
   const [location] = useLocation();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="bg-[hsl(var(--header-background))] text-[hsl(var(--header-foreground))] border-b border-[hsl(var(--header-border))]">
       <div className="container mx-auto px-4">
         <div className="h-16 flex items-center justify-between">
           <div className="flex items-center">
             <img src={tbcLogo} alt="Grupo TBC Logo" className="h-10" />
-            <span className="ml-3 text-[10px] font-medium py-1 px-2 bg-primary/10 text-primary rounded-full">
+            <span className="ml-3 text-[10px] font-medium py-1 px-2 bg-primary/20 text-primary rounded-full">
               Beta
             </span>
           </div>
@@ -61,22 +61,22 @@ export default function Header({
                 <Button 
                   variant="ghost"
                   size="sm"
-                  className="relative group"
+                  className="relative group text-white hover:text-primary hover:bg-white/10"
                   onClick={onSync}
                   disabled={syncLoading}
                 >
-                  <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-gray-600 group-hover:text-primary transition-colors'}`} />
-                  <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Sincronizar</span>
+                  <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-white group-hover:text-primary transition-colors'}`} />
+                  <span className="ml-2 text-sm font-medium">Sincronizar</span>
                 </Button>
                 
                 <Button 
                   variant="ghost"
                   size="sm"
-                  className="relative group"
+                  className="relative group text-white hover:text-primary hover:bg-white/10"
                   onClick={() => setIsSettingsModalOpen(true)}
                 >
-                  <SettingsIcon className="h-4 w-4 text-gray-600 group-hover:text-primary transition-colors" />
-                  <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Configurações</span>
+                  <SettingsIcon className="h-4 w-4 text-white group-hover:text-primary transition-colors" />
+                  <span className="ml-2 text-sm font-medium">Configurações</span>
                 </Button>
               </>
             )}
@@ -85,18 +85,18 @@ export default function Header({
               <Button 
                 variant="ghost"
                 size="sm"
-                className="group"
+                className="group text-white hover:text-primary hover:bg-white/10"
                 onClick={onOpenApiConfig}
               >
-                <KeyIcon className="h-4 w-4 text-gray-600 group-hover:text-primary transition-colors" />
-                <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Configurar API</span>
+                <KeyIcon className="h-4 w-4 text-white group-hover:text-primary transition-colors" />
+                <span className="ml-2 text-sm font-medium">Configurar API</span>
               </Button>
             )}
             
             <Button 
               variant="default"
               size="sm"
-              className="bg-primary hover:bg-primary/90 text-white shadow-sm ml-2"
+              className="bg-primary hover:bg-primary/90 text-black shadow-sm ml-2 border-none"
               onClick={onAddDeal}
             >
               <PlusIcon className="h-4 w-4 mr-1" />
@@ -105,14 +105,16 @@ export default function Header({
           </div>
         </div>
       
-        <div className="border-t border-gray-200">
+        <div className="border-t border-[hsl(var(--header-border))]">
           <div className="flex items-center justify-between py-4">
             <div className="flex space-x-2">
               <Link href="/">
                 <Button 
                   variant={location === "/" ? "default" : "ghost"} 
                   size="sm"
-                  className="flex items-center gap-2"
+                  className={location === "/" 
+                    ? "flex items-center gap-2 bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                    : "flex items-center gap-2 text-white hover:text-primary hover:bg-white/10"}
                 >
                   <GanttChartIcon className="h-4 w-4" />
                   <span>Pipeline</span>
@@ -123,19 +125,23 @@ export default function Header({
                 <Button 
                   variant={location === "/historical" ? "default" : "ghost"} 
                   size="sm"
-                  className="flex items-center gap-2"
+                  className={location === "/historical" 
+                    ? "flex items-center gap-2 bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                    : "flex items-center gap-2 text-white hover:text-primary hover:bg-white/10"}
                 >
                   <BarChart3Icon className="h-4 w-4" />
                   <span>Histórico</span>
                 </Button>
               </Link>
               
-              <div className="flex items-center pl-4 border-l">
+              <div className="flex items-center pl-4 border-l border-[hsl(var(--header-border))]">
                 <Link href="/sales">
                   <Button 
                     variant={location === "/sales" ? "default" : "ghost"} 
                     size="sm"
-                    className="flex items-center gap-2"
+                    className={location === "/sales" 
+                    ? "flex items-center gap-2 bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                    : "flex items-center gap-2 text-white hover:text-primary hover:bg-white/10"}
                   >
                     <CheckCircle2Icon className="h-4 w-4" />
                     <span>Vendas</span>
@@ -146,14 +152,14 @@ export default function Header({
                   <Button 
                     variant={location === "/losses" ? "default" : "ghost"} 
                     size="sm"
-                    className="flex items-center gap-2 ml-1"
+                    className={location === "/losses" 
+                    ? "flex items-center gap-2 bg-primary text-black hover:bg-primary/90 hover:text-black ml-1" 
+                    : "flex items-center gap-2 text-white hover:text-primary hover:bg-white/10 ml-1"}
                   >
                     <XCircleIcon className="h-4 w-4" />
                     <span>Perdas</span>
                   </Button>
                 </Link>
-
-
               </div>
             </div>
             
@@ -163,7 +169,9 @@ export default function Header({
                   variant={viewMode === "kanban" ? "default" : "ghost"} 
                   size="icon"
                   onClick={() => toggleViewMode("kanban")}
-                  className="h-9 w-9 rounded"
+                  className={viewMode === "kanban" 
+                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
                   title="Visão Kanban"
                 >
                   <LayoutIcon className="h-5 w-5" />
@@ -172,7 +180,9 @@ export default function Header({
                   variant={viewMode === "list" ? "default" : "ghost"} 
                   size="icon"
                   onClick={() => toggleViewMode("list")}
-                  className="h-9 w-9 rounded"
+                  className={viewMode === "list" 
+                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
                   title="Visão Lista"
                 >
                   <ListIcon className="h-5 w-5" />
@@ -181,7 +191,9 @@ export default function Header({
                   variant={viewMode === "results" ? "default" : "ghost"} 
                   size="icon"
                   onClick={() => toggleViewMode("results")}
-                  className="h-9 w-9 rounded"
+                  className={viewMode === "results" 
+                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
                   title="Resultados de Vendas"
                 >
                   <GanttChartIcon className="h-5 w-5" />
@@ -191,7 +203,9 @@ export default function Header({
                     variant={viewMode === "contacts" ? "default" : "ghost"} 
                     size="icon"
                     onClick={() => toggleViewMode("contacts")}
-                    className="h-9 w-9 rounded"
+                    className={viewMode === "contacts" 
+                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
                     title="Contatos Chatwoot"
                   >
                     <UsersIcon className="h-5 w-5" />
@@ -201,7 +215,9 @@ export default function Header({
                   variant={viewMode === "heatmap" ? "default" : "ghost"} 
                   size="icon"
                   onClick={() => toggleViewMode("heatmap")}
-                  className="h-9 w-9 rounded"
+                  className={viewMode === "heatmap" 
+                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
                   title="Mapa de Calor"
                 >
                   <MapIcon className="h-5 w-5" />

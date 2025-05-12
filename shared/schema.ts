@@ -33,7 +33,7 @@ export const insertPipelineStageSchema = createInsertSchema(pipelineStages).pick
 export type InsertPipelineStage = z.infer<typeof insertPipelineStageSchema>;
 export type PipelineStage = typeof pipelineStages.$inferSelect;
 
-// Deals
+// Deals - Negócios
 export const deals = pgTable("deals", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -45,6 +45,27 @@ export const deals = pgTable("deals", {
   value: doublePrecision("value").default(0),
   quoteValue: doublePrecision("quote_value").default(0),
   status: text("status").default("in_progress"),
+  // Novos campos para clientes
+  isCompany: boolean("is_company").default(false),
+  cnpj: text("cnpj"),
+  corporateName: text("corporate_name"), // razão social
+  cpf: text("cpf"),
+  stateRegistration: text("state_registration"), // inscrição estadual
+  clientCode: text("client_code"), // código do cliente
+  email: text("email"),
+  phone: text("phone"),
+  // Endereço
+  address: text("address"),
+  addressNumber: text("address_number"),
+  addressComplement: text("address_complement"),
+  neighborhood: text("neighborhood"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  // Status da venda
+  saleStatus: text("sale_status").default("negotiation"), // negotiation, won, lost
+  lostReasons: text("lost_reasons"), // motivos da perda (JSON array)
+  // Campos de rastreamento
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -57,7 +78,28 @@ export const insertDealSchema = createInsertSchema(deals).pick({
   chatwootContactId: true,
   stageId: true,
   value: true,
+  quoteValue: true,
   status: true,
+  // Novos campos do cliente
+  isCompany: true,
+  cnpj: true,
+  corporateName: true,
+  cpf: true,
+  stateRegistration: true,
+  clientCode: true,
+  email: true,
+  phone: true,
+  // Endereço
+  address: true,
+  addressNumber: true,
+  addressComplement: true,
+  neighborhood: true,
+  city: true,
+  state: true,
+  zipCode: true,
+  // Status da venda
+  saleStatus: true,
+  lostReasons: true,
 });
 
 export type InsertDeal = z.infer<typeof insertDealSchema>;
@@ -109,3 +151,41 @@ export const insertSettingsSchema = createInsertSchema(settings).pick({
 
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;
 export type Settings = typeof settings.$inferSelect;
+
+// Máquinas do cliente
+export const clientMachines = pgTable("client_machines", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  name: text("name").notNull(),
+  brand: text("brand").notNull(), // marca
+  model: text("model").notNull(),
+  year: text("year"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertClientMachineSchema = createInsertSchema(clientMachines).pick({
+  dealId: true,
+  name: true,
+  brand: true,
+  model: true,
+  year: true,
+});
+
+export type InsertClientMachine = z.infer<typeof insertClientMachineSchema>;
+export type ClientMachine = typeof clientMachines.$inferSelect;
+
+// Motivos de perda de negócio
+export const lossReasons = pgTable("loss_reasons", {
+  id: serial("id").primaryKey(),
+  reason: text("reason").notNull(),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertLossReasonSchema = createInsertSchema(lossReasons).pick({
+  reason: true,
+  active: true,
+});
+
+export type InsertLossReason = z.infer<typeof insertLossReasonSchema>;
+export type LossReason = typeof lossReasons.$inferSelect;

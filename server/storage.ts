@@ -2,7 +2,10 @@ import {
   users, type User, type InsertUser,
   pipelineStages, type PipelineStage, type InsertPipelineStage,
   deals, type Deal, type InsertDeal,
-  settings, type Settings, type InsertSettings
+  settings, type Settings, type InsertSettings,
+  clientMachines, type ClientMachine, type InsertClientMachine,
+  lossReasons, type LossReason, type InsertLossReason,
+  quoteItems, type QuoteItem, type InsertQuoteItem
 } from "@shared/schema";
 
 // Modify the interface with any CRUD methods you might need
@@ -26,6 +29,26 @@ export interface IStorage {
   updateDeal(id: number, deal: Partial<Deal>): Promise<Deal | undefined>;
   deleteDeal(id: number): Promise<boolean>;
   getDealsByStage(stageId: number): Promise<Deal[]>;
+  // Novos métodos para filtrar por status de venda
+  getDealsBySaleStatus(saleStatus: string): Promise<Deal[]>;
+  
+  // Client Machines (Máquinas do cliente)
+  getClientMachines(dealId: number): Promise<ClientMachine[]>;
+  createClientMachine(machine: InsertClientMachine): Promise<ClientMachine>;
+  updateClientMachine(id: number, machine: Partial<ClientMachine>): Promise<ClientMachine | undefined>;
+  deleteClientMachine(id: number): Promise<boolean>;
+  
+  // Loss Reasons (Motivos de perda)
+  getLossReasons(): Promise<LossReason[]>;
+  createLossReason(reason: InsertLossReason): Promise<LossReason>;
+  updateLossReason(id: number, reason: Partial<LossReason>): Promise<LossReason | undefined>;
+  deleteLossReason(id: number): Promise<boolean>;
+  
+  // Quote Items (Itens da cotação)
+  getQuoteItems(dealId: number): Promise<QuoteItem[]>;
+  createQuoteItem(item: InsertQuoteItem): Promise<QuoteItem>;
+  updateQuoteItem(id: number, item: Partial<QuoteItem>): Promise<QuoteItem | undefined>;
+  deleteQuoteItem(id: number): Promise<boolean>;
   
   // Settings
   getSettings(): Promise<Settings | undefined>;
@@ -36,11 +59,17 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private stages: Map<number, PipelineStage>;
   private dealsList: Map<number, Deal>;
+  private clientMachinesList: Map<number, ClientMachine>;
+  private lossReasonsList: Map<number, LossReason>;
+  private quoteItemsList: Map<number, QuoteItem>;
   private appSettings: Settings | undefined;
   
   userCurrentId: number;
   stageCurrentId: number;
   dealCurrentId: number;
+  clientMachineCurrentId: number;
+  lossReasonCurrentId: number;
+  quoteItemCurrentId: number;
   settingsCurrentId: number;
 
   constructor() {

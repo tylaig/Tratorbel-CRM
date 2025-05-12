@@ -312,18 +312,22 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
   
   // Get status badge based on deal status
   const getStatusBadge = (status: string | null | undefined) => {
-    switch (status) {
-      case 'in_progress':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200">Em andamento</Badge>;
-      case 'waiting':
-        return <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-200">Aguardando</Badge>;
-      case 'completed':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-200">Concluído</Badge>;
-      case 'canceled':
-        return <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-200">Cancelado</Badge>;
-      default:
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200">Em andamento</Badge>;
-    }
+    const statusMap: Record<string, string> = {
+      'in_progress': 'Em andamento',
+      'waiting': 'Aguardando',
+      'completed': 'Concluído',
+      'canceled': 'Cancelado'
+    };
+    
+    // Usar a classe CSS status-badge que definimos em index.css
+    return (
+      <Badge 
+        variant="secondary" 
+        className={`status-badge ${status || 'in_progress'}`}
+      >
+        {statusMap[status || 'in_progress'] || 'Em andamento'}
+      </Badge>
+    );
   };
   
   if (isLoading) {
@@ -412,7 +416,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
             
             return (
               <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full">
-                <div className={`flex flex-col bg-white dark:bg-gray-900 rounded-t-lg border ${stageClass}`}>
+                <div className={`flex flex-col bg-white dark:bg-gray-900 rounded-t-lg border shadow-sm hover:shadow-md transition-shadow ${stageClass}`}>
                   <div className="p-3 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -421,6 +425,9 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
                         )}
                         {stage.stageType === "lost" && (
                           <span className="h-3 w-3 bg-red-600 dark:bg-red-500 rounded-full"></span>
+                        )}
+                        {!stage.stageType && (
+                          <span className="h-3 w-3 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
                         )}
                         <h3 className="font-semibold text-gray-800 dark:text-gray-200">{stage.name}</h3>
                       </div>

@@ -109,6 +109,40 @@
   flex-direction: column;
 }
 
+/* Estilos para os estágios específicos */
+.board-container .deal-list {
+  background-color: rgba(249, 250, 251, 0.5);
+  backdrop-filter: blur(4px);
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* Dark mode */
+.dark .board-container .deal-list {
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+/* Estilos para o estágio normal */
+.kanban-column:not(.stage-completed):not(.stage-lost) {
+  transition: transform 0.2s;
+}
+.kanban-column:not(.stage-completed):not(.stage-lost):hover {
+  transform: translateY(-2px);
+}
+
+/* Cores personalizadas para os status dos cartões */
+.status-badge.in_progress {
+  @apply bg-blue-100 text-blue-800 border-blue-200;
+}
+.status-badge.waiting {
+  @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+}
+.status-badge.completed {
+  @apply bg-green-100 text-green-800 border-green-200;
+}
+.status-badge.canceled {
+  @apply bg-red-100 text-red-800 border-red-200;
+}
+
 .board-container {
   height: calc(100vh - 170px);
   overflow-y: hidden;

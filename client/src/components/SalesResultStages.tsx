@@ -235,27 +235,42 @@ export default function SalesResultStages({ pipelineStages, filters }: SalesResu
 
       {/* Seção de Vendas Perdidas */}
       <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border stage-lost">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
-            <span className="bg-red-600 dark:bg-red-500 h-3 w-3 rounded-full"></span>
-            Vendas Perdidas
-          </h2>
-          <Select 
-            value={lossReasonFilter} 
-            onValueChange={setLossReasonFilter}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filtrar por motivo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os motivos</SelectItem>
+        <div className="flex flex-col mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+              <span className="bg-red-600 dark:bg-red-500 h-3 w-3 rounded-full"></span>
+              Vendas Perdidas
+            </h2>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {getFilteredDeals('lost').length} negócios encontrados
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-sm font-medium">Filtrar por motivo:</span>
+            <div className="flex gap-1 flex-wrap">
+              <Badge 
+                variant={lossReasonFilter === "all" ? "default" : "outline"}
+                className={lossReasonFilter === "all" ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
+                onClick={() => setLossReasonFilter("all")}
+                style={{ cursor: "pointer" }}
+              >
+                Todos os motivos
+              </Badge>
+              
               {lossReasons && lossReasons.map((reason: any) => (
-                <SelectItem key={reason.id} value={reason.reason}>
+                <Badge 
+                  key={reason.id}
+                  variant={lossReasonFilter === reason.reason ? "default" : "outline"}
+                  className={lossReasonFilter === reason.reason ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
+                  onClick={() => setLossReasonFilter(reason.reason)}
+                  style={{ cursor: "pointer" }}
+                >
                   {reason.reason}
-                </SelectItem>
+                </Badge>
               ))}
-            </SelectContent>
-          </Select>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -121,6 +121,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para atualizar estágio
   const updateStageMutation = useMutation({
     mutationFn: async (data: { id: number, name: string }) => {
+      console.log("Chamando API para atualizar estágio:", data);
+      // Certificando-se de passar os argumentos na ordem correta
       return await apiRequest(`/api/pipeline-stages/${data.id}`, 'PUT', {
         name: data.name
       });
@@ -341,10 +343,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       return;
     }
 
-    updateStageMutation.mutate({
-      id: editingStage.id,
-      name: editingStage.name
-    });
+    console.log("Atualizando estágio:", editingStage);
+    
+    // Chamada direta para debugar
+    try {
+      updateStageMutation.mutate({
+        id: editingStage.id,
+        name: editingStage.name
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar estágio:", error);
+    }
   };
 
   // Função para criar motivo de perda
@@ -539,23 +548,36 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       className="flex items-center justify-between p-3 border rounded-md"
                     >
                       {editingStage?.id === stage.id ? (
-                        <div className="flex items-center gap-2 flex-1">
+                        <form 
+                          className="flex items-center gap-2 flex-1"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            updateStage();
+                          }}
+                        >
                           <Input
                             value={editingStage.name}
                             onChange={(e) => setEditingStage({ ...editingStage, name: e.target.value })}
                             autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                updateStage();
+                              }
+                            }}
                           />
-                          <Button variant="ghost" size="sm" onClick={updateStage}>
+                          <Button variant="ghost" size="sm" type="submit">
                             <Check className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             onClick={() => setEditingStage(null)}
+                            type="button"
                           >
                             <X className="h-4 w-4" />
                           </Button>
-                        </div>
+                        </form>
                       ) : (
                         <>
                           <div className="flex items-center">

@@ -13,15 +13,17 @@ import {
   GanttChartIcon,
   CheckCircle2Icon,
   XCircleIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  UserIcon,
+  UsersIcon
 } from "lucide-react";
 import SettingsModal from "./SettingsModal";
 import tbcLogo from "../assets/tbc-logo.png";
 
 interface HeaderProps {
   toggleSidebar: () => void;
-  viewMode: "kanban" | "list";
-  toggleViewMode: (mode: "kanban" | "list") => void;
+  viewMode: "kanban" | "list" | "contacts";
+  toggleViewMode: (mode: "kanban" | "list" | "contacts") => void;
   onOpenApiConfig: () => void;
   onAddDeal: () => void;
   onSync: () => void;
@@ -159,6 +161,7 @@ export default function Header({
                   size="icon"
                   onClick={() => toggleViewMode("kanban")}
                   className="h-9 w-9 rounded"
+                  title="Visão Kanban"
                 >
                   <LayoutIcon className="h-5 w-5" />
                 </Button>
@@ -167,9 +170,21 @@ export default function Header({
                   size="icon"
                   onClick={() => toggleViewMode("list")}
                   className="h-9 w-9 rounded"
+                  title="Visão Lista"
                 >
                   <ListIcon className="h-5 w-5" />
                 </Button>
+                {hasApiConfig && (
+                  <Button 
+                    variant={viewMode === "contacts" ? "default" : "ghost"} 
+                    size="icon"
+                    onClick={() => toggleViewMode("contacts")}
+                    className="h-9 w-9 rounded"
+                    title="Contatos Chatwoot"
+                  >
+                    <UsersIcon className="h-5 w-5" />
+                  </Button>
+                )}
               </div>
             )}
           </div>

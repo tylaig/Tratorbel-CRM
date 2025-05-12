@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
 import ListView from "@/components/ListView";
+import ChatwootContacts from "@/components/ChatwootContacts";
 import FilterBar, { FilterOptions } from "@/components/FilterBar";
 import ApiConfigModal from "@/components/ApiConfigModal";
 import AddDealModal from "@/components/AddDealModal";
@@ -14,7 +15,7 @@ import { type Settings } from "@shared/schema";
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
+  const [viewMode, setViewMode] = useState<"kanban" | "list" | "contacts">("kanban");
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
   
@@ -108,7 +109,7 @@ export default function Dashboard() {
     setSidebarOpen(!sidebarOpen);
   };
   
-  const toggleViewMode = (mode: "kanban" | "list") => {
+  const toggleViewMode = (mode: "kanban" | "list" | "contacts") => {
     setViewMode(mode);
   };
   
@@ -127,15 +128,23 @@ export default function Dashboard() {
       
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 bg-gray-50 px-4 pt-6 overflow-y-auto">
-          <FilterBar 
-            onFilterChange={updateFilters}
-            activeFilters={filters}
-          />
+          {viewMode !== "contacts" && (
+            <FilterBar 
+              onFilterChange={updateFilters}
+              activeFilters={filters}
+            />
+          )}
           
-          {viewMode === "kanban" ? (
+          {viewMode === "kanban" && (
             <KanbanBoard pipelineStages={pipelineStages} />
-          ) : (
+          )}
+          
+          {viewMode === "list" && (
             <ListView pipelineStages={pipelineStages} />
+          )}
+          
+          {viewMode === "contacts" && (
+            <ChatwootContacts pipelineStages={pipelineStages} settings={settings} />
           )}
         </main>
       </div>

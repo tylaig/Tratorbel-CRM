@@ -86,66 +86,132 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
     
-    // If there's no destination or the item is dropped back in the same place
-    if (!destination || 
-        (destination.droppableId === source.droppableId && 
-         destination.index === source.index)) {
+    // Se não houver destino, não fazemos nada
+    if (!destination) {
       return;
     }
     
-    // Get the deal ID and target stage ID
+    // Get the deal ID and source/target stage IDs
     const dealId = parseInt(draggableId);
+    const sourceStageId = parseInt(source.droppableId);
     const targetStageId = parseInt(destination.droppableId);
     
     try {
       // Fazer uma cópia dos dados atuais
       if (!deals) return;
       
-      // Atualização otimista - modificamos a versão local do deal imediatamente
-      const updatedDeal = deals.find(d => d.id === dealId);
-      if (!updatedDeal) return;
+      // Encontrar o deal que está sendo movido
+      const movedDeal = deals.find(d => d.id === dealId);
+      if (!movedDeal) return;
       
-      const updatedDeals = deals.map(deal => 
-        deal.id === dealId ? { ...deal, stageId: targetStageId } : deal
-      );
+      // Dados atualizados que enviaremos para o servidor
+      const updateData: { dealId: number; stageId?: number; order?: number } = { 
+        dealId 
+      };
       
-      // Primeiro atualizamos o estado local para a UI responder imediatamente
-      queryClient.setQueryData(['/api/deals'], updatedDeals);
+      // Vamos criar uma cópia para manipular o novo estado do board
+      let newBoardData = [...boardData];
       
-      // Atualizar o board imediatamente para feedback visual
-      const stagesWithUpdatedDeals = boardData.map(stage => {
-        if (stage.id === targetStageId) {
+      // Caso 1: Reordenação dentro da mesma coluna - mover para cima ou para baixo
+      if (source.droppableId === destination.droppableId) {
+        // Encontrar o estágio relevante
+        const stageIndex = newBoardData.findIndex(s => s.id === sourceStageId);
+        if (stageIndex === -1) return;
+        
+        // Criar uma cópia dos deals desse estágio
+        const stageDeals = [...newBoardData[stageIndex].deals];
+        
+        // Remover o deal da posição atual
+        const [removedDeal] = stageDeals.splice(source.index, 1);
+        
+        // Inserir o deal na nova posição
+        stageDeals.splice(destination.index, 0, removedDeal);
+        
+        // Atualizar as posições dos deals
+        const updatedStageDeals = stageDeals.map((deal, index) => ({
+          ...deal,
+          order: index
+        }));
+        
+        // Atualizar o estado do estágio
+        newBoardData[stageIndex] = {
+          ...newBoardData[stageIndex],
+          deals: updatedStageDeals,
+          totalValue: updatedStageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0)
+        };
+        
+        // Definir a nova ordem para o servidor
+        updateData.order = destination.index;
+      } 
+      // Caso 2: Movendo entre colunas diferentes
+      else {
+        // Adicionar o dealId ao estágio de destino
+        updateData.stageId = targetStageId;
+        
+        // Atualizar o deal local com o novo stageId
+        const updatedDeals = deals.map(deal => 
+          deal.id === dealId ? { ...deal, stageId: targetStageId } : deal
+        );
+        
+        // Atualizar o queryCache local para feedback imediato
+        queryClient.setQueryData(['/api/deals'], updatedDeals);
+        
+        // Atualizar o board visualmente
+        newBoardData = newBoardData.map(stage => {
           // Adicionar o deal à nova coluna
-          const updatedDealsList = [...stage.deals, {...updatedDeal, stageId: targetStageId}];
-          return {
-            ...stage,
-            deals: updatedDealsList,
-            totalValue: updatedDealsList.reduce((sum, deal) => sum + (deal.value || 0), 0)
-          };
-        } else if (parseInt(source.droppableId) === stage.id) {
-          // Remover o deal da coluna antiga
-          const updatedDealsList = stage.deals.filter(deal => deal.id !== dealId);
-          return {
-            ...stage,
-            deals: updatedDealsList,
-            totalValue: updatedDealsList.reduce((sum, deal) => sum + (deal.value || 0), 0)
-          };
-        }
-        return stage;
-      });
+          if (stage.id === targetStageId) {
+            // Remover o deal da coluna antiga se já existir por algum motivo
+            const filteredDeals = stage.deals.filter(d => d.id !== dealId);
+            // Adicionar o deal na nova posição
+            const newDeals = [...filteredDeals];
+            newDeals.splice(destination.index, 0, {...movedDeal, stageId: targetStageId, order: destination.index});
+            
+            return {
+              ...stage,
+              deals: newDeals,
+              totalValue: newDeals.reduce((sum, d) => sum + (d.value || 0), 0)
+            };
+          } 
+          // Remover o deal da coluna original
+          else if (stage.id === sourceStageId) {
+            const newDeals = stage.deals.filter(d => d.id !== dealId);
+            return {
+              ...stage,
+              deals: newDeals,
+              totalValue: newDeals.reduce((sum, d) => sum + (d.value || 0), 0)
+            };
+          }
+          return stage;
+        });
+      }
       
       // Aplicar a mudança visual imediatamente
-      setBoardData(stagesWithUpdatedDeals);
+      setBoardData(newBoardData);
       
       // Enviar a atualização ao servidor em paralelo
-      updateDealMutation.mutate({ dealId, stageId: targetStageId }, {
+      updateDealMutation.mutate(updateData, {
         onSuccess: () => {
-          // Recarregar dados após confirmação do servidor (pode ser silencioso)
+          // Recarregar dados após confirmação do servidor
           queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+          
+          // Criar uma entrada no histórico de atividades para essa movimentação
+          const activityText = updateData.stageId 
+            ? `Negócio movido para a etapa "${boardData.find(s => s.id === targetStageId)?.name || 'Nova etapa'}"`
+            : `Negócio reordenado dentro da etapa "${boardData.find(s => s.id === sourceStageId)?.name || 'Atual'}"`;
+            
+          // Adicionar atividade de movimentação ao histórico
+          apiRequest('/api/lead-activities', {
+            method: 'POST',
+            data: {
+              dealId: dealId,
+              description: activityText,
+              activityType: 'move'
+            }
+          });
           
           toast({
             title: "Negócio movido",
-            description: "Negócio movido com sucesso para nova etapa.",
+            description: "Posição atualizada com sucesso.",
             variant: "default",
             duration: 1500,
           });

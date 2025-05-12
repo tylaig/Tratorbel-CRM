@@ -46,6 +46,7 @@ export const deals = pgTable("deals", {
   contactId: text("contact_id"),
   chatwootContactId: text("chatwoot_contact_id"),
   stageId: integer("stage_id").notNull(),
+  order: integer("order").default(0), // Posição do deal dentro do estágio para ordenação
   value: doublePrecision("value").default(0),
   quoteValue: doublePrecision("quote_value").default(0),
   status: text("status").default("in_progress"),
@@ -87,6 +88,7 @@ export const insertDealSchema = createInsertSchema(deals).pick({
   contactId: true,
   chatwootContactId: true,
   stageId: true,
+  order: true,
   value: true,
   quoteValue: true,
   status: true,

@@ -213,3 +213,21 @@ export const insertLeadActivitySchema = createInsertSchema(leadActivities).pick(
 
 export type InsertLeadActivity = z.infer<typeof insertLeadActivitySchema>;
 export type LeadActivity = typeof leadActivities.$inferSelect;
+
+// Marcas de máquinas
+export const machineBrands = pgTable("machine_brands", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertMachineBrandSchema = createInsertSchema(machineBrands).pick({
+  name: true,
+  description: true,
+  active: true,
+});
+
+export type InsertMachineBrand = z.infer<typeof insertMachineBrandSchema>;
+export type MachineBrand = typeof machineBrands.$inferSelect;

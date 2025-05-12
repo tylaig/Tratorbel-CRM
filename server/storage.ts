@@ -77,6 +77,7 @@ export class MemStorage implements IStorage {
   private lossReasonsList: Map<number, LossReason> = new Map();
   private quoteItemsList: Map<number, QuoteItem> = new Map();
   private leadActivitiesList: Map<number, LeadActivity> = new Map();
+  private machineBrandsList: Map<number, MachineBrand> = new Map();
   private appSettings: Settings | undefined;
   
   userCurrentId: number = 0;
@@ -86,6 +87,7 @@ export class MemStorage implements IStorage {
   lossReasonCurrentId: number = 0;
   quoteItemCurrentId: number = 0;
   leadActivityCurrentId: number = 0;
+  machineBrandCurrentId: number = 0;
   settingsCurrentId: number = 0;
 
   constructor() {
@@ -476,6 +478,46 @@ export class MemStorage implements IStorage {
 
   async deleteLeadActivity(id: number): Promise<boolean> {
     return this.leadActivitiesList.delete(id);
+  }
+
+  // Machine Brands (Marcas de máquinas)
+  async getMachineBrands(): Promise<MachineBrand[]> {
+    return Array.from(this.machineBrandsList.values());
+  }
+
+  async getMachineBrand(id: number): Promise<MachineBrand | undefined> {
+    return this.machineBrandsList.get(id);
+  }
+
+  async createMachineBrand(brand: InsertMachineBrand): Promise<MachineBrand> {
+    const id = ++this.machineBrandCurrentId;
+    const createdAt = new Date();
+    
+    const newBrand: MachineBrand = {
+      id,
+      createdAt,
+      name: brand.name,
+      description: brand.description || null,
+      active: brand.active === undefined ? true : brand.active,
+    };
+    
+    this.machineBrandsList.set(id, newBrand);
+    return newBrand;
+  }
+
+  async updateMachineBrand(id: number, brand: Partial<MachineBrand>): Promise<MachineBrand | undefined> {
+    const existingBrand = this.machineBrandsList.get(id);
+    
+    if (!existingBrand) return undefined;
+    
+    const updatedBrand = { ...existingBrand, ...brand };
+    this.machineBrandsList.set(id, updatedBrand);
+    
+    return updatedBrand;
+  }
+
+  async deleteMachineBrand(id: number): Promise<boolean> {
+    return this.machineBrandsList.delete(id);
   }
 }
 

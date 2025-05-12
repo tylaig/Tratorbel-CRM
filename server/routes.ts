@@ -9,7 +9,8 @@ import {
   insertClientMachineSchema,
   insertLossReasonSchema,
   insertQuoteItemSchema,
-  insertLeadActivitySchema
+  insertLeadActivitySchema,
+  insertMachineBrandSchema
 } from "@shared/schema";
 import { z } from "zod";
 

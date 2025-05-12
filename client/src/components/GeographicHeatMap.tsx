@@ -55,7 +55,7 @@ export default function GeographicHeatMap() {
   const { data: allDeals = [], isLoading: isLoadingDeals } = useQuery<Deal[]>({
     queryKey: ['/api/deals'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/deals');
+      const response = await apiRequest('/api/deals', 'GET');
       return (response as unknown) as Deal[];
     },
   });
@@ -64,7 +64,7 @@ export default function GeographicHeatMap() {
   const { data: wonDeals = [], isLoading: isLoadingWonDeals } = useQuery<Deal[]>({
     queryKey: ['/api/deals/sale-status/won'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/deals/sale-status/won');
+      const response = await apiRequest('/api/deals/sale-status/won', 'GET');
       return (response as unknown) as Deal[];
     },
   });
@@ -73,7 +73,7 @@ export default function GeographicHeatMap() {
   const { data: lostDeals = [], isLoading: isLoadingLostDeals } = useQuery<Deal[]>({
     queryKey: ['/api/deals/sale-status/lost'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/deals/sale-status/lost');
+      const response = await apiRequest('/api/deals/sale-status/lost', 'GET');
       return (response as unknown) as Deal[];
     },
   });

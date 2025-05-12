@@ -5,15 +5,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/formatters";
-import {
-  MapPin,
-  BarChart3,
-  TrendingUp,
-  Calendar,
-  MapIcon,
-  Home,
-  Building2,
-  Cpu
+import { 
+  MapPin, 
+  BarChart3, 
+  TrendingUp, 
+  Calendar, 
+  MapIcon, 
+  Home, 
+  Building2, 
+  HardDrive, 
+  Settings2,
+  Cpu 
 } from "lucide-react";
 
 export default function Heatmap() {

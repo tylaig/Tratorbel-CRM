@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { PlusIcon } from "lucide-react";
 
 interface AddDealModalProps {
@@ -78,6 +80,25 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
   });
   
   const contacts = contactsData?.payload || [];
+  
+  // Preencher os dados do contato selecionado quando disponível
+  useEffect(() => {
+    if (selectedContact) {
+      setName(selectedContact.name || "");
+      setCompanyName(selectedContact.company_name || "");
+      setContactId(selectedContact.id.toString());
+      
+      // Se tiver nome de empresa, assume que é pessoa jurídica
+      if (selectedContact.company_name) {
+        setIsCompany(true);
+        setCorporateName(selectedContact.company_name);
+      }
+      
+      // Preencher dados de contato
+      setEmail(selectedContact.email || "");
+      setPhone(selectedContact.phone_number || "");
+    }
+  }, [selectedContact]);
   
   const addDealMutation = useMutation({
     mutationFn: async () => {
@@ -250,88 +271,271 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="deal-name">Nome do Negócio</Label>
-            <Input
-              id="deal-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Digite o nome do negócio"
-            />
-          </div>
+        <Tabs defaultValue="basic" className="mt-2">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="basic">Básico</TabsTrigger>
+            <TabsTrigger value="client">Cliente</TabsTrigger>
+            <TabsTrigger value="address">Endereço</TabsTrigger>
+          </TabsList>
           
-          <div className="grid gap-2">
-            <Label htmlFor="deal-contact">Contato do Chatwoot</Label>
-            <Select value={contactId} onValueChange={handleContactChange}>
-              <SelectTrigger id="deal-contact">
-                <SelectValue placeholder="Selecione um contato" />
-              </SelectTrigger>
-              <SelectContent>
-                {contacts.length > 0 ? (
-                  contacts.map((contact) => (
-                    <SelectItem key={contact.id} value={contact.id.toString()}>
-                      {contact.name} {contact.email ? `(${contact.email})` : ''}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="none" disabled>Nenhum contato disponível</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Aba de Informações Básicas */}
+          <TabsContent value="basic" className="space-y-4 py-4">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="deal-name">Nome do Negócio</Label>
+                <Input
+                  id="deal-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Digite o nome do negócio"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="deal-contact">Contato do Chatwoot</Label>
+                <Select value={contactId} onValueChange={handleContactChange}>
+                  <SelectTrigger id="deal-contact">
+                    <SelectValue placeholder="Selecione um contato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contacts.length > 0 ? (
+                      contacts.map((contact) => (
+                        <SelectItem key={contact.id} value={contact.id.toString()}>
+                          {contact.name} {contact.email ? `(${contact.email})` : ''}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>Nenhum contato disponível</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="deal-stage">Etapa</Label>
+                <Select value={stageId} onValueChange={setStageId}>
+                  <SelectTrigger id="deal-stage">
+                    <SelectValue placeholder="Selecione uma etapa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pipelineStages.map((stage) => (
+                      <SelectItem key={stage.id} value={stage.id.toString()}>
+                        {stage.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="deal-value">Valor (R$)</Label>
+                <Input
+                  id="deal-value"
+                  value={value}
+                  onChange={handleValueChange}
+                  placeholder="0,00"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="deal-status">Status</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger id="deal-status">
+                    <SelectValue placeholder="Selecione um status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="in_progress">Em andamento</SelectItem>
+                    <SelectItem value="waiting">Aguardando</SelectItem>
+                    <SelectItem value="completed">Concluído</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </TabsContent>
           
-          <div className="grid gap-2">
-            <Label htmlFor="deal-company">Empresa</Label>
-            <Input
-              id="deal-company"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="Digite o nome da empresa"
-            />
-          </div>
+          {/* Aba de Informações do Cliente */}
+          <TabsContent value="client" className="space-y-4 py-4">
+            <div className="grid gap-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is-company"
+                  checked={isCompany}
+                  onCheckedChange={setIsCompany}
+                />
+                <Label htmlFor="is-company">
+                  {isCompany ? "Pessoa Jurídica" : "Pessoa Física"}
+                </Label>
+              </div>
+              
+              {isCompany ? (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="deal-company">Nome Fantasia</Label>
+                    <Input
+                      id="deal-company"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="Nome fantasia"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="deal-corporate">Razão Social</Label>
+                    <Input
+                      id="deal-corporate"
+                      value={corporateName}
+                      onChange={(e) => setCorporateName(e.target.value)}
+                      placeholder="Razão social"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="deal-cnpj">CNPJ</Label>
+                    <Input
+                      id="deal-cnpj"
+                      value={cnpj}
+                      onChange={(e) => setCnpj(e.target.value)}
+                      placeholder="00.000.000/0000-00"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="deal-cpf">CPF</Label>
+                    <Input
+                      id="deal-cpf"
+                      value={cpf}
+                      onChange={(e) => setCpf(e.target.value)}
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                </>
+              )}
+              
+              <div className="grid gap-2">
+                <Label htmlFor="deal-state-registration">Inscrição Estadual</Label>
+                <Input
+                  id="deal-state-registration"
+                  value={stateRegistration}
+                  onChange={(e) => setStateRegistration(e.target.value)}
+                  placeholder="Inscrição estadual"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="deal-client-code">Código Cliente</Label>
+                <Input
+                  id="deal-client-code"
+                  value={clientCode}
+                  onChange={(e) => setClientCode(e.target.value)}
+                  placeholder="Código do cliente"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="deal-email">Email</Label>
+                  <Input
+                    id="deal-email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="deal-phone">Telefone</Label>
+                  <Input
+                    id="deal-phone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
           
-          <div className="grid gap-2">
-            <Label htmlFor="deal-stage">Etapa</Label>
-            <Select value={stageId} onValueChange={setStageId}>
-              <SelectTrigger id="deal-stage">
-                <SelectValue placeholder="Selecione uma etapa" />
-              </SelectTrigger>
-              <SelectContent>
-                {pipelineStages.map((stage) => (
-                  <SelectItem key={stage.id} value={stage.id.toString()}>
-                    {stage.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="deal-value">Valor (R$)</Label>
-            <Input
-              id="deal-value"
-              value={value}
-              onChange={handleValueChange}
-              placeholder="0,00"
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="deal-status">Status</Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger id="deal-status">
-                <SelectValue placeholder="Selecione um status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="in_progress">Em andamento</SelectItem>
-                <SelectItem value="waiting">Aguardando</SelectItem>
-                <SelectItem value="completed">Concluído</SelectItem>
-                <SelectItem value="canceled">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+          {/* Aba de Endereço */}
+          <TabsContent value="address" className="space-y-4 py-4">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="deal-address">Endereço</Label>
+                <Input
+                  id="deal-address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Rua, Avenida, etc."
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="deal-address-number">Número</Label>
+                  <Input
+                    id="deal-address-number"
+                    value={addressNumber}
+                    onChange={(e) => setAddressNumber(e.target.value)}
+                    placeholder="Número"
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="deal-address-complement">Complemento</Label>
+                  <Input
+                    id="deal-address-complement"
+                    value={addressComplement}
+                    onChange={(e) => setAddressComplement(e.target.value)}
+                    placeholder="Complemento"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="deal-neighborhood">Bairro</Label>
+                <Input
+                  id="deal-neighborhood"
+                  value={neighborhood}
+                  onChange={(e) => setNeighborhood(e.target.value)}
+                  placeholder="Bairro"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="deal-city">Cidade</Label>
+                  <Input
+                    id="deal-city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Cidade"
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="deal-state">Estado</Label>
+                  <Input
+                    id="deal-state"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    placeholder="Estado"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="deal-zipcode">CEP</Label>
+                <Input
+                  id="deal-zipcode"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  placeholder="00000-000"
+                />
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

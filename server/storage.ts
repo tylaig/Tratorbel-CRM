@@ -636,20 +636,26 @@ export class DatabaseStorage implements IStorage {
 
   async searchLeads(query: string): Promise<Lead[]> {
     console.log(`Buscando leads com o termo: "${query}"`);
-    // Verificamos se a busca é por CPF ou CNPJ - neste caso, buscamos exatamente
-    const isCpfOrCnpj = query.replace(/[^0-9]/g, '').length > 8;
+    
+    // Normalização da consulta (remover acentos, converter para minúsculas)
+    const normalizedQuery = query.toLowerCase().trim();
+    
+    // Verifica se a busca é por CPF ou CNPJ - buscar números exatos
+    const numericQuery = query.replace(/[^0-9]/g, '');
+    const isCpfOrCnpj = numericQuery.length > 8;
     
     if (isCpfOrCnpj) {
-      const numericQuery = query.replace(/[^0-9]/g, '');
       console.log(`Detectada busca por documento: ${numericQuery}`);
       
+      // Busca exata para documentos
       const results = await db
         .select()
         .from(leads)
         .where(
           or(
-            like(leads.cnpj, `%${numericQuery}%`),
-            like(leads.cpf, `%${numericQuery}%`)
+            // Procura pelo documento completo ou pelo final do documento
+            like(leads.cnpj, `%${numericQuery}`),
+            like(leads.cpf, `%${numericQuery}`)
           )
         )
         .orderBy(desc(leads.updatedAt));
@@ -658,30 +664,78 @@ export class DatabaseStorage implements IStorage {
       return results;
     }
     
-    // Busca normal por texto em vários campos
-    const searchTerm = `%${query}%`;
-    console.log(`Realizando busca por texto: "${searchTerm}"`);
+    // Se a busca parece ser por telefone (muitos números)
+    if (numericQuery.length >= 6) {
+      console.log(`Detectada busca por telefone: ${numericQuery}`);
+      
+      const results = await db
+        .select()
+        .from(leads)
+        .where(
+          like(leads.phone, `%${numericQuery}%`)
+        )
+        .orderBy(desc(leads.updatedAt));
+      
+      // Se encontrou resultados por telefone, já retorna
+      if (results.length > 0) {
+        console.log(`Encontrados ${results.length} resultados para busca por telefone`);
+        return results;
+      }
+    }
     
-    const results = await db
+    // Busca normal por texto em vários campos, priorizando com estreitamento do termo
+    const exactSearchTerm = normalizedQuery;
+    const partialSearchTerm = `%${normalizedQuery}%`;
+    
+    console.log(`Realizando busca por texto: "${partialSearchTerm}"`);
+    
+    // Primeiro tentamos uma busca mais precisa (começo de palavras)
+    const exactResults = await db
       .select()
       .from(leads)
       .where(
         or(
-          like(leads.name, searchTerm),
-          like(leads.companyName, searchTerm),
-          like(leads.email, searchTerm),
-          like(leads.phone, searchTerm),
-          like(leads.address, searchTerm),
-          like(leads.city, searchTerm),
-          like(leads.state, searchTerm),
-          like(leads.corporateName, searchTerm),
-          like(leads.clientCode, searchTerm)
+          // Priorizamos correspondências exatas
+          eq(leads.name, exactSearchTerm),
+          eq(leads.companyName, exactSearchTerm),
+          eq(leads.email, exactSearchTerm),
+          eq(leads.phone, exactSearchTerm),
+          // Depois, correspondências de início de palavra
+          like(leads.name, `${normalizedQuery}%`), 
+          like(leads.companyName, `${normalizedQuery}%`),
+          like(leads.email, `${normalizedQuery}%`)
         )
       )
       .orderBy(desc(leads.updatedAt));
     
-    console.log(`Encontrados ${results.length} resultados para busca por texto`);
-    return results;
+    // Se encontramos resultados exatos, retornamos eles imediatamente
+    if (exactResults.length > 0) {
+      console.log(`Encontrados ${exactResults.length} resultados exatos`);
+      return exactResults;
+    }
+    
+    // Caso contrário, realizamos uma busca mais ampla
+    const partialResults = await db
+      .select()
+      .from(leads)
+      .where(
+        or(
+          like(leads.name, partialSearchTerm),
+          like(leads.companyName, partialSearchTerm),
+          like(leads.email, partialSearchTerm),
+          like(leads.phone, partialSearchTerm),
+          like(leads.address, partialSearchTerm),
+          like(leads.city, partialSearchTerm),
+          like(leads.state, partialSearchTerm),
+          like(leads.corporateName, partialSearchTerm),
+          like(leads.clientCode, partialSearchTerm)
+        )
+      )
+      .orderBy(desc(leads.updatedAt))
+      .limit(20); // Limitamos para evitar muitos resultados irrelevantes
+    
+    console.log(`Encontrados ${partialResults.length} resultados parciais`);
+    return partialResults;
   }
 
   // Pipeline Stages

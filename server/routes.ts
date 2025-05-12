@@ -383,6 +383,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para criar novo contato no Chatwoot (via WooCommerce)
+  apiRouter.post("/chatwoot/contacts", async (req: Request, res: Response) => {
+    try {
+      const settings = await storage.getSettings();
+      
+      if (!settings || !settings.chatwootApiKey || !settings.chatwootUrl || !settings.accountId) {
+        return res.status(400).json({ message: "Chatwoot API not configured" });
+      }
+      
+      // Validar os dados necessários para criar um contato
+      const { name, email, phone_number, company_name } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      
+      // Preparar os dados para enviar ao Chatwoot
+      const contactData = {
+        name: name,
+        email: email || undefined,
+        phone_number: phone_number || undefined,
+        custom_attributes: {
+          company_name: company_name || undefined,
+          source: "WooCommerce (manual)",
+          created_via: "CRM"
+        }
+      };
+      
+      // Criar o contato no Chatwoot
+      const chatwootApiUrl = `${settings.chatwootUrl}/api/v1/accounts/${settings.accountId}/contacts`;
+      const response = await axios.post(
+        chatwootApiUrl,
+        contactData,
+        {
+          headers: {
+            'api_access_token': settings.chatwootApiKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      // Verificar se o contato foi criado com sucesso
+      if (response.status === 200 || response.status === 201) {
+        // Retornar os dados do contato criado
+        res.status(201).json({
+          message: "Contato criado com sucesso no WooCommerce",
+          contact: response.data
+        });
+      } else {
+        res.status(response.status).json({
+          message: "Erro ao criar contato no WooCommerce",
+          apiResponse: response.data
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao criar contato no Chatwoot:", error);
+      
+      if (axios.isAxiosError(error)) {
+        res.status(error.response?.status || 500).json({
+          message: "Erro ao criar contato no WooCommerce",
+          details: error.response?.data ? JSON.stringify(error.response.data) : error.message
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Erro interno ao criar contato no WooCommerce",
+          details: error instanceof Error ? error.message : "Erro desconhecido"
+        });
+      }
+    }
+  });
+  
   // Busca avançada de leads/contatos
   apiRouter.get("/leads/search", async (req: Request, res: Response) => {
     try {

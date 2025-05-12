@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Deal, PipelineStage, Settings } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,33 @@ import {
   PlusCircleIcon,
   Edit,
   Check,
-  X
+  X,
+  UserPlus,
+  Loader2
 } from "lucide-react";
 import AddDealModal from "@/components/AddDealModal";
 import { toast } from "@/hooks/use-toast";
 import { formatPhoneNumber } from "@/lib/formatters";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 interface ChatwootContactsProps {
   pipelineStages: PipelineStage[];

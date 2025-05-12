@@ -441,7 +441,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
                     <SelectValue placeholder="Selecione uma etapa" />
                   </SelectTrigger>
                   <SelectContent>
-                    {pipelineStages.map((stage) => (
+                    {availablePipelineStages.map((stage) => (
                       <SelectItem key={stage.id} value={stage.id.toString()}>
                         {stage.name}
                       </SelectItem>

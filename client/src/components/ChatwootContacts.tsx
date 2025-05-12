@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Deal, PipelineStage } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Deal, PipelineStage, Settings } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -11,12 +11,13 @@ import {
   Phone,
   Mail,
   Search,
-  UserIcon,
-  DollarSign,
   PlusCircleIcon,
+  Edit,
+  Check,
+  X
 } from "lucide-react";
 import AddDealModal from "@/components/AddDealModal";
-import { Settings } from "@shared/schema";
+import { toast } from "@/hooks/use-toast";
 
 interface ChatwootContactsProps {
   pipelineStages: PipelineStage[];
@@ -35,6 +36,8 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<ChatwootContact | null>(null);
+  const [editingContact, setEditingContact] = useState<ChatwootContact | null>(null);
+  const [editName, setEditName] = useState("");
   
   // Encontre o estágio padrão para contatos do Chatwoot
   const defaultStage = pipelineStages.find(stage => stage.isDefault);
@@ -83,6 +86,51 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
     });
   };
   
+  // Função para iniciar a edição de um contato
+  const startEditingContact = (contact: ChatwootContact) => {
+    setEditingContact(contact);
+    setEditName(contact.name || "");
+  };
+  
+  // Função para salvar a alteração do nome do contato
+  const saveContactName = async () => {
+    if (!editingContact || !editName.trim()) return;
+    
+    try {
+      // Lógica para atualizar o nome do contato via API do Chatwoot
+      await apiRequest('PUT', `/api/chatwoot/contact/${editingContact.id}`, {
+        name: editName.trim()
+      });
+      
+      // Reset do estado de edição
+      setEditingContact(null);
+      setEditName("");
+      
+      // Atualizar cache de contatos
+      queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
+      
+      toast({
+        title: "Nome atualizado",
+        description: "O nome do contato foi atualizado com sucesso.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar nome do contato:", error);
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível atualizar o nome do contato. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Função para cancelar a edição
+  const cancelEditing = () => {
+    setEditingContact(null);
+    setEditName("");
+  };
+  
+  // Renderização para quando não há conexão com Chatwoot
   if (!settings?.chatwootApiKey) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -97,6 +145,7 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
     );
   }
   
+  // Renderização durante o carregamento
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center p-8">
@@ -141,47 +190,88 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
             filteredContacts.map((contact) => (
               <Card key={contact.id} className="p-4 hover:shadow-md transition-shadow">
                 <div className="flex justify-between">
-                  <h3 className="font-medium text-gray-900">{contact.name}</h3>
-                  {isContactInDeal(contact.id) ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      No funil
-                    </Badge>
+                  {editingContact && editingContact.id === contact.id ? (
+                    <div className="flex items-center gap-2 w-full">
+                      <Input 
+                        value={editName} 
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="h-8"
+                        autoFocus
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-green-600"
+                        onClick={saveContactName}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-red-600"
+                        onClick={cancelEditing}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={() => {
-                        setSelectedContact(contact);
-                        setIsAddDealModalOpen(true);
-                      }}
-                    >
-                      <PlusCircleIcon className="h-3.5 w-3.5" />
-                      <span>Criar negócio</span>
-                    </Button>
+                    <>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-gray-900">{contact.name}</h3>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="h-6 w-6 opacity-70 hover:opacity-100" 
+                          onClick={() => startEditingContact(contact)}
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      {isContactInDeal(contact.id) ? (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          No funil
+                        </Badge>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-1"
+                          onClick={() => {
+                            setSelectedContact(contact);
+                            setIsAddDealModalOpen(true);
+                          }}
+                        >
+                          <PlusCircleIcon className="h-3.5 w-3.5" />
+                          <span>Criar negócio</span>
+                        </Button>
+                      )}
+                    </>
                   )}
                 </div>
                 
-                <div className="mt-2 space-y-1">
-                  {contact.company_name && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Building className="mr-2 h-4 w-4 text-gray-400" />
-                      <span>{contact.company_name}</span>
-                    </div>
-                  )}
-                  {contact.email && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="mr-2 h-4 w-4 text-gray-400" />
-                      <span>{contact.email}</span>
-                    </div>
-                  )}
-                  {contact.phone_number && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Phone className="mr-2 h-4 w-4 text-gray-400" />
-                      <span>{contact.phone_number}</span>
-                    </div>
-                  )}
-                </div>
+                {!(editingContact && editingContact.id === contact.id) && (
+                  <div className="mt-2 space-y-1">
+                    {contact.company_name && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Building className="mr-2 h-4 w-4 text-gray-400" />
+                        <span>{contact.company_name}</span>
+                      </div>
+                    )}
+                    {contact.email && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Mail className="mr-2 h-4 w-4 text-gray-400" />
+                        <span>{contact.email}</span>
+                      </div>
+                    )}
+                    {contact.phone_number && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Phone className="mr-2 h-4 w-4 text-gray-400" />
+                        <span>{contact.phone_number}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </Card>
             ))
           ) : (

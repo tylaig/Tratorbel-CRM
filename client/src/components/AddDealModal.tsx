@@ -272,9 +272,10 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
         </DialogHeader>
         
         <Tabs defaultValue="basic" className="mt-2">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="basic">Básico</TabsTrigger>
             <TabsTrigger value="client">Cliente</TabsTrigger>
+            <TabsTrigger value="city">Cidade</TabsTrigger>
             <TabsTrigger value="address">Endereço</TabsTrigger>
           </TabsList>
           
@@ -456,6 +457,20 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
                 </div>
               </div>
             </div>
+          </TabsContent>
+          
+          {/* Aba de Cidade */}
+          <TabsContent value="city" className="space-y-4 py-4">
+            <ClientCities 
+              dealId={null}
+              isExisting={false}
+              currentCity={city}
+              currentState={state}
+              onCityChange={(cityValue, stateValue) => {
+                setCity(cityValue);
+                setState(stateValue);
+              }}
+            />
           </TabsContent>
           
           {/* Aba de Endereço */}

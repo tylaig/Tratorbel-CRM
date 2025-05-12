@@ -118,7 +118,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       // Filtrar por motivo de perda
       if (activeFilters.lossReason) {
         filteredDeals = filteredDeals.filter(deal => 
-          deal.saleStatus === 'lost' && deal.lossReason === activeFilters.lossReason
+          deal.saleStatus === 'lost' && deal.lostReason === activeFilters.lossReason
         );
       }
       

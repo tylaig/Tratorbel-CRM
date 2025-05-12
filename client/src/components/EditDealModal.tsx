@@ -71,7 +71,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const [status, setStatus] = useState("in_progress");
   
   // Tipo de cliente
-  const [isCompany, setIsCompany] = useState(false);
+  const [clientType, setClientType] = useState("person"); // "person", "company", "consumer"
+  const [isCompany, setIsCompany] = useState(false); // campo legado
   
   // Campos pessoa jurídica
   const [cnpj, setCnpj] = useState("");
@@ -111,7 +112,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setStatus(deal.status || "in_progress");
       
       // Tipo de cliente
-      setIsCompany(deal.isCompany || false);
+      setClientType(deal.clientType || "person");
+      setIsCompany(deal.isCompany || false); // legado
       
       // Campos pessoa jurídica
       setCnpj(deal.cnpj || "");
@@ -214,13 +216,14 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       status,
       
       // Atualizar tipo de cliente
-      isCompany,
+      clientType,
+      isCompany: clientType === "company", // manter compatibilidade
       
       // Campos específicos tipo de cliente
-      cnpj: isCompany ? cnpj : null,
-      corporateName: isCompany ? corporateName : null,
-      cpf: !isCompany ? cpf : null,
-      stateRegistration: !isCompany ? stateRegistration : null,
+      cnpj: clientType === "company" ? cnpj : null,
+      corporateName: clientType === "company" ? corporateName : null,
+      cpf: clientType === "person" ? cpf : null,
+      stateRegistration: clientType === "person" ? stateRegistration : null,
       
       // Dados de contato
       clientCode,
@@ -427,16 +430,41 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
               {/* Sub-aba Cliente */}
               <TabsContent value="client" className="pt-2">
                 <div className="grid gap-4 py-2">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="client-type"
-                      checked={isCompany}
-                      onCheckedChange={toggleClientType}
-                    />
-                    <Label htmlFor="client-type">Pessoa Jurídica</Label>
+                  <div className="grid gap-2">
+                    <Label htmlFor="client-type">Tipo de Cliente</Label>
+                    <Select 
+                      value={clientType} 
+                      onValueChange={(value) => {
+                        setClientType(value);
+                        setIsCompany(value === "company"); // manter compatibilidade
+                        
+                        // Resetar campos não relevantes quando muda o tipo
+                        if (value === "person") {
+                          setCnpj("");
+                          setCorporateName("");
+                        } else if (value === "company") {
+                          setCpf("");
+                          setStateRegistration("");
+                        } else if (value === "consumer") {
+                          setCnpj("");
+                          setCorporateName("");
+                          setCpf("");
+                          setStateRegistration("");
+                        }
+                      }}
+                    >
+                      <SelectTrigger id="client-type">
+                        <SelectValue placeholder="Selecione o tipo de cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="person">Pessoa Física</SelectItem>
+                        <SelectItem value="company">Pessoa Jurídica</SelectItem>
+                        <SelectItem value="consumer">Consumidor Final</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   
-                  {isCompany ? (
+                  {clientType === "company" ? (
                     // Campos pessoa jurídica
                     <>
                       <div className="grid gap-2">
@@ -458,7 +486,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                         />
                       </div>
                     </>
-                  ) : (
+                  ) : clientType === "person" ? (
                     // Campos pessoa física
                     <>
                       <div className="grid gap-2">
@@ -480,6 +508,11 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                         />
                       </div>
                     </>
+                  ) : (
+                    // Consumidor final não tem campos específicos
+                    <div className="rounded-md bg-gray-50 p-4 text-sm text-gray-500">
+                      Este tipo de cliente não requer documentos específicos.
+                    </div>
                   )}
                   
                   <div className="grid gap-2">

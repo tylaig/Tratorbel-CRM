@@ -51,7 +51,8 @@ export const deals = pgTable("deals", {
   quoteValue: doublePrecision("quote_value").default(0),
   status: text("status").default("in_progress"),
   // Novos campos para clientes
-  isCompany: boolean("is_company").default(false),
+  clientType: text("client_type").default("person"), // "person" (Pessoa Física), "company" (Pessoa Jurídica), "consumer" (Consumidor Final)
+  isCompany: boolean("is_company").default(false), // campo legado (manter por compatibilidade)
   cnpj: text("cnpj"),
   corporateName: text("corporate_name"), // razão social
   cpf: text("cpf"),
@@ -94,6 +95,7 @@ export const insertDealSchema = createInsertSchema(deals).pick({
   quoteValue: true,
   status: true,
   // Novos campos do cliente
+  clientType: true,
   isCompany: true,
   cnpj: true,
   corporateName: true,

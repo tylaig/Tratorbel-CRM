@@ -101,34 +101,64 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
       // Fazer uma cópia dos dados atuais
       if (!deals) return;
       
-      // Atualização otimista - atualizamos a UI antes da resposta do servidor
+      // Atualização otimista - modificamos a versão local do deal imediatamente
+      const updatedDeal = deals.find(d => d.id === dealId);
+      if (!updatedDeal) return;
+      
       const updatedDeals = deals.map(deal => 
         deal.id === dealId ? { ...deal, stageId: targetStageId } : deal
       );
       
-      // Atualizar o cache local para feedback visual imediato
+      // Primeiro atualizamos o estado local para a UI responder imediatamente
       queryClient.setQueryData(['/api/deals'], updatedDeals);
       
-      // Forçar reorganização do quadro
-      organizeBoardData();
+      // Atualizar o board imediatamente para feedback visual
+      const stagesWithUpdatedDeals = boardData.map(stage => {
+        if (stage.id === targetStageId) {
+          // Adicionar o deal à nova coluna
+          const updatedDealsList = [...stage.deals, {...updatedDeal, stageId: targetStageId}];
+          return {
+            ...stage,
+            deals: updatedDealsList,
+            totalValue: updatedDealsList.reduce((sum, deal) => sum + (deal.value || 0), 0)
+          };
+        } else if (parseInt(source.droppableId) === stage.id) {
+          // Remover o deal da coluna antiga
+          const updatedDealsList = stage.deals.filter(deal => deal.id !== dealId);
+          return {
+            ...stage,
+            deals: updatedDealsList,
+            totalValue: updatedDealsList.reduce((sum, deal) => sum + (deal.value || 0), 0)
+          };
+        }
+        return stage;
+      });
       
-      // Enviar atualização para o servidor
-      await updateDealMutation.mutateAsync({ dealId, stageId: targetStageId });
+      // Aplicar a mudança visual imediatamente
+      setBoardData(stagesWithUpdatedDeals);
       
-      // Invalidar e buscar dados novamente após salvar no servidor
-      await queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-      
-      toast({
-        title: "Negócio movido",
-        description: "Negócio movido com sucesso para nova etapa.",
-        variant: "default",
-        duration: 1500,
+      // Enviar a atualização ao servidor em paralelo
+      updateDealMutation.mutate({ dealId, stageId: targetStageId }, {
+        onSuccess: () => {
+          // Recarregar dados após confirmação do servidor (pode ser silencioso)
+          queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+          
+          toast({
+            title: "Negócio movido",
+            description: "Negócio movido com sucesso para nova etapa.",
+            variant: "default",
+            duration: 1500,
+          });
+        }
       });
     } catch (error) {
       console.error("Erro ao mover negócio:", error);
       
-      // Em caso de erro, recarregar todos os dados
-      await queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      // Restaurar a disposição original do quadro
+      organizeBoardData();
+      
+      // Recarregar todos os dados do servidor de forma assíncrona
+      queryClient.fetchQuery({ queryKey: ['/api/deals'] });
       
       toast({
         title: "Erro ao mover",

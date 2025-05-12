@@ -50,7 +50,7 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
   const { data, isLoading } = useQuery({
     queryKey: ['/api/lead-activities', deal?.id],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/lead-activities/${deal?.id}`);
+      const response = await apiRequest(`/api/lead-activities/${deal?.id}`, 'GET');
       return (response as unknown) as LeadActivity[];
     },
     enabled: !!deal?.id,
@@ -61,7 +61,7 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
 
   const createActivityMutation = useMutation({
     mutationFn: (newActivity: { dealId: number; activityType: string; description: string; createdBy: string | null }) => 
-      apiRequest('POST', '/api/lead-activities', newActivity),
+      apiRequest('/api/lead-activities', 'POST', newActivity),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/lead-activities', deal?.id] });
       setDescription('');

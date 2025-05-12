@@ -87,7 +87,7 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
         payload.lostNotes = notes;
       }
       
-      return await apiRequest('PUT', `/api/deals/${deal.id}`, payload);
+      return await apiRequest(`/api/deals/${deal.id}`, 'PUT', payload);
     },
     onSuccess: () => {
       toast({

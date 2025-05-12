@@ -642,6 +642,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete quote item" });
     }
   });
+  
+  // Machine Brands Routes
+  apiRouter.get("/machine-brands", async (req: Request, res: Response) => {
+    try {
+      const brands = await storage.getMachineBrands();
+      res.json(brands);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch machine brands" });
+    }
+  });
+  
+  apiRouter.get("/machine-brands/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const brand = await storage.getMachineBrand(id);
+      if (!brand) {
+        return res.status(404).json({ message: "Machine brand not found" });
+      }
+      
+      res.json(brand);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch machine brand" });
+    }
+  });
+  
+  apiRouter.post("/machine-brands", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertMachineBrandSchema.parse(req.body);
+      const brand = await storage.createMachineBrand(validatedData);
+      res.status(201).json(brand);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create machine brand" });
+      }
+    }
+  });
+  
+  apiRouter.put("/machine-brands/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const validatedData = insertMachineBrandSchema.partial().parse(req.body);
+      const updatedBrand = await storage.updateMachineBrand(id, validatedData);
+      
+      if (!updatedBrand) {
+        return res.status(404).json({ message: "Machine brand not found" });
+      }
+      
+      res.json(updatedBrand);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update machine brand" });
+      }
+    }
+  });
+  
+  apiRouter.delete("/machine-brands/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const success = await storage.deleteMachineBrand(id);
+      if (!success) {
+        return res.status(404).json({ message: "Machine brand not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete machine brand" });
+    }
+  });
 
   app.use("/api", apiRouter);
   

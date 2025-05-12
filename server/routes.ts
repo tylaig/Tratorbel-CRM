@@ -11,6 +11,7 @@ import {
   insertQuoteItemSchema,
   insertLeadActivitySchema,
   insertMachineBrandSchema,
+  insertLeadSchema,
   Deal
 } from "@shared/schema";
 import { z } from "zod";

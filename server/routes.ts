@@ -8,7 +8,8 @@ import {
   insertSettingsSchema,
   insertClientMachineSchema,
   insertLossReasonSchema,
-  insertQuoteItemSchema
+  insertQuoteItemSchema,
+  insertLeadActivitySchema
 } from "@shared/schema";
 import { z } from "zod";
 

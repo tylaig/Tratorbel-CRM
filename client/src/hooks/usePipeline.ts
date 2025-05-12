@@ -19,9 +19,15 @@ type ExtendedDeal = Deal & {
   clientType?: string;
 };
 
+// Estendendo a interface FilterOptions para incluir os campos de ordenação
+interface InternalFilterOptions extends FilterOptions {
+  sortBy?: string;
+  sortOrder?: string;
+}
+
 export function usePipeline() {
   const [filteredDeals, setFilteredDeals] = useState<ExtendedDeal[]>([]);
-  const [filters, setFilters] = useState<FilterOptions>({
+  const [filters, setFilters] = useState<InternalFilterOptions>({
     search: "",
     status: [],
     sortBy: "date",
@@ -29,7 +35,7 @@ export function usePipeline() {
     hideClosed: true // Por padrão, escondemos negócios fechados (vendidos ou perdidos)
   });
   
-  // Fetch deals com configurações para garantir atualização imediata
+  // Buscar negócios com configurações para garantir atualização imediata
   const { data: allDeals = [], isLoading: isDealsLoading } = useQuery<ExtendedDeal[]>({
     queryKey: ['/api/deals'],
     staleTime: 0,                // Considerar dados obsoletos imediatamente (sempre buscar dados frescos)
@@ -37,7 +43,7 @@ export function usePipeline() {
     refetchOnWindowFocus: true,  // Recarregar quando a janela ganhar foco
   });
   
-  // Fetch pipeline stages com configurações para garantir atualização imediata
+  // Buscar estágios do pipeline com configurações para garantir atualização imediata
   const { data: pipelineStages = [], isLoading: isStagesLoading } = useQuery<PipelineStage[]>({
     queryKey: ['/api/pipeline-stages'],
     staleTime: 0,                // Considerar dados obsoletos imediatamente (sempre buscar dados frescos)
@@ -45,11 +51,11 @@ export function usePipeline() {
     refetchOnWindowFocus: true,  // Recarregar quando a janela ganhar foco
   });
   
-  // Apply filters and sorting to deals
+  // Aplicar filtros e ordenação aos negócios
   useEffect(() => {
     let result = [...allDeals];
     
-    // Apply search filter
+    // Aplicar filtro de pesquisa textual
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       result = result.filter(deal => {
@@ -75,14 +81,27 @@ export function usePipeline() {
       });
     }
     
-    // Apply status filters (para o campo status)
+    // Aplicar filtros de status
     if (filters.status && filters.status.length > 0) {
-      result = result.filter(deal => {
-        // Verificar se o status do negócio está no array de filtros
-        const matched = deal.status && filters.status.includes(deal.status);
-        console.log(`Deal ${deal.id} (${deal.name}) has status ${deal.status}, match: ${matched}`);
-        return matched;
-      });
+      result = result.filter(deal => 
+        deal.status && filters.status.includes(deal.status)
+      );
+    }
+    
+    // Aplicar filtro de motivo de ganho
+    if (filters.winReason) {
+      result = result.filter(deal => 
+        deal.saleStatus === 'won' && 
+        deal.salePerformance === filters.winReason
+      );
+    }
+    
+    // Aplicar filtro de motivo de perda
+    if (filters.lossReason) {
+      result = result.filter(deal => 
+        deal.saleStatus === 'lost' && 
+        deal.lostReason === filters.lossReason
+      );
     }
     
     // Filtro específico para excluir negócios ganhos ou perdidos do pipeline
@@ -93,33 +112,35 @@ export function usePipeline() {
       );
     }
     
-    // Apply stage filter
+    // Aplicar filtro de estágio
     if (filters.stageId !== undefined) {
       result = result.filter(deal => deal.stageId === filters.stageId);
     }
     
-    // Apply sorting
-    result.sort((a, b) => {
-      const sortMultiplier = filters.sortOrder === "asc" ? 1 : -1;
-      
-      switch (filters.sortBy) {
-        case "name":
-          return sortMultiplier * (a.name || "").localeCompare(b.name || "");
-        case "value":
-          return sortMultiplier * ((a.value || 0) - (b.value || 0));
-        case "company":
-          // Use companyName que já vem no objeto
-          const companyA = a.companyName || "";
-          const companyB = b.companyName || ""; 
-          return sortMultiplier * companyA.localeCompare(companyB);
-        case "date":
-        default:
-          // Se a data for inválida, use a data atual como fallback
-          const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : Date.now();
-          const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : Date.now();
-          return sortMultiplier * (dateA - dateB);
-      }
-    });
+    // Aplicar ordenação
+    if (filters.sortBy && filters.sortOrder) {
+      result.sort((a, b) => {
+        const sortMultiplier = filters.sortOrder === "asc" ? 1 : -1;
+        
+        switch (filters.sortBy) {
+          case "name":
+            return sortMultiplier * (a.name || "").localeCompare(b.name || "");
+          case "value":
+            return sortMultiplier * ((a.value || 0) - (b.value || 0));
+          case "company":
+            // Use companyName que já vem no objeto
+            const companyA = a.companyName || "";
+            const companyB = b.companyName || ""; 
+            return sortMultiplier * companyA.localeCompare(companyB);
+          case "date":
+          default:
+            // Se a data for inválida, use a data atual como fallback
+            const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : Date.now();
+            const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : Date.now();
+            return sortMultiplier * (dateA - dateB);
+        }
+      });
+    }
     
     setFilteredDeals(result);
     console.log("Filtros aplicados:", filters);

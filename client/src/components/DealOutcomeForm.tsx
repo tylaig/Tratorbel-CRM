@@ -82,8 +82,11 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
         value: numericValue,
       };
       
-      // Adicionar motivo de perda se aplicável
-      if (outcome === "lost") {
+      // Adicionar informações específicas com base no resultado
+      if (outcome === "won") {
+        // Adicionar o desempenho da venda quando o negócio for ganho
+        payload.salePerformance = salePerformance;
+      } else if (outcome === "lost") {
         // Se for "Outro", usar o motivo personalizado
         payload.lostReason = lossReason === "other" ? customReason : lossReason;
         payload.lostNotes = notes;
@@ -123,6 +126,15 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
       toast({
         title: "Selecione um Resultado",
         description: "Você precisa selecionar se o negócio foi ganho ou perdido.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (outcome === "won" && !salePerformance) {
+      toast({
+        title: "Desempenho Obrigatório",
+        description: "Por favor, indique se a venda foi abaixo, de acordo ou acima da cotação.",
         variant: "destructive",
       });
       return;
@@ -187,7 +199,7 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
             
             <div className="space-y-2">
               <Label htmlFor="sale-performance">Desempenho da Venda</Label>
-              <Select value={salePerformance} onValueChange={setSalePerformance}>
+              <Select value={salePerformance} onValueChange={(value) => setSalePerformance(value as "below_quote" | "according_to_quote" | "above_quote" | "")}>
                 <SelectTrigger id="sale-performance">
                   <SelectValue placeholder="Selecione o desempenho" />
                 </SelectTrigger>

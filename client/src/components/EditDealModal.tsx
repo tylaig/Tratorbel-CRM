@@ -207,7 +207,14 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         const dealUpdateData: Partial<Deal> = {
           name,
           stageId: parseInt(stageId),
-          value: parseFloat(value.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0,
+          // Se temos um valor de cotação selecionado, use-o; caso contrário, use o valor do campo
+          value: selectedQuoteValue !== null 
+            ? selectedQuoteValue 
+            : parseFloat(value.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0,
+          // Sempre manter o quoteValue sincronizado com o valor quando o deal é atualizado
+          quoteValue: selectedQuoteValue !== null 
+            ? selectedQuoteValue 
+            : parseFloat(value.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0,
           status,
           notes,
         };
@@ -228,6 +235,13 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const updateDealMutation = useMutation({
     mutationFn: async (data: Partial<Deal>) => {
       if (!deal) return null;
+      
+      // Incluir o valor da cotação selecionada nos dados a serem atualizados
+      if (selectedQuoteValue !== null) {
+        data.quoteValue = selectedQuoteValue;
+        data.value = selectedQuoteValue;
+      }
+      
       return apiRequest(`/api/deals/${deal.id}`, "PUT", data);
     },
     onSuccess: () => {
@@ -283,7 +297,11 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const handleSave = () => {
     if (!deal) return;
     
-    const parsedValue = parseFloat(value.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0;
+    // Usar o valor da cotação selecionada, se disponível
+    // Se não, usar o valor formatado no campo (caso seja um negócio existente sem cotação)
+    const parsedValue = selectedQuoteValue !== null 
+      ? selectedQuoteValue 
+      : parseFloat(value.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0;
     
     // Preparar dados do lead para atualização
     const leadUpdateData: Partial<Lead> = {

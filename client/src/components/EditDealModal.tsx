@@ -356,26 +356,18 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-7 w-full">
-            <TabsTrigger value="details" className="flex items-center gap-1">
-              <FileTextIcon className="h-4 w-4" />
-              <span>Detalhes</span>
-            </TabsTrigger>
-            <TabsTrigger value="client" className="flex items-center gap-1">
+          <TabsList className="grid grid-cols-5 w-full">
+            <TabsTrigger value="lead" className="flex items-center gap-1">
               <UserIcon className="h-4 w-4" />
-              <span>Cliente</span>
-            </TabsTrigger>
-            <TabsTrigger value="city" className="flex items-center gap-1">
-              <MapPinIcon className="h-4 w-4" />
-              <span>Cidade</span>
-            </TabsTrigger>
-            <TabsTrigger value="machines" className="flex items-center gap-1">
-              <PlusCircleIcon className="h-4 w-4" />
-              <span>Máquinas</span>
+              <span>Lead</span>
             </TabsTrigger>
             <TabsTrigger value="activities" className="flex items-center gap-1">
               <MessageCircleIcon className="h-4 w-4" />
               <span>Atividades</span>
+            </TabsTrigger>
+            <TabsTrigger value="notes" className="flex items-center gap-1">
+              <FileTextIcon className="h-4 w-4" />
+              <span>Notas</span>
             </TabsTrigger>
             <TabsTrigger value="quote" className="flex items-center gap-1">
               <ReceiptIcon className="h-4 w-4" />
@@ -384,10 +376,6 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             <TabsTrigger value="outcome" className="flex items-center gap-1">
               <CheckCircle2Icon className="h-4 w-4" />
               <span>Resultado</span>
-            </TabsTrigger>
-            <TabsTrigger value="related" className="flex items-center gap-1">
-              <FileTextIcon className="h-4 w-4" />
-              <span>Outros Negócios</span>
             </TabsTrigger>
           </TabsList>
 

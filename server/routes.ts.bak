@@ -1,4 +1,4 @@
-import express, { type Express, Request, Response, NextFunction } from "express";
+import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import axios from "axios";
@@ -10,8 +10,7 @@ import {
   insertLossReasonSchema,
   insertQuoteItemSchema,
   insertLeadActivitySchema,
-  insertMachineBrandSchema,
-  Deal
+  insertMachineBrandSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -138,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Caso especial: atualização do drag-and-drop (ordem ou stage)
       if (dealId) {
-        let updateData: Partial<Deal> = {};
+        let updateData: any = {};
         
         // Se recebemos nova ordem, atualizamos apenas isso
         if (order !== undefined) {
@@ -202,7 +201,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid data", errors: error.errors });
       } else {
-        console.error("Error updating deal:", error);
         res.status(500).json({ message: "Failed to update deal" });
       }
     }
@@ -253,12 +251,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deals = await storage.getDealsByContactId(contactId);
       res.json(deals);
     } catch (error) {
-      console.error(`Error getting deals for contact ${req.params.contactId}:`, error);
+      console.error("Error getting deals by contact ID:", error);
+      res.status(500).json({ message: "Failed to fetch deals for this contact" });
+    }
+  });
+  
+  // Rotas de motivos de perda
+  apiRouter.get("/loss-reasons", async (req: Request, res: Response) => {
+    try {
+      const reasons = await storage.getLossReasons();
+      res.json(reasons);
+    } catch (error) {
+      console.error("Error getting loss reasons:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
   
-  // Configurações do CRM
+  apiRouter.post("/loss-reasons", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertLossReasonSchema.parse(req.body);
+      const reason = await storage.createLossReason(validatedData);
+      res.status(201).json(reason);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        console.error("Error creating loss reason:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+  
+  // Lead Activities routes
+  apiRouter.get("/lead-activities/:dealId", async (req: Request, res: Response) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
+      
+      const activities = await storage.getLeadActivities(dealId);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error getting lead activities:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  apiRouter.post("/lead-activities", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertLeadActivitySchema.parse(req.body);
+      const activity = await storage.createLeadActivity(validatedData);
+      res.status(201).json(activity);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        console.error("Error creating lead activity:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+  
+  apiRouter.delete("/lead-activities/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const success = await storage.deleteLeadActivity(id);
+      if (!success) {
+        return res.status(404).json({ message: "Activity not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting lead activity:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  apiRouter.put("/loss-reasons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const validatedData = insertLossReasonSchema.partial().parse(req.body);
+      const updatedReason = await storage.updateLossReason(id, validatedData);
+      
+      if (!updatedReason) {
+        return res.status(404).json({ message: "Loss reason not found" });
+      }
+      
+      res.json(updatedReason);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        console.error("Error updating loss reason:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+  
+  apiRouter.delete("/loss-reasons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const success = await storage.deleteLossReason(id);
+      if (!success) {
+        return res.status(404).json({ message: "Loss reason not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting loss reason:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Settings routes
   apiRouter.get("/settings", async (req: Request, res: Response) => {
     try {
       const settings = await storage.getSettings();
@@ -272,7 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertSettingsSchema.parse(req.body);
       const settings = await storage.updateSettings(validatedData);
-      res.json(settings);
+      res.status(201).json(settings);
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -282,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Chatwoot routes
+  // Chatwoot API integration routes
   apiRouter.get("/chatwoot/contacts", async (req: Request, res: Response) => {
     try {
       const settings = await storage.getSettings();
@@ -308,34 +426,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: error.response?.data || error.message
         });
       } else {
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "Failed to fetch Chatwoot contacts" });
       }
     }
   });
-  
-  // Update a Chatwoot contact
+  // Endpoint para atualizar um contato no Chatwoot
   apiRouter.put("/chatwoot/contact/:id", async (req: Request, res: Response) => {
     try {
       const contactId = req.params.id;
-      const { name, email, phone_number, company_name } = req.body;
+      const { name } = req.body;
+      
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ message: "Nome inválido" });
+      }
       
       const settings = await storage.getSettings();
       
       if (!settings || !settings.chatwootApiKey || !settings.chatwootUrl || !settings.accountId) {
-        return res.status(400).json({ message: "Chatwoot API not configured" });
+        return res.status(400).json({ message: "Chatwoot API não configurada" });
       }
       
       const response = await axios.put(
         `${settings.chatwootUrl}/api/v1/accounts/${settings.accountId}/contacts/${contactId}`,
-        {
-          name,
-          email,
-          phone_number,
-          company_name
-        },
+        { name },
         {
           headers: {
-            'api_access_token': settings.chatwootApiKey
+            'api_access_token': settings.chatwootApiKey,
+            'Content-Type': 'application/json'
           }
         }
       );
@@ -343,17 +460,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        console.error("Erro ao atualizar contato no Chatwoot:", error.response?.data);
         res.status(error.response?.status || 500).json({
-          message: "Failed to update Chatwoot contact",
+          message: "Falha ao atualizar contato no Chatwoot",
           error: error.response?.data || error.message
         });
       } else {
-        res.status(500).json({ message: "Internal server error" });
+        console.error("Erro ao atualizar contato no Chatwoot:", error);
+        res.status(500).json({ message: "Falha ao atualizar contato no Chatwoot" });
       }
     }
   });
-
-  // Sync contacts from Chatwoot
+  
   apiRouter.post("/chatwoot/sync", async (req: Request, res: Response) => {
     try {
       const settings = await storage.getSettings();
@@ -374,6 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const contacts = response.data.payload || [];
       const existingDeals = await storage.getDeals();
+      const existingChatwootIds = new Set(existingDeals.map(deal => deal.chatwootContactId));
       
       // Não criamos negócios automaticamente para contatos
       // Apenas atualizamos os já existentes
@@ -383,12 +502,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const deal of existingDeals) {
         if (!deal.chatwootContactId) continue;
         
-        const chatwootContact = contacts.find((c: any) => c.id.toString() === deal.chatwootContactId);
+        const chatwootContact = contacts.find(c => c.id.toString() === deal.chatwootContactId);
         if (!chatwootContact) continue;
         
         try {
           // Atualizar informações do contato vindas do Chatwoot
-          const updateData: Partial<Deal> = {};
+          const updateData: Partial<any> = {};
           let needsUpdate = false;
           
           if (chatwootContact.name && chatwootContact.name !== deal.contactName) {
@@ -474,59 +593,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: error.response?.data || error.message
         });
       } else {
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "Failed to sync with Chatwoot" });
       }
     }
   });
   
-  // Lead Activities
-  apiRouter.get("/lead-activities/:dealId", async (req: Request, res: Response) => {
+  // Rotas para deals por status de venda (won/lost)
+  apiRouter.get("/deals/sale-status/:status", async (req: Request, res: Response) => {
     try {
-      const dealId = parseInt(req.params.dealId);
-      if (isNaN(dealId)) {
-        return res.status(400).json({ message: "Invalid deal ID" });
+      const status = req.params.status;
+      if (!status || !["won", "lost", "negotiation"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
       }
       
-      const activities = await storage.getLeadActivities(dealId);
-      res.json(activities);
+      const deals = await storage.getDealsBySaleStatus(status);
+      res.json(deals);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch lead activities" });
+      res.status(500).json({ message: "Failed to fetch deals by status" });
     }
   });
   
-  apiRouter.post("/lead-activities", async (req: Request, res: Response) => {
-    try {
-      const validatedData = insertLeadActivitySchema.parse(req.body);
-      const activity = await storage.createLeadActivity(validatedData);
-      res.status(201).json(activity);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to create lead activity" });
-      }
-    }
-  });
-  
-  apiRouter.delete("/lead-activities/:id", async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid ID" });
-      }
-      
-      const success = await storage.deleteLeadActivity(id);
-      if (!success) {
-        return res.status(404).json({ message: "Lead activity not found" });
-      }
-      
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete lead activity" });
-    }
-  });
-  
-  // Client Machines
+  // Rotas para máquinas do cliente
   apiRouter.get("/client-machines/:dealId", async (req: Request, res: Response) => {
     try {
       const dealId = parseInt(req.params.dealId);
@@ -597,7 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Loss Reasons
+  // Rotas para motivos de perda
   apiRouter.get("/loss-reasons", async (req: Request, res: Response) => {
     try {
       const reasons = await storage.getLossReasons();
@@ -640,8 +727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid data", errors: error.errors });
       } else {
-        console.error("Error updating loss reason:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "Failed to update loss reason" });
       }
     }
   });
@@ -660,12 +746,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting loss reason:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Failed to delete loss reason" });
     }
   });
   
-  // Quote Items
+  // Rotas para itens de cotação
   apiRouter.get("/quote-items/:dealId", async (req: Request, res: Response) => {
     try {
       const dealId = parseInt(req.params.dealId);
@@ -736,7 +821,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Machine Brands
+  // Machine Brands Routes
   apiRouter.get("/machine-brands", async (req: Request, res: Response) => {
     try {
       const brands = await storage.getMachineBrands();

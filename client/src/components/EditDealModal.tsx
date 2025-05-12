@@ -50,23 +50,75 @@ interface EditDealModalProps {
 }
 
 export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }: EditDealModalProps) {
+  // Campos básicos
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [stageId, setStageId] = useState("");
   const [value, setValue] = useState("");
   const [status, setStatus] = useState("in_progress");
   const [activeTab, setActiveTab] = useState("details");
+  
+  // Campos de tipo de cliente
+  const [isCompany, setIsCompany] = useState(false);
+  
+  // Campos pessoa jurídica
+  const [cnpj, setCnpj] = useState("");
+  const [corporateName, setCorporateName] = useState("");
+  
+  // Campos pessoa física
+  const [cpf, setCpf] = useState("");
+  const [stateRegistration, setStateRegistration] = useState("");
+  
+  // Campos de contato
+  const [clientCode, setClientCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  
+  // Campos de endereço
+  const [address, setAddress] = useState("");
+  const [addressNumber, setAddressNumber] = useState("");
+  const [addressComplement, setAddressComplement] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
 
   const { toast } = useToast();
 
   // Carregar dados do deal quando o modal abrir
   useEffect(() => {
     if (deal) {
+      // Campos básicos
       setName(deal.name);
       setCompanyName(deal.companyName || "");
       setStageId(deal.stageId.toString());
       setValue(formatCurrency(deal.value || 0));
       setStatus(deal.status || "in_progress");
+      
+      // Tipo de cliente
+      setIsCompany(deal.isCompany || false);
+      
+      // Campos pessoa jurídica
+      setCnpj(deal.cnpj || "");
+      setCorporateName(deal.corporateName || "");
+      
+      // Campos pessoa física
+      setCpf(deal.cpf || "");
+      setStateRegistration(deal.stateRegistration || "");
+      
+      // Campos de contato
+      setClientCode(deal.clientCode || "");
+      setEmail(deal.email || "");
+      setPhone(deal.phone || "");
+      
+      // Campos de endereço
+      setAddress(deal.address || "");
+      setAddressNumber(deal.addressNumber || "");
+      setAddressComplement(deal.addressComplement || "");
+      setNeighborhood(deal.neighborhood || "");
+      setCity(deal.city || "");
+      setState(deal.state || "");
+      setZipCode(deal.zipCode || "");
     }
   }, [deal]);
 
@@ -76,17 +128,45 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
 
       const quoteTotal = calculateQuoteTotal();
       const payload = {
+        // Campos básicos
         name,
         companyName,
         stageId: parseInt(stageId),
         value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
         quoteValue: quoteTotal,
+        status,
+        
+        // Tipo de cliente
+        isCompany,
+        
+        // Campos pessoa jurídica
+        cnpj,
+        corporateName,
+        
+        // Campos pessoa física
+        cpf,
+        stateRegistration,
+        
+        // Campos de contato
+        clientCode,
+        email,
+        phone,
+        
+        // Campos de endereço
+        address,
+        addressNumber,
+        addressComplement,
+        neighborhood,
+        city,
+        state,
+        zipCode,
+        
+        // Items da cotação
         quoteItems: quoteItems.map(item => ({
           description: item.description,
           quantity: item.quantity,
           unitPrice: item.unitPrice
-        })),
-        status
+        }))
       };
       return await apiRequest('PUT', `/api/deals/${deal.id}`, payload);
     },
@@ -155,11 +235,37 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   };
 
   const resetForm = () => {
+    // Campos básicos
     setName("");
     setCompanyName("");
     setStageId("");
     setValue("");
     setStatus("in_progress");
+    
+    // Tipo de cliente
+    setIsCompany(false);
+    
+    // Campos pessoa jurídica
+    setCnpj("");
+    setCorporateName("");
+    
+    // Campos pessoa física
+    setCpf("");
+    setStateRegistration("");
+    
+    // Campos de contato
+    setClientCode("");
+    setEmail("");
+    setPhone("");
+    
+    // Campos de endereço
+    setAddress("");
+    setAddressNumber("");
+    setAddressComplement("");
+    setNeighborhood("");
+    setCity("");
+    setState("");
+    setZipCode("");
   };
 
   // Format currency input

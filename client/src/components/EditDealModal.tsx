@@ -38,7 +38,8 @@ import {
   MailIcon,
   CreditCardIcon,
   CheckIcon,
-  XIcon
+  XIcon,
+  MapIcon
 } from "lucide-react";
 import {
   Tabs,
@@ -49,6 +50,7 @@ import {
 import DealOutcomeForm from "@/components/DealOutcomeForm";
 import LeadActivities from "@/components/LeadActivities";
 import ClientMachines from "@/components/ClientMachines";
+import ClientCities from "@/components/ClientCities";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 
@@ -614,6 +616,19 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                 </div>
               </div>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="city" className="p-1">
+            <ClientCities 
+              dealId={deal?.id || null}
+              isExisting={!!deal?.id}
+              currentCity={deal?.city || null}
+              currentState={deal?.state || null}
+              onCityChange={(city, state) => {
+                setCity(city);
+                setState(state);
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="machines" className="p-1">

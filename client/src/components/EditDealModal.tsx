@@ -48,12 +48,10 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import DealOutcomeForm from "@/components/DealOutcomeForm";
-import LeadActivities from "@/components/LeadActivities";
 import ClientMachines from "@/components/ClientMachines";
 import ClientCities from "@/components/ClientCities";
+import LeadActivities from "@/components/LeadActivities";
 import RelatedDeals from "@/components/RelatedDeals";
-import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 
 interface EditDealModalProps {
   isOpen: boolean;
@@ -63,18 +61,16 @@ interface EditDealModalProps {
 }
 
 export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }: EditDealModalProps) {
-  // Campos básicos
+  const [activeTab, setActiveTab] = useState("lead");
+  
+  // Campos base do formulário
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [stageId, setStageId] = useState("");
   const [value, setValue] = useState("");
   const [status, setStatus] = useState("in_progress");
-  const [activeTab, setActiveTab] = useState("details");
   
-  // Estado para gerenciar relacionamento entre negócios
-  const [showRelatedDeals, setShowRelatedDeals] = useState(false);
-  
-  // Campos de tipo de cliente
+  // Tipo de cliente
   const [isCompany, setIsCompany] = useState(false);
   
   // Campos pessoa jurídica
@@ -149,151 +145,121 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     }, 200);
   };
   
-  const handleCreateNewDeal = () => {
-    // Implementação futura - abrir modal de criação de novo negócio para o mesmo cliente
-    toast({
-      title: "Função em desenvolvimento",
-      description: "Em breve será possível criar um novo negócio a partir daqui."
-    });
-  };
-
+  // Mutation para atualizar deal
   const updateDealMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: Partial<Deal>) => {
       if (!deal) return null;
-
-      const quoteTotal = calculateQuoteTotal();
-      const payload = {
-        // Campos básicos
-        name,
-        companyName,
-        stageId: parseInt(stageId),
-        value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
-        quoteValue: quoteTotal,
-        status,
-        
-        // Tipo de cliente
-        isCompany,
-        
-        // Campos pessoa jurídica
-        cnpj,
-        corporateName,
-        
-        // Campos pessoa física
-        cpf,
-        stateRegistration,
-        
-        // Campos de contato
-        clientCode,
-        email,
-        phone,
-        
-        // Campos de endereço
-        address,
-        addressNumber,
-        addressComplement,
-        neighborhood,
-        city,
-        state,
-        zipCode,
-        
-        // Items da cotação
-        quoteItems: quoteItems.map(item => ({
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice
-        }))
-      };
-      return await apiRequest('PUT', `/api/deals/${deal.id}`, payload);
+      return apiRequest(`/api/deals/${deal.id}`, "PUT", data);
     },
     onSuccess: () => {
       toast({
-        title: "Negócio atualizado",
-        description: "As alterações foram salvas com sucesso.",
-        variant: "default",
+        title: "Sucesso!",
+        description: "Negócio atualizado com sucesso.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-      resetForm();
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
       onClose();
     },
     onError: (error) => {
       toast({
-        title: "Erro ao atualizar",
-        description: "Não foi possível atualizar o negócio. Por favor, tente novamente.",
         variant: "destructive",
+        title: "Erro",
+        description: "Falha ao atualizar negócio. Por favor tente novamente.",
       });
-      console.error("Update deal error:", error);
-    }
+      console.error("Erro ao atualizar deal:", error);
+    },
   });
-
+  
+  // Mutation para excluir deal
   const deleteDealMutation = useMutation({
     mutationFn: async () => {
       if (!deal) return null;
-      return await apiRequest('DELETE', `/api/deals/${deal.id}`, {});
+      return apiRequest(`/api/deals/${deal.id}`, "DELETE");
     },
     onSuccess: () => {
       toast({
-        title: "Negócio excluído",
-        description: "O negócio foi excluído com sucesso.",
-        variant: "default",
+        title: "Sucesso!",
+        description: "Negócio excluído com sucesso.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-      resetForm();
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
       onClose();
     },
     onError: (error) => {
       toast({
-        title: "Erro ao excluir",
-        description: "Não foi possível excluir o negócio. Por favor, tente novamente.",
         variant: "destructive",
+        title: "Erro",
+        description: "Falha ao excluir negócio. Por favor tente novamente.",
       });
-      console.error("Delete deal error:", error);
-    }
+      console.error("Erro ao excluir deal:", error);
+    },
   });
-
+  
+  // Função para manipular salvamento
   const handleSave = () => {
-    if (!name || !stageId) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Nome do negócio e etapa do funil são obrigatórios.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    updateDealMutation.mutate();
+    if (!deal) return;
+    
+    const parsedValue = parseFloat(value.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0;
+    
+    // Preparar dados para atualização
+    const updateData: Partial<Deal> = {
+      name,
+      companyName,
+      stageId: parseInt(stageId),
+      value: parsedValue,
+      status,
+      
+      // Atualizar tipo de cliente
+      isCompany,
+      
+      // Campos específicos tipo de cliente
+      cnpj: isCompany ? cnpj : null,
+      corporateName: isCompany ? corporateName : null,
+      cpf: !isCompany ? cpf : null,
+      stateRegistration: !isCompany ? stateRegistration : null,
+      
+      // Dados de contato
+      clientCode,
+      email,
+      phone,
+      
+      // Dados de endereço
+      address,
+      addressNumber,
+      addressComplement,
+      neighborhood,
+      city,
+      state,
+      zipCode,
+    };
+    
+    // Executar a atualização
+    updateDealMutation.mutate(updateData);
   };
-
-  const handleDelete = () => {
-    if (confirm("Tem certeza que deseja excluir este negócio?")) {
+  
+  // Confirmar exclusão
+  const confirmDelete = () => {
+    if (window.confirm("Tem certeza que deseja excluir este negócio? Esta ação não pode ser desfeita.")) {
       deleteDealMutation.mutate();
     }
   };
-
-  const resetForm = () => {
-    // Campos básicos
-    setName("");
-    setCompanyName("");
-    setStageId("");
-    setValue("");
-    setStatus("in_progress");
+  
+  // Alternar tipo de cliente
+  const toggleClientType = () => {
+    setIsCompany(!isCompany);
     
-    // Tipo de cliente
-    setIsCompany(false);
-    
-    // Campos pessoa jurídica
-    setCnpj("");
-    setCorporateName("");
-    
-    // Campos pessoa física
-    setCpf("");
-    setStateRegistration("");
-    
-    // Campos de contato
-    setClientCode("");
-    setEmail("");
-    setPhone("");
-    
-    // Campos de endereço
+    // Limpar campos dependendo do tipo selecionado
+    if (isCompany) {
+      // Mudando para pessoa física, limpar campos PJ
+      setCnpj("");
+      setCorporateName("");
+    } else {
+      // Mudando para pessoa jurídica, limpar campos PF
+      setCpf("");
+      setStateRegistration("");
+    }
+  };
+  
+  // Limpar endereço
+  const clearAddress = () => {
     setAddress("");
     setAddressNumber("");
     setAddressComplement("");
@@ -379,427 +345,385 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="p-1">
-            <div className="grid gap-4 py-2">
-              <div className="grid gap-2">
-                <Label htmlFor="deal-name">Nome do Negócio</Label>
-                <Input
-                  id="deal-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Digite o nome do negócio"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="deal-company">Empresa</Label>
-                <Input
-                  id="deal-company"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Digite o nome da empresa"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="deal-stage">Etapa</Label>
-                  <Select value={stageId} onValueChange={setStageId}>
-                    <SelectTrigger id="deal-stage">
-                      <SelectValue placeholder="Selecione uma etapa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {pipelineStages.map((stage) => (
-                        <SelectItem key={stage.id} value={stage.id.toString()}>
-                          {stage.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="deal-status">Status</Label>
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger id="deal-status">
-                      <SelectValue placeholder="Selecione um status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="in_progress">Em andamento</SelectItem>
-                      <SelectItem value="waiting">Aguardando</SelectItem>
-                      <SelectItem value="completed">Concluído</SelectItem>
-                      <SelectItem value="canceled">Cancelado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="deal-value">Valor (R$)</Label>
-                <Input
-                  id="deal-value"
-                  value={value}
-                  onChange={handleValueChange}
-                  placeholder="0,00"
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="client" className="p-1">
-            <div className="grid gap-4 py-2">
-              {/* Tipo de Cliente (PF ou PJ) */}
-              <div className="flex items-center space-x-2 border-b pb-4">
-                <div className="flex-1">
-                  <Label htmlFor="client-type" className="text-base">Tipo de Cliente</Label>
-                  <div className="text-sm text-muted-foreground">Selecione o tipo de cliente</div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="client-type" className={!isCompany ? "font-bold" : ""}>Pessoa Física</Label>
-                  <Switch
-                    id="client-type"
-                    checked={isCompany}
-                    onCheckedChange={setIsCompany}
-                  />
-                  <Label htmlFor="client-type" className={isCompany ? "font-bold" : ""}>Pessoa Jurídica</Label>
-                </div>
-              </div>
-
-              {/* Campos específicos conforme tipo de cliente */}
-              {isCompany ? (
-                /* Campos para Pessoa Jurídica */
-                <div className="grid gap-4">
+          {/* Tab Lead - Informações detalhadas do lead */}
+          <TabsContent value="lead" className="p-1">
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid grid-cols-4 w-full mb-4">
+                <TabsTrigger value="details" className="text-xs">
+                  Detalhes
+                </TabsTrigger>
+                <TabsTrigger value="client" className="text-xs">
+                  Cliente
+                </TabsTrigger>
+                <TabsTrigger value="address" className="text-xs">
+                  Endereço
+                </TabsTrigger>
+                <TabsTrigger value="machines" className="text-xs">
+                  Máquinas
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* Sub-aba Detalhes */}
+              <TabsContent value="details" className="pt-2">
+                <div className="grid gap-4 py-2">
                   <div className="grid gap-2">
-                    <Label htmlFor="cnpj">CNPJ</Label>
+                    <Label htmlFor="deal-name">Nome do Negócio</Label>
                     <Input
-                      id="cnpj"
-                      value={cnpj}
-                      onChange={(e) => setCnpj(e.target.value)}
-                      placeholder="00.000.000/0000-00"
+                      id="deal-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Digite o nome do negócio"
                     />
                   </div>
+
                   <div className="grid gap-2">
-                    <Label htmlFor="corporate-name">Razão Social</Label>
+                    <Label htmlFor="deal-company">Empresa</Label>
                     <Input
-                      id="corporate-name"
-                      value={corporateName}
-                      onChange={(e) => setCorporateName(e.target.value)}
-                      placeholder="Razão Social Completa"
+                      id="deal-company"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="Digite o nome da empresa"
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="deal-stage">Etapa</Label>
+                      <Select value={stageId} onValueChange={setStageId}>
+                        <SelectTrigger id="deal-stage">
+                          <SelectValue placeholder="Selecione uma etapa" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {pipelineStages.map((stage) => (
+                            <SelectItem key={stage.id} value={stage.id.toString()}>
+                              {stage.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="deal-value">Valor</Label>
+                      <Input
+                        id="deal-value"
+                        value={value}
+                        onChange={handleValueChange}
+                        placeholder="R$ 0,00"
+                      />
+                    </div>
                   </div>
                 </div>
-              ) : (
-                /* Campos para Pessoa Física */
-                <div className="grid gap-4">
+              </TabsContent>
+              
+              {/* Sub-aba Cliente */}
+              <TabsContent value="client" className="pt-2">
+                <div className="grid gap-4 py-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="client-type"
+                      checked={isCompany}
+                      onCheckedChange={toggleClientType}
+                    />
+                    <Label htmlFor="client-type">Pessoa Jurídica</Label>
+                  </div>
+                  
+                  {isCompany ? (
+                    // Campos pessoa jurídica
+                    <>
+                      <div className="grid gap-2">
+                        <Label htmlFor="cnpj">CNPJ</Label>
+                        <Input
+                          id="cnpj"
+                          value={cnpj}
+                          onChange={(e) => setCnpj(e.target.value)}
+                          placeholder="00.000.000/0000-00"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="corporate-name">Razão Social</Label>
+                        <Input
+                          id="corporate-name"
+                          value={corporateName}
+                          onChange={(e) => setCorporateName(e.target.value)}
+                          placeholder="Razão Social da Empresa"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    // Campos pessoa física
+                    <>
+                      <div className="grid gap-2">
+                        <Label htmlFor="cpf">CPF</Label>
+                        <Input
+                          id="cpf"
+                          value={cpf}
+                          onChange={(e) => setCpf(e.target.value)}
+                          placeholder="000.000.000-00"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="state-registration">Inscrição Estadual</Label>
+                        <Input
+                          id="state-registration"
+                          value={stateRegistration}
+                          onChange={(e) => setStateRegistration(e.target.value)}
+                          placeholder="Inscrição Estadual"
+                        />
+                      </div>
+                    </>
+                  )}
+                  
                   <div className="grid gap-2">
-                    <Label htmlFor="cpf">CPF</Label>
+                    <Label htmlFor="client-code">Código do Cliente</Label>
                     <Input
-                      id="cpf"
-                      value={cpf}
-                      onChange={(e) => setCpf(e.target.value)}
-                      placeholder="000.000.000-00"
+                      id="client-code"
+                      value={clientCode}
+                      onChange={(e) => setClientCode(e.target.value)}
+                      placeholder="Código do cliente no sistema"
                     />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="state-registration">Inscrição Estadual</Label>
-                    <Input
-                      id="state-registration"
-                      value={stateRegistration}
-                      onChange={(e) => setStateRegistration(e.target.value)}
-                      placeholder="Inscrição Estadual"
-                    />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">E-mail</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="email@exemplo.com"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="phone">Telefone</Label>
+                      <Input
+                        id="phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="(00) 00000-0000"
+                      />
+                    </div>
                   </div>
                 </div>
-              )}
-
-              {/* Código do Cliente */}
-              <div className="grid gap-2">
-                <Label htmlFor="client-code">Código do Cliente</Label>
-                <Input
-                  id="client-code"
-                  value={clientCode}
-                  onChange={(e) => setClientCode(e.target.value)}
-                  placeholder="Código do cliente no sistema"
-                />
-              </div>
-
-              {/* Contato */}
-              <div className="grid gap-2 border-t pt-4">
-                <h3 className="font-medium flex items-center gap-2">
-                  <PhoneIcon className="h-4 w-4 text-primary" />
-                  Informações de Contato
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
+              </TabsContent>
+              
+              {/* Sub-aba Endereço */}
+              <TabsContent value="address" className="pt-2">
+                <div className="grid gap-4 py-2">
                   <div className="grid gap-2">
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="email@exemplo.com"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="phone">Telefone</Label>
-                    <Input
-                      id="phone"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="(00) 00000-0000"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Endereço Completo */}
-              <div className="grid gap-2 border-t pt-4">
-                <h3 className="font-medium flex items-center gap-2">
-                  <MapPinIcon className="h-4 w-4 text-primary" />
-                  Endereço Completo
-                </h3>
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="address">Logradouro</Label>
+                    <Label htmlFor="address">Endereço</Label>
                     <Input
                       id="address"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Rua/Av./Estrada"
+                      placeholder="Rua, Avenida, etc."
                     />
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
+                  
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="address-number">Número</Label>
                       <Input
                         id="address-number"
                         value={addressNumber}
                         onChange={(e) => setAddressNumber(e.target.value)}
-                        placeholder="Nº"
+                        placeholder="123"
                       />
                     </div>
-                    <div className="grid gap-2 col-span-2">
+                    <div className="grid gap-2">
                       <Label htmlFor="address-complement">Complemento</Label>
                       <Input
                         id="address-complement"
                         value={addressComplement}
                         onChange={(e) => setAddressComplement(e.target.value)}
-                        placeholder="Complemento"
+                        placeholder="Apto, Sala, etc."
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="neighborhood">Bairro</Label>
-                      <Input
-                        id="neighborhood"
-                        value={neighborhood}
-                        onChange={(e) => setNeighborhood(e.target.value)}
-                        placeholder="Bairro"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="city">Cidade</Label>
-                      <Input
-                        id="city"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        placeholder="Cidade"
-                      />
-                    </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="neighborhood">Bairro</Label>
+                    <Input
+                      id="neighborhood"
+                      value={neighborhood}
+                      onChange={(e) => setNeighborhood(e.target.value)}
+                      placeholder="Bairro"
+                    />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="state">Estado</Label>
-                      <Input
-                        id="state"
-                        value={state}
-                        onChange={(e) => setState(e.target.value)}
-                        placeholder="Estado"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="zip-code">CEP</Label>
-                      <Input
-                        id="zip-code"
-                        value={zipCode}
-                        onChange={(e) => setZipCode(e.target.value)}
-                        placeholder="00000-000"
-                      />
-                    </div>
+                  
+                  <ClientCities
+                    dealId={deal?.id || null}
+                    isExisting={!!deal}
+                    currentCity={city}
+                    currentState={state}
+                    onCityChange={(city, state) => {
+                      setCity(city);
+                      setState(state);
+                    }}
+                  />
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="zipcode">CEP</Label>
+                    <Input
+                      id="zipcode"
+                      value={zipCode}
+                      onChange={(e) => setZipCode(e.target.value)}
+                      placeholder="00000-000"
+                    />
                   </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="city" className="p-1">
-            <ClientCities 
-              dealId={deal?.id || null}
-              isExisting={!!deal?.id}
-              currentCity={deal?.city || null}
-              currentState={deal?.state || null}
-              onCityChange={(city, state) => {
-                setCity(city);
-                setState(state);
-              }}
-            />
-          </TabsContent>
-
-          <TabsContent value="machines" className="p-1">
-            <ClientMachines dealId={deal?.id || null} isExisting={!!deal?.id} />
-          </TabsContent>
-
-          <TabsContent value="activities" className="p-1">
-            <LeadActivities deal={deal} />
-          </TabsContent>
-
-          <TabsContent value="quote" className="p-1">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-medium text-gray-500">Itens da Cotação</h3>
-                  <Button variant="outline" size="sm" onClick={addQuoteItem} className="flex items-center gap-1">
-                    <PlusIcon className="h-4 w-4" />
-                    <span>Adicionar Item</span>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={clearAddress}
+                    type="button"
+                    className="w-full"
+                  >
+                    <TrashIcon className="h-4 w-4 mr-2" />
+                    Limpar Endereço
                   </Button>
                 </div>
+              </TabsContent>
+              
+              {/* Sub-aba Máquinas */}
+              <TabsContent value="machines" className="pt-2">
+                {deal && (
+                  <ClientMachines dealId={deal.id} isExisting={true} />
+                )}
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
 
-                <div className="border rounded-md">
-                  <div className="grid grid-cols-12 gap-2 p-2 bg-gray-50 border-b text-xs font-medium text-gray-600">
-                    <div className="col-span-6">Descrição</div>
-                    <div className="col-span-2 text-center">Quantidade</div>
-                    <div className="col-span-2 text-center">Preço Unitário</div>
-                    <div className="col-span-2 text-right">Subtotal</div>
+          {/* Tab Atividades */}
+          <TabsContent value="activities" className="p-1">
+            {deal && (
+              <LeadActivities dealId={deal.id} />
+            )}
+          </TabsContent>
+
+          {/* Tab Notas */}
+          <TabsContent value="notes" className="p-1">
+            <div className="grid gap-4 py-2">
+              <h3 className="text-lg font-medium">Notas do Negócio</h3>
+              <div className="grid gap-2">
+                <Label htmlFor="deal-notes">Anotações</Label>
+                <textarea
+                  id="deal-notes"
+                  className="flex h-32 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Adicione notas e observações sobre este negócio..."
+                  value={deal?.notes || ""}
+                  onChange={(e) => {
+                    if (deal) {
+                      updateDealMutation.mutate({
+                        notes: e.target.value
+                      });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab Cotação */}
+          <TabsContent value="quote" className="p-1">
+            <div className="grid gap-4 py-2">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Itens da Cotação</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addQuoteItem}
+                >
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Adicionar Item
+                </Button>
+              </div>
+              
+              <div className="space-y-4 mt-2">
+                {quoteItems.map((item, index) => (
+                  <div key={index} className="grid grid-cols-12 gap-2 items-center border p-2 rounded-md">
+                    <div className="col-span-5">
+                      <Input
+                        placeholder="Descrição"
+                        value={item.description}
+                        onChange={(e) => updateQuoteItem(index, 'description', e.target.value)}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="number"
+                        placeholder="Qtd"
+                        value={item.quantity.toString()}
+                        onChange={(e) => updateQuoteItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <Input
+                        type="number"
+                        placeholder="Preço"
+                        value={item.unitPrice.toString()}
+                        onChange={(e) => updateQuoteItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="col-span-1 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeQuoteItem(index)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="col-span-12 text-right text-sm font-medium text-muted-foreground">
+                      Subtotal: {formatCurrency(item.quantity * item.unitPrice)}
+                    </div>
                   </div>
-
-                  <div className="max-h-[250px] overflow-y-auto">
-                    {quoteItems.map((item, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-2 p-2 border-b last:border-0 items-center">
-                        <div className="col-span-6">
-                          <Input
-                            value={item.description}
-                            onChange={(e) => updateQuoteItem(index, 'description', e.target.value)}
-                            placeholder="Descrição do item"
-                            className="text-sm"
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            min={1}
-                            value={item.quantity}
-                            onChange={(e) => updateQuoteItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                            className="text-sm text-center"
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            min={0}
-                            step={0.01}
-                            value={item.unitPrice}
-                            onChange={(e) => updateQuoteItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                            className="text-sm text-center"
-                          />
-                        </div>
-                        <div className="col-span-2 text-right font-mono text-sm">
-                          {formatCurrency(item.quantity * item.unitPrice)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex justify-end p-2">
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-gray-700">Total da Cotação:</div>
-                    <div className="text-lg font-mono font-bold text-primary">{formatCurrency(calculateQuoteTotal())}</div>
+                ))}
+                
+                <div className="flex justify-end pt-2">
+                  <div className="px-4 py-2 bg-muted rounded-md">
+                    <span className="font-semibold">Total: {formatCurrency(calculateQuoteTotal())}</span>
                   </div>
                 </div>
               </div>
             </div>
           </TabsContent>
 
+          {/* Tab Resultado */}
           <TabsContent value="outcome" className="p-1">
-            <div className="py-2">
-              <h3 className="text-lg font-medium mb-4">
-                {deal?.saleStatus === "won" ? (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <CheckCircle2Icon className="h-5 w-5" />
-                    <span>Negócio Ganho</span>
-                  </div>
-                ) : deal?.saleStatus === "lost" ? (
-                  <div className="flex items-center gap-2 text-red-600">
-                    <XCircleIcon className="h-5 w-5" />
-                    <span>Negócio Perdido</span>
-                    <span className="text-sm font-normal text-gray-500 ml-2">
-                      {deal?.lostReason && `Razão: ${deal.lostReason}`}
-                    </span>
-                  </div>
-                ) : (
-                  <span>Concluir Negócio</span>
-                )}
-              </h3>
-              
-              {!deal?.saleStatus && (
-                <DealOutcomeForm deal={deal} onSuccess={onClose} />
-              )}
-              
-              {deal?.saleStatus && (
-                <div className="p-4 bg-gray-50 rounded-md mb-4">
-                  {deal.saleStatus === "won" ? (
-                    <div className="space-y-2">
-                      <p className="text-green-700 font-medium">Este negócio foi concluído com sucesso.</p>
-                      <p>Valor final: {deal.value ? formatCurrency(deal.value) : "Não informado"}</p>
-                      <p className="text-sm text-gray-500">Concluído em: {formatDate(new Date(deal.updatedAt))}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <p className="text-red-700 font-medium">Este negócio foi perdido.</p>
-                      <p>Motivo: {deal.lostReason || "Não informado"}</p>
-                      {deal.lostNotes && <p>Notas: {deal.lostNotes}</p>}
-                      <p className="text-sm text-gray-500">Registrado em: {formatDate(new Date(deal.updatedAt))}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="related" className="p-1">
-            <div className="py-2">
-              {deal?.chatwootContactId ? (
-                <RelatedDeals 
-                  contactId={deal.chatwootContactId}
-                  currentDealId={deal.id}
-                  onOpenDeal={handleOpenDeal}
-                  onCreateNewDeal={handleCreateNewDeal}
-                />
-              ) : (
-                <div className="p-4 bg-gray-50 rounded-md mb-4 text-center">
-                  <p className="text-gray-500">
-                    Este negócio não está vinculado a um contato do Chatwoot.
-                  </p>
-                </div>
-              )}
-            </div>
+            {deal && (
+              <DealOutcomeForm
+                dealId={deal.id} 
+                currentStatus={deal.status || "in_progress"}
+                onStatusChange={(newStatus) => {
+                  // Marcando negócio como ganho ou perdido, ele sai do pipeline
+                  let updateData: Partial<Deal> = {
+                    status: newStatus,
+                  };
+                  
+                  // Se estiver marcando como vencido ou perdido, remover do pipeline
+                  if (newStatus === "won" || newStatus === "lost") {
+                    updateData.stageId = null; // Remove do pipeline
+                  }
+                  
+                  updateDealMutation.mutate(updateData);
+                }}
+              />
+            )}
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="flex justify-between">
+        <DialogFooter className="flex flex-col sm:flex-row justify-between">
           <Button 
             variant="destructive" 
-            className="flex items-center gap-2" 
-            onClick={handleDelete}
+            onClick={confirmDelete}
+            disabled={updateDealMutation.isPending || deleteDealMutation.isPending}
           >
-            <Trash2Icon className="h-4 w-4" />
-            <span>Excluir</span>
+            <TrashIcon className="h-4 w-4 mr-2" />
+            Excluir
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={onClose}>Cancelar</Button>
             <Button 
               onClick={handleSave}
               disabled={updateDealMutation.isPending || deleteDealMutation.isPending}

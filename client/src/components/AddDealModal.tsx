@@ -36,12 +36,38 @@ interface ChatwootContact {
 }
 
 export default function AddDealModal({ isOpen, onClose, pipelineStages, selectedContact }: AddDealModalProps) {
+  // Campos básicos
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [contactId, setContactId] = useState("");
   const [stageId, setStageId] = useState("");
   const [value, setValue] = useState("");
   const [status, setStatus] = useState("in_progress");
+  
+  // Campos de tipo de cliente
+  const [isCompany, setIsCompany] = useState(false);
+  
+  // Campos pessoa jurídica
+  const [cnpj, setCnpj] = useState("");
+  const [corporateName, setCorporateName] = useState("");
+  
+  // Campos pessoa física
+  const [cpf, setCpf] = useState("");
+  const [stateRegistration, setStateRegistration] = useState("");
+  
+  // Campos de contato
+  const [clientCode, setClientCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  
+  // Campos de endereço
+  const [address, setAddress] = useState("");
+  const [addressNumber, setAddressNumber] = useState("");
+  const [addressComplement, setAddressComplement] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
   
   const { toast } = useToast();
   
@@ -58,6 +84,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
       const selectedContact = contacts.find(c => c.id.toString() === contactId);
       
       const payload = {
+        // Campos básicos
         name,
         companyName: companyName || selectedContact?.company_name || "",
         contactName: selectedContact?.name || "",
@@ -65,7 +92,32 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
         chatwootContactId: contactId,
         stageId: parseInt(stageId),
         value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
-        status
+        status,
+        
+        // Tipo de cliente
+        isCompany,
+        
+        // Campos pessoa jurídica
+        cnpj,
+        corporateName,
+        
+        // Campos pessoa física
+        cpf,
+        stateRegistration,
+        
+        // Campos de contato
+        clientCode,
+        email: email || selectedContact?.email || "",
+        phone: phone || selectedContact?.phone_number || "",
+        
+        // Campos de endereço
+        address,
+        addressNumber,
+        addressComplement,
+        neighborhood,
+        city,
+        state,
+        zipCode
       };
       return await apiRequest('POST', '/api/deals', payload);
     },
@@ -103,12 +155,38 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
   };
   
   const resetForm = () => {
+    // Campos básicos
     setName("");
     setCompanyName("");
     setContactId("");
     setStageId("");
     setValue("");
     setStatus("in_progress");
+    
+    // Tipo de cliente
+    setIsCompany(false);
+    
+    // Campos pessoa jurídica
+    setCnpj("");
+    setCorporateName("");
+    
+    // Campos pessoa física
+    setCpf("");
+    setStateRegistration("");
+    
+    // Campos de contato
+    setClientCode("");
+    setEmail("");
+    setPhone("");
+    
+    // Campos de endereço
+    setAddress("");
+    setAddressNumber("");
+    setAddressComplement("");
+    setNeighborhood("");
+    setCity("");
+    setState("");
+    setZipCode("");
   };
   
   // Format currency input

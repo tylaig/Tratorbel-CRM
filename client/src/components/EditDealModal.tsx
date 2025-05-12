@@ -425,6 +425,193 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             </div>
           </TabsContent>
 
+          <TabsContent value="client" className="p-1">
+            <div className="grid gap-4 py-2">
+              {/* Tipo de Cliente (PF ou PJ) */}
+              <div className="flex items-center space-x-2 border-b pb-4">
+                <div className="flex-1">
+                  <Label htmlFor="client-type" className="text-base">Tipo de Cliente</Label>
+                  <div className="text-sm text-muted-foreground">Selecione o tipo de cliente</div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="client-type" className={!isCompany ? "font-bold" : ""}>Pessoa Física</Label>
+                  <Switch
+                    id="client-type"
+                    checked={isCompany}
+                    onCheckedChange={setIsCompany}
+                  />
+                  <Label htmlFor="client-type" className={isCompany ? "font-bold" : ""}>Pessoa Jurídica</Label>
+                </div>
+              </div>
+
+              {/* Campos específicos conforme tipo de cliente */}
+              {isCompany ? (
+                /* Campos para Pessoa Jurídica */
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="cnpj">CNPJ</Label>
+                    <Input
+                      id="cnpj"
+                      value={cnpj}
+                      onChange={(e) => setCnpj(e.target.value)}
+                      placeholder="00.000.000/0000-00"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="corporate-name">Razão Social</Label>
+                    <Input
+                      id="corporate-name"
+                      value={corporateName}
+                      onChange={(e) => setCorporateName(e.target.value)}
+                      placeholder="Razão Social Completa"
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Campos para Pessoa Física */
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="cpf">CPF</Label>
+                    <Input
+                      id="cpf"
+                      value={cpf}
+                      onChange={(e) => setCpf(e.target.value)}
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="state-registration">Inscrição Estadual</Label>
+                    <Input
+                      id="state-registration"
+                      value={stateRegistration}
+                      onChange={(e) => setStateRegistration(e.target.value)}
+                      placeholder="Inscrição Estadual"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Código do Cliente */}
+              <div className="grid gap-2">
+                <Label htmlFor="client-code">Código do Cliente</Label>
+                <Input
+                  id="client-code"
+                  value={clientCode}
+                  onChange={(e) => setClientCode(e.target.value)}
+                  placeholder="Código do cliente no sistema"
+                />
+              </div>
+
+              {/* Contato */}
+              <div className="grid gap-2 border-t pt-4">
+                <h3 className="font-medium flex items-center gap-2">
+                  <PhoneIcon className="h-4 w-4 text-primary" />
+                  Informações de Contato
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">E-mail</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="email@exemplo.com"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Telefone</Label>
+                    <Input
+                      id="phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Endereço Completo */}
+              <div className="grid gap-2 border-t pt-4">
+                <h3 className="font-medium flex items-center gap-2">
+                  <MapPinIcon className="h-4 w-4 text-primary" />
+                  Endereço Completo
+                </h3>
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="address">Logradouro</Label>
+                    <Input
+                      id="address"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="Rua/Av./Estrada"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="address-number">Número</Label>
+                      <Input
+                        id="address-number"
+                        value={addressNumber}
+                        onChange={(e) => setAddressNumber(e.target.value)}
+                        placeholder="Nº"
+                      />
+                    </div>
+                    <div className="grid gap-2 col-span-2">
+                      <Label htmlFor="address-complement">Complemento</Label>
+                      <Input
+                        id="address-complement"
+                        value={addressComplement}
+                        onChange={(e) => setAddressComplement(e.target.value)}
+                        placeholder="Complemento"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="neighborhood">Bairro</Label>
+                      <Input
+                        id="neighborhood"
+                        value={neighborhood}
+                        onChange={(e) => setNeighborhood(e.target.value)}
+                        placeholder="Bairro"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="city">Cidade</Label>
+                      <Input
+                        id="city"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="Cidade"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="state">Estado</Label>
+                      <Input
+                        id="state"
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
+                        placeholder="Estado"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="zip-code">CEP</Label>
+                      <Input
+                        id="zip-code"
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                        placeholder="00000-000"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="machines" className="p-1">
             <ClientMachines dealId={deal?.id || null} isExisting={!!deal?.id} />
           </TabsContent>

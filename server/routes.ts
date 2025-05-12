@@ -107,8 +107,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post("/deals", async (req: Request, res: Response) => {
     try {
       console.log("Recebendo dados do negócio:", JSON.stringify(req.body));
-      const validatedData = insertDealSchema.parse(req.body);
-      console.log("Dados do negócio validados com sucesso:", JSON.stringify(validatedData));
+      
+      // Verifica se leadId está presente
+      if (!req.body.leadId) {
+        console.error("Faltando campo obrigatório leadId");
+        return res.status(400).json({
+          message: "Campo obrigatório 'leadId' está faltando ou é inválido",
+          details: "O ID do lead é necessário para associar o negócio ao contato"
+        });
+      }
+      
+      // Verifica se o lead realmente existe
+      const lead = await storage.getLead(req.body.leadId);
+      if (!lead) {
+        console.error(`Lead com ID ${req.body.leadId} não encontrado`);
+        return res.status(404).json({
+          message: "Lead não encontrado",
+          details: `Não foi possível encontrar um lead com o ID ${req.body.leadId}`
+        });
+      }
+      
+      // Validação dos dados
+      let validatedData;
+      try {
+        validatedData = insertDealSchema.parse(req.body);
+        console.log("Dados do negócio validados com sucesso:", JSON.stringify(validatedData));
+      } catch (validationError) {
+        if (validationError instanceof z.ZodError) {
+          console.error("Erro de validação:", JSON.stringify(validationError.errors));
+          return res.status(400).json({ 
+            message: "Dados inválidos para criação do negócio", 
+            errors: validationError.errors 
+          });
+        }
+        throw validationError;
+      }
       
       // Verificar se o stageId está definido, caso contrário, usar o estágio padrão
       if (!validatedData.stageId) {
@@ -124,23 +157,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const deal = await storage.createDeal(validatedData);
-      console.log("Negócio criado com sucesso:", JSON.stringify(deal));
-      res.status(201).json(deal);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error("Erro de validação:", JSON.stringify(error.errors));
-        res.status(400).json({ 
-          message: "Dados inválidos para criação do negócio", 
-          errors: error.errors 
-        });
-      } else {
-        console.error("Erro ao criar negócio:", error);
+      try {
+        const deal = await storage.createDeal(validatedData);
+        console.log("Negócio criado com sucesso:", JSON.stringify(deal));
+        res.status(201).json(deal);
+      } catch (dbError) {
+        console.error("Erro no banco de dados ao criar negócio:", dbError);
         res.status(500).json({ 
-          message: "Falha ao criar o negócio", 
-          error: error instanceof Error ? error.message : String(error)
+          message: "Falha ao criar o negócio no banco de dados", 
+          error: dbError instanceof Error ? dbError.message : String(dbError),
+          details: "Erro ao inserir os dados no banco. Verifique os logs do servidor."
         });
       }
+    } catch (error) {
+      console.error("Erro não tratado ao criar negócio:", error);
+      res.status(500).json({ 
+        message: "Falha geral ao criar o negócio", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   

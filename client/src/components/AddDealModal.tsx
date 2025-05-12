@@ -117,20 +117,25 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
   const addDealMutation = useMutation({
     mutationFn: async () => {
       const selectedContact = contacts.find(c => c.id.toString() === contactId);
+      console.log("Iniciando criação de negócio para contato:", selectedContact);
       
       // Primeiro vamos verificar se já existe um lead para este contato
       let leadId: number;
       if (contactId) {
         try {
           // Tentar buscar um lead existente pelo chatwootContactId
+          console.log("Buscando lead existente para chatwootContactId:", contactId);
           const leadsResponse = await apiRequest('GET', `/api/leads/search?q=${contactId}`);
-          const existingLeads = leadsResponse.data?.results || [];
+          const existingLeads = leadsResponse?.results || [];
+          console.log("Leads encontrados:", existingLeads);
           
           if (existingLeads.length > 0) {
             // Se encontrar, usar o id do lead existente
             leadId = existingLeads[0].id;
+            console.log("Usando lead existente com ID:", leadId);
           } else {
             // Se não encontrar, criar um novo lead
+            console.log("Criando novo lead para o contato");
             const leadPayload = {
               name: selectedContact?.name || name,
               companyName: companyName || selectedContact?.company_name || "",
@@ -154,35 +159,49 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
               zipCode
             };
             
+            console.log("Dados do novo lead:", leadPayload);
             const leadResponse = await apiRequest('POST', '/api/leads', leadPayload);
-            leadId = leadResponse.data.id;
+            console.log("Lead criado com sucesso:", leadResponse);
+            leadId = leadResponse.id;
+            console.log("ID do novo lead:", leadId);
           }
         } catch (error) {
           console.error("Erro ao obter/criar lead:", error);
-          throw new Error("Falha ao criar ou obter lead necessário para o negócio");
+          throw error; // Propaga o erro para cima
         }
       } else {
-        throw new Error("É necessário selecionar um contato para criar um negócio");
+        const error = new Error("É necessário selecionar um contato para criar um negócio");
+        console.error(error);
+        throw error;
       }
       
-      // Agora criamos o deal com o leadId
-      const payload = {
-        // Campos básicos
-        name,
-        leadId,  // Campo obrigatório - ID do lead
-        stageId: parseInt(stageId),
-        value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
-        status,
-        notes: "",
-        chatwootContactId: contactId,
-        chatwootAgentId: null,
-        chatwootAgentName: null,
-        chatwootConversationId: null,
-        saleStatus: null,
-        quoteValue: null
-      };
-      
-      return await apiRequest('POST', '/api/deals', payload);
+      try {
+        // Agora criamos o deal com o leadId
+        console.log("Criando deal com leadId:", leadId);
+        const payload = {
+          // Campos básicos
+          name,
+          leadId,  // Campo obrigatório - ID do lead
+          stageId: parseInt(stageId),
+          value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
+          status,
+          notes: "",
+          chatwootContactId: contactId,
+          chatwootAgentId: null,
+          chatwootAgentName: null,
+          chatwootConversationId: null,
+          saleStatus: null,
+          quoteValue: null
+        };
+        
+        console.log("Dados do deal a ser criado:", payload);
+        const result = await apiRequest('POST', '/api/deals', payload);
+        console.log("Deal criado com sucesso:", result);
+        return result;
+      } catch (error) {
+        console.error("Erro ao criar deal:", error);
+        throw error; // Propaga o erro para cima
+      }
     },
     onSuccess: async (data) => {
       toast({

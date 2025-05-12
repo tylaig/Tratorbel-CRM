@@ -110,7 +110,7 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
       console.error("Erro ao criar contato:", error);
       toast({
         title: "Erro ao criar contato",
-        description: "Não foi possível criar o contato no WooCommerce. Por favor, tente novamente.",
+        description: "Não foi possível criar o contato no Chatwoot. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
@@ -263,9 +263,9 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
       <Dialog open={isAddContactModalOpen} onOpenChange={setIsAddContactModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Adicionar Contato no WooCommerce</DialogTitle>
+            <DialogTitle>Adicionar Contato no Chatwoot</DialogTitle>
             <DialogDescription>
-              Crie um novo contato que será sincronizado com o WooCommerce e ficará disponível no Chatwoot.
+              Crie um novo contato no Chatwoot para gerenciar seus leads e negócios.
             </DialogDescription>
           </DialogHeader>
           

@@ -10,7 +10,7 @@ import {
   BarChart3,
   TrendingUp,
   Calendar,
-  Map as MapIcon,
+  Map as MapIcon, // Importando como MapIcon
   Home,
   Building2,
   Cpu
@@ -33,7 +33,7 @@ export default function Heatmap() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <MapIcon className="mr-2 h-6 w-6 text-primary" />
+            <Map className="mr-2 h-6 w-6 text-primary" />
             Mapa de Calor
           </h1>
           <p className="text-gray-500 mt-1">
@@ -76,7 +76,7 @@ export default function Heatmap() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="h-[400px] bg-gray-100 rounded-md p-4 flex items-center justify-center">
                       <div className="text-center text-gray-500">
-                        <MapIcon className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                        <Map className="h-12 w-12 mx-auto mb-2 text-gray-400" />
                         <p>Visualização do mapa do Brasil</p>
                         <p className="text-sm">(Implementação visual futura)</p>
                       </div>
@@ -223,21 +223,21 @@ export default function Heatmap() {
 
 // Funções auxiliares para processar os dados
 function processStateData(deals: Deal[]) {
-  // Estamos usando o objeto Map do JavaScript, não o componente Map do Lucide
-  const stateMap = new Map<string, { count: number, value: number }>();
+  // Usando um objeto normal em vez de Map para evitar conflitos
+  const stateData: Record<string, { count: number; value: number }> = {};
   
   deals.forEach(deal => {
     if (deal.state) {
       const state = deal.state.toUpperCase();
-      const current = stateMap.get(state) || { count: 0, value: 0 };
-      stateMap.set(state, {
-        count: current.count + 1,
-        value: current.value + (deal.value || 0)
-      });
+      if (!stateData[state]) {
+        stateData[state] = { count: 0, value: 0 };
+      }
+      stateData[state].count += 1;
+      stateData[state].value += (deal.value || 0);
     }
   });
   
-  return Array.from(stateMap.entries())
+  return Object.entries(stateData)
     .map(([name, data]) => ({ name, ...data }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 10);

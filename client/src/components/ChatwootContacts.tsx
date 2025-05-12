@@ -54,8 +54,19 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
   }
   
   // Buscar contatos do Chatwoot quando há uma configuração válida
-  const { data: chatwootResponse, isLoading } = useQuery<ChatwootResponse>({
-    queryKey: ['/api/chatwoot/contacts'],
+  const { data: chatwootResponse, isLoading, refetch } = useQuery<ChatwootResponse>({
+    queryKey: ['/api/chatwoot/contacts', searchTerm],
+    queryFn: async () => {
+      let url = '/api/chatwoot/contacts';
+      if (searchTerm && searchTerm.trim()) {
+        url += `?q=${encodeURIComponent(searchTerm.trim())}`;
+      }
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Erro ao buscar contatos do Chatwoot');
+      }
+      return response.json();
+    },
     enabled: !!settings?.chatwootApiKey
   });
   
@@ -67,17 +78,6 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
     queryKey: ['/api/deals'],
     select: (deals) => deals.filter(deal => defaultStage && deal.stageId === defaultStage.id),
     enabled: !!defaultStage
-  });
-  
-  // Filtra contatos com base no termo de busca
-  const filteredContacts = chatwootContacts.filter(contact => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      contact.name?.toLowerCase().includes(searchLower) ||
-      contact.email?.toLowerCase().includes(searchLower) ||
-      contact.phone_number?.toLowerCase().includes(searchLower) ||
-      contact.company_name?.toLowerCase().includes(searchLower)
-    );
   });
   
   // Verifica se um contato já está em um negócio

@@ -86,6 +86,9 @@ export class MemStorage implements IStorage {
     
     // Initialize with default pipeline stages
     this.initDefaultStages();
+    
+    // Initialize with default loss reasons
+    this.initDefaultLossReasons();
   }
   
   private initDefaultStages() {
@@ -100,6 +103,21 @@ export class MemStorage implements IStorage {
     
     defaultStages.forEach(stage => {
       this.createPipelineStage(stage);
+    });
+  }
+  
+  private initDefaultLossReasons() {
+    const defaultReasons = [
+      { reason: "Preço alto", active: true },
+      { reason: "Concorrência", active: true },
+      { reason: "Prazo de entrega", active: true },
+      { reason: "Indisponibilidade de peças", active: true },
+      { reason: "Cliente desistiu", active: true },
+      { reason: "Outro", active: true }
+    ];
+    
+    defaultReasons.forEach(reason => {
+      this.createLossReason(reason);
     });
   }
 
@@ -202,6 +220,199 @@ export class MemStorage implements IStorage {
     return Array.from(this.dealsList.values())
       .filter(deal => deal.stageId === stageId)
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+  
+  async getDealsBySaleStatus(saleStatus: string): Promise<Deal[]> {
+    return Array.from(this.dealsList.values())
+      .filter(deal => deal.saleStatus === saleStatus)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+  
+  // Client Machines methods
+  async getClientMachines(dealId: number): Promise<ClientMachine[]> {
+    return Array.from(this.clientMachinesList.values())
+      .filter(machine => machine.dealId === dealId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async createClientMachine(machine: InsertClientMachine): Promise<ClientMachine> {
+    const id = this.clientMachineCurrentId++;
+    const newMachine: ClientMachine = {
+      ...machine,
+      id,
+      createdAt: new Date()
+    };
+    this.clientMachinesList.set(id, newMachine);
+    
+    // Atualizar contador de máquinas no negócio
+    const deal = this.dealsList.get(machine.dealId);
+    if (deal) {
+      const currentCount = deal.machineCount || 0;
+      this.updateDeal(deal.id, { machineCount: currentCount + 1 });
+    }
+    
+    return newMachine;
+  }
+  
+  async updateClientMachine(id: number, machine: Partial<ClientMachine>): Promise<ClientMachine | undefined> {
+    const existingMachine = this.clientMachinesList.get(id);
+    if (!existingMachine) {
+      return undefined;
+    }
+    
+    const updatedMachine = {
+      ...existingMachine,
+      ...machine
+    };
+    
+    this.clientMachinesList.set(id, updatedMachine);
+    return updatedMachine;
+  }
+  
+  async deleteClientMachine(id: number): Promise<boolean> {
+    const machine = this.clientMachinesList.get(id);
+    if (!machine) {
+      return false;
+    }
+    
+    const result = this.clientMachinesList.delete(id);
+    
+    // Atualizar contador de máquinas no negócio
+    if (result) {
+      const deal = this.dealsList.get(machine.dealId);
+      if (deal && deal.machineCount && deal.machineCount > 0) {
+        this.updateDeal(deal.id, { machineCount: deal.machineCount - 1 });
+      }
+    }
+    
+    return result;
+  }
+  
+  // Loss Reasons methods
+  async getLossReasons(): Promise<LossReason[]> {
+    return Array.from(this.lossReasonsList.values())
+      .filter(reason => reason.active)
+      .sort((a, b) => a.reason.localeCompare(b.reason));
+  }
+  
+  async createLossReason(reason: InsertLossReason): Promise<LossReason> {
+    const id = this.lossReasonCurrentId++;
+    const newReason: LossReason = {
+      ...reason,
+      id,
+      createdAt: new Date()
+    };
+    this.lossReasonsList.set(id, newReason);
+    return newReason;
+  }
+  
+  async updateLossReason(id: number, reason: Partial<LossReason>): Promise<LossReason | undefined> {
+    const existingReason = this.lossReasonsList.get(id);
+    if (!existingReason) {
+      return undefined;
+    }
+    
+    const updatedReason = {
+      ...existingReason,
+      ...reason
+    };
+    
+    this.lossReasonsList.set(id, updatedReason);
+    return updatedReason;
+  }
+  
+  async deleteLossReason(id: number): Promise<boolean> {
+    // Soft delete - apenas marcamos como inativo
+    const existingReason = this.lossReasonsList.get(id);
+    if (!existingReason) {
+      return false;
+    }
+    
+    existingReason.active = false;
+    this.lossReasonsList.set(id, existingReason);
+    return true;
+  }
+  
+  // Quote Items methods
+  async getQuoteItems(dealId: number): Promise<QuoteItem[]> {
+    return Array.from(this.quoteItemsList.values())
+      .filter(item => item.dealId === dealId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+  
+  async createQuoteItem(item: InsertQuoteItem): Promise<QuoteItem> {
+    const id = this.quoteItemCurrentId++;
+    const newItem: QuoteItem = {
+      ...item,
+      id,
+      createdAt: new Date()
+    };
+    this.quoteItemsList.set(id, newItem);
+    
+    // Atualizar valor da cotação no negócio
+    const deal = this.dealsList.get(item.dealId);
+    if (deal) {
+      const total = (deal.quoteValue || 0) + (item.unitPrice * item.quantity);
+      this.updateDeal(deal.id, { quoteValue: total });
+    }
+    
+    return newItem;
+  }
+  
+  async updateQuoteItem(id: number, item: Partial<QuoteItem>): Promise<QuoteItem | undefined> {
+    const existingItem = this.quoteItemsList.get(id);
+    if (!existingItem) {
+      return undefined;
+    }
+    
+    // Calcular diferença no valor para atualizar o negócio
+    let priceDifference = 0;
+    if (item.unitPrice !== undefined || item.quantity !== undefined) {
+      const oldValue = existingItem.unitPrice * existingItem.quantity;
+      const newUnitPrice = item.unitPrice !== undefined ? item.unitPrice : existingItem.unitPrice;
+      const newQuantity = item.quantity !== undefined ? item.quantity : existingItem.quantity;
+      const newValue = newUnitPrice * newQuantity;
+      priceDifference = newValue - oldValue;
+    }
+    
+    const updatedItem = {
+      ...existingItem,
+      ...item
+    };
+    
+    this.quoteItemsList.set(id, updatedItem);
+    
+    // Atualizar valor da cotação no negócio se houve mudança de preço
+    if (priceDifference !== 0) {
+      const deal = this.dealsList.get(existingItem.dealId);
+      if (deal) {
+        const total = (deal.quoteValue || 0) + priceDifference;
+        this.updateDeal(deal.id, { quoteValue: total });
+      }
+    }
+    
+    return updatedItem;
+  }
+  
+  async deleteQuoteItem(id: number): Promise<boolean> {
+    const item = this.quoteItemsList.get(id);
+    if (!item) {
+      return false;
+    }
+    
+    const result = this.quoteItemsList.delete(id);
+    
+    // Atualizar valor da cotação no negócio
+    if (result) {
+      const deal = this.dealsList.get(item.dealId);
+      if (deal) {
+        const valueToSubtract = item.unitPrice * item.quantity;
+        const newTotal = Math.max(0, (deal.quoteValue || 0) - valueToSubtract);
+        this.updateDeal(deal.id, { quoteValue: newTotal });
+      }
+    }
+    
+    return result;
   }
   
   // Settings methods

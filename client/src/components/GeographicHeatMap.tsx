@@ -315,8 +315,14 @@ export default function GeographicHeatMap() {
                   ))}
                   
                   {sortedLocations.length === 0 && (
-                    <div className="p-4 text-center text-muted-foreground">
-                      Nenhum dado disponível para a seleção atual.
+                    <div className="p-8 text-center">
+                      <div className="mb-4 flex justify-center">
+                        <MapPin className="h-10 w-10 text-muted-foreground/40" />
+                      </div>
+                      <h3 className="text-lg font-medium text-muted-foreground">Sem dados geográficos</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Adicione cidade e estado aos seus negócios através do editor para visualizar dados no mapa de calor.
+                      </p>
                     </div>
                   )}
                 </div>

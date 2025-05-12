@@ -193,8 +193,14 @@ export default function Heatmap() {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={4} className="py-6 text-center text-gray-500">
-                              Nenhum dado disponível para exibição
+                            <td colSpan={4} className="py-8">
+                              <div className="flex flex-col items-center justify-center">
+                                <Building2 className="h-10 w-10 text-gray-300 mb-3" />
+                                <h3 className="text-lg font-medium text-gray-500">Sem dados de cidade</h3>
+                                <p className="mt-1 text-sm text-gray-400 max-w-md text-center">
+                                  Adicione cidade e estado aos seus negócios no formulário de edição para visualizar estatísticas geográficas.
+                                </p>
+                              </div>
                             </td>
                           </tr>
                         )}
@@ -407,20 +413,20 @@ function processMachineData(deals: Deal[]) {
   
   // Adicionamos algumas estatísticas iniciais para demonstração
   // Normalmente estes dados viriam de uma chamada API para client-machines
-  deals.forEach(deal => {
-    // Distribuímos aleatoriamente para visualização
-    if (deal.value && deal.value > 0) {
-      const brands = Object.keys(brandData);
-      if (brands.length > 0) {
-        // Incrementamos sempre a primeira marca para ter algum dado visível
-        brandData["Caterpillar"] += 1;
-        
-        // E um pouco para outras marcas para variar
-        if (deal.id % 3 === 0) brandData["John Deere"] += 1;
-        if (deal.id % 5 === 0) brandData["Komatsu"] += 1;
-      }
-    }
-  });
+  // Nesta implementação, consultaríamos a API real para obter as máquinas associadas a cada deal
+  // Por exemplo:
+  // Usando useQuery para consultar as máquinas de cada deal e depois contabilizar por marca
+  // Para fins desta implementação, deixaremos os dados vazios até termos dados reais
+  
+  // Em uma implementação real, faríamos:
+  // deals.forEach(async (deal) => {
+  //   const machines = await apiRequest('GET', `/api/client-machines/${deal.id}`);
+  //   machines.forEach((machine) => {
+  //     if (machine.brand) {
+  //       brandData[machine.brand] = (brandData[machine.brand] || 0) + 1;
+  //     }
+  //   });
+  // });
   
   return Object.entries(brandData)
     .map(([brand, count]) => ({ brand, count }))

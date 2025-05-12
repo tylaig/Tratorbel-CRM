@@ -128,7 +128,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       // Campos de contato
       setClientCode(deal.clientCode || "");
       setEmail(deal.email || "");
-      setPhone(deal.phone || "");
+      setPhone(formatPhoneNumber(deal.phone) || "");
       
       // Campos de endereço
       setAddress(deal.address || "");

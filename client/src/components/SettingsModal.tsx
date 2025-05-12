@@ -526,7 +526,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </DialogHeader>
 
         <Tabs defaultValue="chatwoot" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="chatwoot" className="flex items-center gap-1">
               <MessageSquare className="h-4 w-4" />
               Chatwoot
@@ -538,6 +538,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <TabsTrigger value="loss-reasons" className="flex items-center gap-1">
               <XCircle className="h-4 w-4" />
               Motivos de Perda
+            </TabsTrigger>
+            <TabsTrigger value="sale-performance" className="flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <path d="m22 7-7.9 7.9-4.1-4.1L2 19"></path>
+                <circle cx="22" cy="7" r="2"></circle>
+                <circle cx="2" cy="19" r="2"></circle>
+              </svg>
+              Desempenho
             </TabsTrigger>
             <TabsTrigger value="machine-brands" className="flex items-center gap-1">
               <Car className="h-4 w-4" />
@@ -882,6 +890,194 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             <p className="text-xs text-muted-foreground mt-1">
                               {brand.description}
                             </p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Aba Desempenho de Vendas */}
+          <TabsContent value="sale-performance">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Motivos de Desempenho de Vendas</CardTitle>
+                <CardDescription>
+                  Gerencie os motivos de desempenho utilizados na classificação de vendas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4 space-y-2">
+                  <Input
+                    placeholder="Motivo (ex: Acima do esperado, Conforme cotação)"
+                    value={newPerformanceReason}
+                    onChange={(e) => setNewPerformanceReason(e.target.value)}
+                    className="mb-2"
+                  />
+                  <Input
+                    placeholder="Valor (ex: above, on_target, below)"
+                    value={newPerformanceValue}
+                    onChange={(e) => setNewPerformanceValue(e.target.value)}
+                    className="mb-2"
+                  />
+                  <Input
+                    placeholder="Descrição (opcional)"
+                    value={newPerformanceDescription}
+                    onChange={(e) => setNewPerformanceDescription(e.target.value)}
+                  />
+                  <Button 
+                    onClick={() => {
+                      if (!newPerformanceReason.trim()) {
+                        toast({
+                          title: "Campo obrigatório",
+                          description: "O motivo de desempenho é obrigatório.",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      if (!newPerformanceValue.trim()) {
+                        toast({
+                          title: "Campo obrigatório",
+                          description: "O valor é obrigatório.",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      
+                      createPerformanceReasonMutation.mutate({
+                        reason: newPerformanceReason,
+                        value: newPerformanceValue,
+                        description: newPerformanceDescription
+                      });
+                    }} 
+                    disabled={createPerformanceReasonMutation.isPending}
+                    className="w-full"
+                  >
+                    <PlusCircle className="h-4 w-4 mr-1" />
+                    Adicionar Motivo de Desempenho
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  {performanceReasons.map((reason) => (
+                    <div 
+                      key={reason.id}
+                      className="flex flex-col p-3 border rounded-md"
+                    >
+                      {editingPerformance?.id === reason.id ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editingPerformance.reason}
+                            onChange={(e) => setEditingPerformance({ ...editingPerformance, reason: e.target.value })}
+                            autoFocus
+                          />
+                          <Input
+                            value={editingPerformance.value}
+                            onChange={(e) => setEditingPerformance({ ...editingPerformance, value: e.target.value })}
+                            placeholder="Valor (ex: above, on_target, below)"
+                          />
+                          <Input
+                            value={editingPerformance.description || ''}
+                            onChange={(e) => setEditingPerformance({ ...editingPerformance, description: e.target.value })}
+                            placeholder="Descrição (opcional)"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" size="sm" onClick={() => {
+                              if (!editingPerformance.reason.trim()) {
+                                toast({
+                                  title: "Campo obrigatório",
+                                  description: "O motivo de desempenho é obrigatório.",
+                                  variant: "destructive"
+                                });
+                                return;
+                              }
+                              if (!editingPerformance.value.trim()) {
+                                toast({
+                                  title: "Campo obrigatório",
+                                  description: "O valor é obrigatório.",
+                                  variant: "destructive"
+                                });
+                                return;
+                              }
+                              
+                              updatePerformanceReasonMutation.mutate({
+                                id: editingPerformance.id,
+                                reason: editingPerformance.reason,
+                                value: editingPerformance.value,
+                                description: editingPerformance.description || ''
+                              });
+                            }}>
+                              <Check className="h-4 w-4 mr-1" />
+                              Salvar
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setEditingPerformance(null)}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-sm font-medium">{reason.reason}</span>
+                              <span className="ml-2 px-2 py-0.5 bg-muted text-xs rounded-full">
+                                {reason.value}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => setEditingPerformance({ 
+                                  id: reason.id, 
+                                  reason: reason.reason,
+                                  value: reason.value,
+                                  description: reason.description
+                                })}
+                                disabled={reason.isSystem}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  if (reason.isSystem) {
+                                    toast({
+                                      title: "Operação não permitida",
+                                      description: "Não é possível excluir motivos de desempenho do sistema.",
+                                      variant: "destructive"
+                                    });
+                                    return;
+                                  }
+                                  
+                                  if (window.confirm("Tem certeza que deseja excluir este motivo de desempenho?")) {
+                                    deletePerformanceReasonMutation.mutate(reason.id);
+                                  }
+                                }}
+                                disabled={reason.isSystem}
+                              >
+                                <Trash2 className={`h-4 w-4 ${reason.isSystem ? 'text-muted-foreground' : 'text-red-500'}`} />
+                              </Button>
+                            </div>
+                          </div>
+                          {reason.description && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {reason.description}
+                            </p>
+                          )}
+                          {reason.isSystem && (
+                            <div className="mt-1 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-2 py-1 rounded-sm">
+                              Este é um motivo de desempenho do sistema e não pode ser excluído.
+                            </div>
                           )}
                         </>
                       )}

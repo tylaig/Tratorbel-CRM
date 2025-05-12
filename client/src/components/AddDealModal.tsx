@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatPhoneNumber } from "@/lib/formatters";
 import { type PipelineStage, type Deal } from "@shared/schema";
 import ClientCities from "@/components/ClientCities";
+import AdvancedSearchModal from "@/components/AdvancedSearchModal";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,9 @@ interface ChatwootContact {
 }
 
 export default function AddDealModal({ isOpen, onClose, pipelineStages, selectedContact }: AddDealModalProps) {
+  // Estado para o modal de busca avançada
+  const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
+  
   // Campos básicos
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -282,6 +286,23 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
     }
   }, [isOpen, selectedContact, pipelineStages, name]);
   
+  // Função para lidar com a seleção de contato da busca avançada
+  const handleAdvancedSearchSelect = (contactId: string, contactName: string) => {
+    setContactId(contactId);
+    const selectedContact = contacts.find(c => c.id.toString() === contactId);
+    
+    // Se encontrar o contato nos contatos do Chatwoot, usar seus dados
+    if (selectedContact) {
+      if (!name) setName(selectedContact.name || "Novo negócio");
+      if (selectedContact.company_name) setCompanyName(selectedContact.company_name);
+      if (selectedContact.email) setEmail(selectedContact.email);
+      if (selectedContact.phone_number) setPhone(formatPhoneNumber(selectedContact.phone_number));
+    } else {
+      // Se não encontrar, usar os dados básicos fornecidos pelo parâmetro
+      if (!name) setName(contactName || "Novo negócio");
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -323,13 +344,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
                     variant="link"
                     size="sm"
                     className="h-6 px-0 text-primary"
-                    onClick={() => {
-                      // Implementação futura: abrir modal de busca avançada de contatos
-                      toast({
-                        title: "Busca avançada",
-                        description: "Busca avançada de contatos será implementada em breve.",
-                      });
-                    }}
+                    onClick={() => setIsAdvancedSearchOpen(true)}
                   >
                     Busca avançada
                   </Button>
@@ -654,6 +669,13 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
           </Button>
         </DialogFooter>
       </DialogContent>
+      
+      {/* Modal de busca avançada */}
+      <AdvancedSearchModal 
+        isOpen={isAdvancedSearchOpen}
+        onClose={() => setIsAdvancedSearchOpen(false)}
+        onSelectContact={handleAdvancedSearchSelect}
+      />
     </Dialog>
   );
 }

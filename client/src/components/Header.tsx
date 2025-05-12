@@ -196,6 +196,15 @@ export default function Header({
                     <UsersIcon className="h-5 w-5" />
                   </Button>
                 )}
+                <Button 
+                  variant={viewMode === "heatmap" ? "default" : "ghost"} 
+                  size="icon"
+                  onClick={() => toggleViewMode("heatmap")}
+                  className="h-9 w-9 rounded"
+                  title="Mapa de Calor"
+                >
+                  <MapIcon className="h-5 w-5" />
+                </Button>
               </div>
             )}
           </div>

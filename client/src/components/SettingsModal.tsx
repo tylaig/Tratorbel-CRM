@@ -236,7 +236,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para criar marca
   const createBrandMutation = useMutation({
     mutationFn: async (data: { name: string, description: string }) => {
-      return await apiRequest('POST', '/api/machine-brands', {
+      return await apiRequest('/api/machine-brands', 'POST', {
         name: data.name,
         description: data.description,
         active: true
@@ -263,7 +263,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para atualizar marca
   const updateBrandMutation = useMutation({
     mutationFn: async (data: { id: number, name: string, description: string }) => {
-      return await apiRequest('PUT', `/api/machine-brands/${data.id}`, {
+      return await apiRequest(`/api/machine-brands/${data.id}`, 'PUT', {
         name: data.name,
         description: data.description
       });
@@ -288,7 +288,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para excluir marca
   const deleteBrandMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest('DELETE', `/api/machine-brands/${id}`);
+      return await apiRequest(`/api/machine-brands/${id}`, 'DELETE');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/machine-brands'] });

@@ -215,6 +215,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Obter todos os negócios de um mesmo cliente (por chatwootContactId)
+  apiRouter.get("/deals/contact/:contactId", async (req: Request, res: Response) => {
+    try {
+      const contactId = req.params.contactId;
+      if (!contactId) {
+        return res.status(400).json({ message: "Contact ID is required" });
+      }
+      
+      const deals = await storage.getDealsByContactId(contactId);
+      res.json(deals);
+    } catch (error) {
+      console.error("Error getting deals by contact ID:", error);
+      res.status(500).json({ message: "Failed to fetch deals for this contact" });
+    }
+  });
+  
   // Rotas de motivos de perda
   apiRouter.get("/loss-reasons", async (req: Request, res: Response) => {
     try {

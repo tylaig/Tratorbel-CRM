@@ -31,8 +31,9 @@ export interface IStorage {
   updateDeal(id: number, deal: Partial<Deal>): Promise<Deal | undefined>;
   deleteDeal(id: number): Promise<boolean>;
   getDealsByStage(stageId: number): Promise<Deal[]>;
-  // Novos métodos para filtrar por status de venda
+  // Métodos para filtrar deals
   getDealsBySaleStatus(saleStatus: string): Promise<Deal[]>;
+  getDealsByContactId(contactId: string): Promise<Deal[]>;
   
   // Client Machines (Máquinas do cliente)
   getClientMachines(dealId: number): Promise<ClientMachine[]>;

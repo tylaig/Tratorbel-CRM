@@ -122,6 +122,7 @@ export const deals = pgTable("deals", {
   status: text("status").default("in_progress"),
   // Status da venda
   saleStatus: text("sale_status").default("negotiation"), // negotiation, won, lost
+  salePerformance: text("sale_performance"), // "below_quote", "above_quote", "according_to_quote"
   lostReason: text("lost_reason"), // motivo principal da perda
   lostNotes: text("lost_notes"), // observações sobre a perda
   notes: text("notes"), // anotações gerais do negócio
@@ -153,6 +154,7 @@ export const insertDealSchema = createInsertSchema(deals).pick({
   status: true,
   // Status da venda
   saleStatus: true,
+  salePerformance: true,
   lostReason: true,
   lostNotes: true,
   notes: true,

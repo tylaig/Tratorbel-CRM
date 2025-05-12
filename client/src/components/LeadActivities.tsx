@@ -49,16 +49,16 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
 
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ['/api/lead-activities', deal?.id],
-    queryFn: () => apiRequest(`/api/lead-activities/${deal?.id}`),
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/lead-activities/${deal?.id}`);
+      return response as LeadActivity[];
+    },
     enabled: !!deal?.id,
   });
 
   const createActivityMutation = useMutation({
     mutationFn: (newActivity: { dealId: number; activityType: string; description: string; createdBy: string | null }) => 
-      apiRequest('/api/lead-activities', {
-        method: 'POST',
-        body: JSON.stringify(newActivity),
-      }),
+      apiRequest('POST', '/api/lead-activities', newActivity),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/lead-activities', deal?.id] });
       setDescription('');
@@ -79,9 +79,7 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
 
   const deleteActivityMutation = useMutation({
     mutationFn: (id: number) => 
-      apiRequest(`/api/lead-activities/${id}`, {
-        method: 'DELETE',
-      }),
+      apiRequest('DELETE', `/api/lead-activities/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/lead-activities', deal?.id] });
       toast({

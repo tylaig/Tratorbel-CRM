@@ -60,6 +60,7 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
       newStatus = [...filters.status, status];
     }
     
+    console.log("Novo status selecionado:", newStatus);
     updateFilter({ status: newStatus });
   };
   
@@ -82,7 +83,7 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
     });
   };
   
-  // Status disponíveis
+  // Status disponíveis - Mantendo exatamente os mesmos valores do campo status no banco
   const statusOptions = [
     { value: "in_progress", label: "Em andamento", color: "bg-blue-100 text-blue-700 border-blue-200" },
     { value: "waiting", label: "Aguardando", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },

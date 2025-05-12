@@ -4,8 +4,23 @@ import { queryClient } from "@/lib/queryClient";
 import { Deal, PipelineStage } from "@shared/schema";
 import { FilterOptions } from "@/components/FilterBar";
 
+// Tipo expandido para lidar com os campos mesclados do lead que vêm na API
+type ExtendedDeal = Deal & {
+  // Campos do Lead que vêm junto no objeto
+  companyName?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  state?: string;
+  address?: string;
+  chatwootContactId?: string;
+  chatwootAgentName?: string;
+  clientCategory?: string;
+  clientType?: string;
+};
+
 export function usePipeline() {
-  const [filteredDeals, setFilteredDeals] = useState<Deal[]>([]);
+  const [filteredDeals, setFilteredDeals] = useState<ExtendedDeal[]>([]);
   const [filters, setFilters] = useState<FilterOptions>({
     search: "",
     status: [],
@@ -15,7 +30,7 @@ export function usePipeline() {
   });
   
   // Fetch deals com configurações para garantir atualização imediata
-  const { data: allDeals = [], isLoading: isDealsLoading } = useQuery<Deal[]>({
+  const { data: allDeals = [], isLoading: isDealsLoading } = useQuery<ExtendedDeal[]>({
     queryKey: ['/api/deals'],
     staleTime: 0,                // Considerar dados obsoletos imediatamente (sempre buscar dados frescos)
     refetchOnMount: true,        // Recarregar quando o componente for montado
@@ -43,37 +58,28 @@ export function usePipeline() {
           return true;
         }
         
-        // Outros campos podem não existir, então verificamos antes
-        // A maioria dos campos estão em leadData (já que usamos joins no backend)
-        const leadData = (deal as any).leadData || {};
-        
+        // Verificamos todos os campos disponíveis (incluindo os de lead que vêm junto no mesmo objeto)
+        // Na API, o objeto já vem com todos os campos mesclados
         return (
-          // Campos do Deal diretamente
+          // Campos do Deal
           (deal.notes && deal.notes.toLowerCase().includes(searchLower)) ||
           
-          // Campos do Lead (podem existir em leadData)
-          (leadData.companyName && leadData.companyName.toLowerCase().includes(searchLower)) ||
-          (leadData.name && leadData.name.toLowerCase().includes(searchLower)) ||
-          (leadData.phone && leadData.phone.toLowerCase().includes(searchLower)) ||
-          (leadData.email && leadData.email.toLowerCase().includes(searchLower)) ||
-          (leadData.city && leadData.city.toLowerCase().includes(searchLower)) ||
-          (leadData.state && leadData.state.toLowerCase().includes(searchLower)) ||
-          (leadData.address && leadData.address.toLowerCase().includes(searchLower))
+          // Campos do Lead que vêm junto
+          (deal.companyName && deal.companyName.toLowerCase().includes(searchLower)) ||
+          (deal.email && deal.email.toLowerCase().includes(searchLower)) ||
+          (deal.phone && deal.phone.toLowerCase().includes(searchLower)) ||
+          (deal.city && deal.city.toLowerCase().includes(searchLower)) ||
+          (deal.state && deal.state.toLowerCase().includes(searchLower)) ||
+          (deal.address && deal.address.toLowerCase().includes(searchLower))
         );
       });
     }
     
-    // Apply status filters (status e saleStatus)
+    // Apply status filters (para o campo status)
     if (filters.status && filters.status.length > 0) {
       result = result.filter(deal => {
-        // O filtro pode ser por status ou por saleStatus
-        // O status se refere ao estado do negócio (em andamento, concluído, etc.)
-        // O saleStatus se refere ao resultado da venda (ganho, perdido, aberto)
-        
-        // Verificar se algum dos filtros aplicados corresponde ao status do negócio
-        const matchStatus = deal.status && filters.status.includes(deal.status);
-        
-        return matchStatus;
+        // Verificar se o status do negócio está no array de filtros
+        return deal.status && filters.status.includes(deal.status);
       });
     }
     
@@ -93,8 +99,6 @@ export function usePipeline() {
     // Apply sorting
     result.sort((a, b) => {
       const sortMultiplier = filters.sortOrder === "asc" ? 1 : -1;
-      const leadDataA = (a as any).leadData || {};
-      const leadDataB = (b as any).leadData || {};
       
       switch (filters.sortBy) {
         case "name":
@@ -102,9 +106,9 @@ export function usePipeline() {
         case "value":
           return sortMultiplier * ((a.value || 0) - (b.value || 0));
         case "company":
-          // Use companyName do leadData se disponível
-          const companyA = leadDataA.companyName || "";
-          const companyB = leadDataB.companyName || "";
+          // Use companyName que já vem no objeto
+          const companyA = a.companyName || "";
+          const companyB = b.companyName || ""; 
           return sortMultiplier * companyA.localeCompare(companyB);
         case "date":
         default:
@@ -116,6 +120,8 @@ export function usePipeline() {
     });
     
     setFilteredDeals(result);
+    console.log("Filtros aplicados:", filters);
+    console.log("Negócios filtrados:", result.length);
   }, [allDeals, filters]);
   
   // Calculate stats for a stage

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -99,6 +99,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
+  
+  // Ref para armazenar os dados do lead durante a atualização
+  const leadUpdateDataRef = useRef<Partial<Lead> | null>(null);
 
   const { toast } = useToast();
 
@@ -168,6 +171,38 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     }, 200);
   };
   
+  // Mutation para atualizar lead
+  const updateLeadMutation = useMutation({
+    mutationFn: async (data: Partial<Lead>) => {
+      if (!deal?.leadId) return null;
+      return apiRequest(`/api/leads/${deal.leadId}`, "PUT", data);
+    },
+    onSuccess: (updatedLead) => {
+      console.log("Lead atualizado com sucesso:", updatedLead);
+      queryClient.invalidateQueries({ queryKey: [`/api/leads/${deal?.leadId}`] });
+      
+      // Após atualizar o lead com sucesso, atualizar o deal
+      if (leadUpdateDataRef.current) {
+        const dealUpdateData: Partial<Deal> = {
+          name,
+          stageId: parseInt(stageId),
+          value: parseFloat(value.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0,
+          status,
+          notes,
+        };
+        updateDealMutation.mutate(dealUpdateData);
+      }
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Falha ao atualizar dados do lead. Por favor tente novamente.",
+      });
+      console.error("Erro ao atualizar lead:", error);
+    },
+  });
+
   // Mutation para atualizar deal
   const updateDealMutation = useMutation({
     mutationFn: async (data: Partial<Deal>) => {
@@ -175,11 +210,18 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       return apiRequest(`/api/deals/${deal.id}`, "PUT", data);
     },
     onSuccess: () => {
+      // Limpar a referência aos dados do lead
+      leadUpdateDataRef.current = null;
+      
       toast({
         title: "Sucesso!",
-        description: "Negócio atualizado com sucesso.",
+        description: "Informações atualizadas com sucesso.",
       });
+      
+      // Invalidar consultas para atualizar a interface
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+      
+      // Fechar o modal
       onClose();
     },
     onError: (error) => {
@@ -222,18 +264,13 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     
     const parsedValue = parseFloat(value.replace(/[^\d,.-]/g, "").replace(",", ".")) || 0;
     
-    // Preparar dados para atualização
-    const updateData: Partial<Deal> = {
-      name,
+    // Preparar dados do lead para atualização
+    const leadUpdateData: Partial<Lead> = {
       companyName,
-      stageId: parseInt(stageId),
-      value: parsedValue,
-      status,
       
       // Atualizar tipo de cliente
       clientCategory,
       clientType,
-      isCompany: clientType === "company", // manter compatibilidade
       
       // Campos específicos tipo de cliente
       cnpj: clientType === "company" ? cnpj : null,
@@ -246,9 +283,6 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       email,
       phone,
       
-      // Notas
-      notes,
-      
       // Dados de endereço
       address,
       addressNumber,
@@ -259,8 +293,20 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       zipCode,
     };
     
-    // Executar a atualização
-    updateDealMutation.mutate(updateData);
+    // Salvar na ref para usar no callback de sucesso
+    leadUpdateDataRef.current = leadUpdateData;
+    
+    // Mostrar feedback de carregamento
+    toast({
+      title: "Salvando...",
+      description: "Atualizando informações...",
+    });
+    
+    // Atualizar primeiro o lead
+    updateLeadMutation.mutate(leadUpdateData);
+    
+    // Nota: A atualização do deal será feita após o sucesso da atualização do lead
+    // ver o callback onSuccess no updateLeadMutation
   };
   
   // Confirmar exclusão

@@ -28,8 +28,9 @@ import { PlusIcon } from "lucide-react";
 interface AddDealModalProps {
   isOpen: boolean;
   onClose: () => void;
-  pipelineStages: PipelineStage[];
+  pipelineStages?: PipelineStage[];
   selectedContact?: ChatwootContact | null;
+  initialStageId?: number;
 }
 
 interface ChatwootContact {
@@ -40,7 +41,7 @@ interface ChatwootContact {
   company_name?: string;
 }
 
-export default function AddDealModal({ isOpen, onClose, pipelineStages, selectedContact }: AddDealModalProps) {
+export default function AddDealModal({ isOpen, onClose, pipelineStages = [], selectedContact, initialStageId }: AddDealModalProps) {
   // Estado para o modal de busca avançada
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   

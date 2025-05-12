@@ -63,14 +63,16 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
     queryKey: ['/api/client-machines', dealId],
     queryFn: async () => {
       if (!dealId) return [];
-      return apiRequest('GET', `/api/client-machines/${dealId}`);
+      const result = await apiRequest('GET', `/api/client-machines/${dealId}`);
+      console.log("Máquinas carregadas:", result);
+      return result;
     },
     enabled: !!dealId && isExisting,
   });
   
   // Efeito para sincronizar as máquinas do servidor com o estado local
   useEffect(() => {
-    if (isExisting && clientMachines.length > 0) {
+    if (isExisting) {
       setLocalMachines(clientMachines);
     }
   }, [clientMachines, isExisting]);

@@ -12,8 +12,18 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit2Icon, MoreVerticalIcon, AlertCircleIcon, InfoIcon } from "lucide-react";
+import { Edit2Icon, MoreVerticalIcon, AlertCircleIcon, InfoIcon, Trash2Icon } from "lucide-react";
 import { FilterOptions } from "@/components/FilterBar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import EditDealModal from "@/components/EditDealModal";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 
 interface ListViewProps {
   pipelineStages: PipelineStage[];
@@ -30,6 +40,9 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
     hideClosed: true
   };
   const [stageMap, setStageMap] = useState<Map<number, string>>(new Map());
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { toast } = useToast();
   
   // Fetch deals
   const { data: allDeals = [], isLoading } = useQuery<Deal[]>({
@@ -41,6 +54,33 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
   
   // Filtrar deals baseado nos mesmos critérios do KanbanBoard
   const [filteredDeals, setFilteredDeals] = useState<Deal[]>([]);
+  
+  // Função para excluir um negócio
+  const handleDeleteDeal = async (dealId: number) => {
+    try {
+      await apiRequest(`/api/deals/${dealId}`, 'DELETE');
+      
+      // Atualizar a lista após exclusão
+      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      
+      toast({
+        title: "Negócio excluído",
+        description: "O negócio foi excluído com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir o negócio. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Função para editar um negócio
+  const handleEditDeal = (deal: Deal) => {
+    setSelectedDeal(deal);
+    setIsEditModalOpen(true);
+  };
   
   // Aplicar filtros sempre que allDeals ou activeFilters mudarem
   useEffect(() => {
@@ -179,12 +219,30 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
                   <TableCell className="text-sm text-gray-500">{formatTimeAgo(new Date(deal.updatedAt))}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" className="h-8 px-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 px-2"
+                        onClick={() => handleEditDeal(deal)}
+                      >
                         <Edit2Icon className="h-4 w-4 text-gray-500" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8 px-2">
-                        <MoreVerticalIcon className="h-4 w-4 text-gray-500" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 px-2">
+                            <MoreVerticalIcon className="h-4 w-4 text-gray-500" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            className="text-red-600 cursor-pointer"
+                            onClick={() => handleDeleteDeal(deal.id)}
+                          >
+                            <Trash2Icon className="h-4 w-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -209,6 +267,25 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
           </TableBody>
         </Table>
       </div>
+      
+      {/* Modal de edição de negócio */}
+      {selectedDeal && (
+        <EditDealModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedDeal(null);
+          }}
+          deal={selectedDeal}
+          pipelineStages={pipelineStages}
+          onSaved={() => {
+            setIsEditModalOpen(false);
+            setSelectedDeal(null);
+            // Recarregar dados após salvar
+            queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -99,7 +99,7 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
     
     try {
       // Lógica para atualizar o nome do contato via API do Chatwoot
-      await apiRequest('PUT', `/api/chatwoot/contact/${editingContact.id}`, {
+      await apiRequest(`/api/chatwoot/contact/${editingContact.id}`, 'PUT', {
         name: editName.trim()
       });
       

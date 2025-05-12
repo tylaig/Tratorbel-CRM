@@ -115,7 +115,10 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
       }
     },
     onSuccess: () => {
+      // Invalidar consultas de máquinas e também de deals para atualizar contagens
       queryClient.invalidateQueries({ queryKey: ['/api/client-machines', dealId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      
       toast({
         title: "Máquina adicionada",
         description: "A máquina foi adicionada com sucesso.",
@@ -162,6 +165,7 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/client-machines', dealId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
       toast({
         title: "Máquina atualizada",
         description: "A máquina foi atualizada com sucesso.",
@@ -200,6 +204,7 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/client-machines', dealId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
       toast({
         title: "Máquina excluída",
         description: "A máquina foi excluída com sucesso.",

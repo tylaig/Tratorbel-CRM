@@ -389,6 +389,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   });
+  // Endpoint para atualizar um contato no Chatwoot
+  apiRouter.put("/chatwoot/contact/:id", async (req: Request, res: Response) => {
+    try {
+      const contactId = req.params.id;
+      const { name } = req.body;
+      
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ message: "Nome inválido" });
+      }
+      
+      const settings = await storage.getSettings();
+      
+      if (!settings || !settings.chatwootApiKey || !settings.chatwootUrl || !settings.accountId) {
+        return res.status(400).json({ message: "Chatwoot API não configurada" });
+      }
+      
+      const response = await axios.put(
+        `${settings.chatwootUrl}/api/v1/accounts/${settings.accountId}/contacts/${contactId}`,
+        { name },
+        {
+          headers: {
+            'api_access_token': settings.chatwootApiKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      res.json(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Erro ao atualizar contato no Chatwoot:", error.response?.data);
+        res.status(error.response?.status || 500).json({
+          message: "Falha ao atualizar contato no Chatwoot",
+          error: error.response?.data || error.message
+        });
+      } else {
+        console.error("Erro ao atualizar contato no Chatwoot:", error);
+        res.status(500).json({ message: "Falha ao atualizar contato no Chatwoot" });
+      }
+    }
+  });
   
   apiRouter.post("/chatwoot/sync", async (req: Request, res: Response) => {
     try {

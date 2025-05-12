@@ -153,14 +153,14 @@ export default function DealOutcomeModal({ isOpen, onClose, deal, targetStageId,
               Qual o motivo da perda?
             </Label>
             <Select 
-              value={lostReason?.toString() || ''} 
-              onValueChange={(value) => setLostReason(Number(value))}
+              value={lostReason || ''} 
+              onValueChange={(value) => setLostReason(value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o motivo da perda" />
               </SelectTrigger>
               <SelectContent>
-                {lossReasons?.map((reason: LossReason) => (
+                {Array.isArray(lossReasons) && lossReasons.map((reason: LossReason) => (
                   <SelectItem key={reason.id} value={reason.id.toString()}>
                     {reason.reason}
                   </SelectItem>

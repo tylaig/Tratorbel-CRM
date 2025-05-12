@@ -49,10 +49,14 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
     queryKey: ['/api/deals'],
   });
   
-  // Update deal stage when dragged
+  // Update deal stage or order when dragged
   const updateDealMutation = useMutation({
-    mutationFn: async ({ dealId, stageId }: { dealId: number; stageId: number }) => {
-      return await apiRequest('PUT', `/api/deals/${dealId}`, { stageId });
+    mutationFn: async (data: { 
+      dealId: number; 
+      stageId?: number; 
+      order?: number
+    }) => {
+      return await apiRequest('PUT', `/api/deals/${data.dealId}`, data);
     }
   });
   
@@ -189,7 +193,11 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
       setBoardData(newBoardData);
       
       // Enviar a atualização ao servidor em paralelo
-      updateDealMutation.mutate(updateData, {
+      updateDealMutation.mutate({
+        dealId,
+        ...(updateData.stageId !== undefined ? { stageId: updateData.stageId } : {}),
+        ...(updateData.order !== undefined ? { order: updateData.order } : {})
+      }, {
         onSuccess: () => {
           // Recarregar dados após confirmação do servidor
           queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
@@ -200,13 +208,10 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
             : `Negócio reordenado dentro da etapa "${boardData.find(s => s.id === sourceStageId)?.name || 'Atual'}"`;
             
           // Adicionar atividade de movimentação ao histórico
-          apiRequest('/api/lead-activities', {
-            method: 'POST',
-            data: {
-              dealId: dealId,
-              description: activityText,
-              activityType: 'move'
-            }
+          apiRequest('POST', '/api/lead-activities', {
+            dealId: dealId,
+            description: activityText,
+            activityType: 'move'
           });
           
           toast({

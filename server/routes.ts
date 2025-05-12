@@ -118,18 +118,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   apiRouter.put("/deals/:id", async (req: Request, res: Response) => {
     try {
+      // Verificar se é atualização normal ou do drag-and-drop
       const id = parseInt(req.params.id);
-      if (isNaN(id)) {
+      const { dealId, stageId, order } = req.body;
+      
+      // Se recebemos dealId no corpo, este é um request do drag-and-drop
+      const targetId = dealId || id;
+      
+      if (isNaN(targetId)) {
         return res.status(400).json({ message: "Invalid ID" });
       }
       
-      const validatedData = insertDealSchema.partial().parse(req.body);
-      
-      // Buscar o deal atual para verificar se houve alteração no nome
-      const existingDeal = await storage.getDeal(id);
+      // Buscar o deal atual
+      const existingDeal = await storage.getDeal(targetId);
       if (!existingDeal) {
         return res.status(404).json({ message: "Deal not found" });
       }
+      
+      // Caso especial: atualização do drag-and-drop (ordem ou stage)
+      if (dealId) {
+        let updateData: any = {};
+        
+        // Se recebemos nova ordem, atualizamos apenas isso
+        if (order !== undefined) {
+          updateData.order = order;
+        }
+        
+        // Se recebemos novo stageId, atualizamos o estágio
+        if (stageId !== undefined) {
+          updateData.stageId = stageId;
+        }
+        
+        const updatedDeal = await storage.updateDeal(targetId, updateData);
+        return res.json(updatedDeal);
+      }
+      
+      // Atualização normal via formulário
+      const validatedData = insertDealSchema.partial().parse(req.body);
       
       // Sincronização bidirecional com Chatwoot
       if (validatedData.name && 
@@ -165,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const updatedDeal = await storage.updateDeal(id, validatedData);
+      const updatedDeal = await storage.updateDeal(targetId, validatedData);
       
       if (!updatedDeal) {
         return res.status(404).json({ message: "Deal not found" });

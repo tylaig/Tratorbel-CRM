@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   FilterIcon, 
   Search, 
-  SortDesc, 
+  ArrowDownIcon,
+  ArrowUpIcon,
   Tag, 
-  X
+  X,
+  CheckIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,17 +18,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export interface FilterOptions {
@@ -44,23 +35,14 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ onFilterChange, activeFilters }: FilterBarProps) {
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  // Usando useEffect para garantir que os filtros locais estejam sempre sincronizados com os ativos
   const [localFilters, setLocalFilters] = useState<FilterOptions>(activeFilters);
   
-  const { toast } = useToast();
+  useEffect(() => {
+    setLocalFilters(activeFilters);
+  }, [activeFilters]);
   
-  // Aplicar filtros
-  const applyFilters = () => {
-    onFilterChange(localFilters);
-    setIsFilterOpen(false);
-    toast({
-      title: "Filtros aplicados",
-      description: "Os negócios foram filtrados conforme suas preferências.",
-      variant: "default",
-    });
-  };
+  const { toast } = useToast();
   
   // Limpar filtros
   const clearFilters = () => {
@@ -69,28 +51,26 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
       status: [],
       sortBy: "date",
       sortOrder: "desc",
-      hideClosed: true // Por padrão, escondemos negócios fechados (vendidos ou perdidos)
+      hideClosed: true
     };
     
     setLocalFilters(defaultFilters);
     onFilterChange(defaultFilters);
-    setIsFilterOpen(false);
+    
     toast({
       title: "Filtros limpos",
       description: "Todos os filtros foram removidos.",
-      variant: "default",
     });
   };
   
-  // Aplicar ordenação
-  const applySorting = (sortBy: "name" | "value" | "date" | "company", sortOrder: "asc" | "desc") => {
-    const newFilters = { ...localFilters, sortBy, sortOrder };
-    setLocalFilters(newFilters);
-    onFilterChange(newFilters);
-    setIsSortOpen(false);
+  // Aplicar filtros de forma imediata
+  const applyFilters = (newFilters: Partial<FilterOptions>) => {
+    const updatedFilters = { ...localFilters, ...newFilters };
+    setLocalFilters(updatedFilters);
+    onFilterChange(updatedFilters);
   };
   
-  // Toggle status filter
+  // Alternar status
   const toggleStatus = (status: string) => {
     let newStatusFilters: string[];
     
@@ -100,25 +80,14 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
       newStatusFilters = [...localFilters.status, status];
     }
     
-    const newFilters = { ...localFilters, status: newStatusFilters };
-    setLocalFilters(newFilters);
-    onFilterChange(newFilters);
-    
-    // Fechar o popover após alteração
-    setTimeout(() => {
-      // Usando um pequeno atraso para garantir que a interface seja atualizada
-      if (newStatusFilters.length === 0) {
-        setIsStatusOpen(false);
-      }
-    }, 300);
+    applyFilters({ status: newStatusFilters });
   };
   
-  // Handle search input change
+  // Controlar a busca com debounce
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
     setLocalFilters(prev => ({ ...prev, search: searchTerm }));
     
-    // Debounce search for better performance
     const timer = setTimeout(() => {
       onFilterChange({ ...localFilters, search: searchTerm });
     }, 300);
@@ -128,26 +97,38 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
   
   // Status options with colors
   const statusOptions = [
-    { value: "in_progress", label: "Em andamento", color: "blue", bgColor: "bg-blue-100", borderColor: "border-blue-200", textColor: "text-blue-800" },
-    { value: "waiting", label: "Aguardando", color: "yellow", bgColor: "bg-yellow-100", borderColor: "border-yellow-200", textColor: "text-yellow-800" },
-    { value: "completed", label: "Concluído", color: "green", bgColor: "bg-green-100", borderColor: "border-green-200", textColor: "text-green-800" },
-    { value: "canceled", label: "Cancelado", color: "red", bgColor: "bg-red-100", borderColor: "border-red-200", textColor: "text-red-800" },
+    { value: "in_progress", label: "Em andamento", bgColor: "bg-blue-100", borderColor: "border-blue-200", textColor: "text-blue-800" },
+    { value: "waiting", label: "Aguardando", bgColor: "bg-yellow-100", borderColor: "border-yellow-200", textColor: "text-yellow-800" },
+    { value: "completed", label: "Concluído", bgColor: "bg-green-100", borderColor: "border-green-200", textColor: "text-green-800" },
+    { value: "canceled", label: "Cancelado", bgColor: "bg-red-100", borderColor: "border-red-200", textColor: "text-red-800" }
   ];
   
-  // Format active filter count
+  // Opções de ordenação
+  const sortOptions = [
+    { id: "name-asc", label: "Nome (A-Z)", sortBy: "name", sortOrder: "asc" },
+    { id: "name-desc", label: "Nome (Z-A)", sortBy: "name", sortOrder: "desc" },
+    { id: "value-desc", label: "Maior valor", sortBy: "value", sortOrder: "desc" },
+    { id: "value-asc", label: "Menor valor", sortBy: "value", sortOrder: "asc" },
+    { id: "date-desc", label: "Mais recentes", sortBy: "date", sortOrder: "desc" },
+    { id: "date-asc", label: "Mais antigos", sortBy: "date", sortOrder: "asc" },
+    { id: "company-asc", label: "Empresa (A-Z)", sortBy: "company", sortOrder: "asc" },
+    { id: "company-desc", label: "Empresa (Z-A)", sortBy: "company", sortOrder: "desc" }
+  ];
+  
+  // Contagem de filtros ativos
   const getActiveFilterCount = (): number => {
     let count = 0;
     if (localFilters.search) count++;
     if (localFilters.status.length > 0) count++;
     if (localFilters.sortBy !== "date" || localFilters.sortOrder !== "desc") count++;
-    if (localFilters.hideClosed === false) count++; // Considerar como filtro ativo se mostrar negócios concluídos
+    if (localFilters.hideClosed === false) count++;
     return count;
   };
   
   return (
     <div className="flex items-center space-x-2 mb-4">
-      {/* Filtros */}
-      <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+      {/* Filtro - Mostrar/Ocultar Concluídos */}
+      <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className="flex items-center gap-2 relative">
             <FilterIcon className="h-4 w-4" />
@@ -178,10 +159,7 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
                 id="show-closed-deals"
                 checked={!localFilters.hideClosed}
                 onCheckedChange={(checked) => {
-                  setLocalFilters({
-                    ...localFilters,
-                    hideClosed: !checked
-                  });
+                  applyFilters({ hideClosed: !checked });
                 }}
               />
               <Label
@@ -192,127 +170,63 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
               </Label>
             </div>
             
-            <div className="flex justify-between pt-2">
+            <div className="flex justify-end pt-2">
               <Button variant="outline" size="sm" onClick={clearFilters}>
-                Limpar
-              </Button>
-              <Button size="sm" onClick={applyFilters}>
-                Aplicar
+                Limpar Tudo
               </Button>
             </div>
           </div>
         </PopoverContent>
       </Popover>
       
-      {/* Ordenação */}
-      <Popover open={isSortOpen} onOpenChange={setIsSortOpen}>
+      {/* Ordenação - Simplificada */}
+      <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="flex items-center gap-2">
-            <SortDesc className="h-4 w-4" />
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            {localFilters.sortOrder === "asc" ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />}
             <span>Ordenar</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-56">
-          <div className="space-y-4">
-            <h4 className="font-medium">Ordenar por</h4>
+          <div className="space-y-2">
+            <h4 className="font-medium mb-2">Ordenar por</h4>
             
-            <div className="grid gap-2">
-              <Button 
-                variant={localFilters.sortBy === "name" && localFilters.sortOrder === "asc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("name", "asc")}
-              >
-                Nome (A-Z)
-              </Button>
-              
-              <Button 
-                variant={localFilters.sortBy === "name" && localFilters.sortOrder === "desc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("name", "desc")}
-              >
-                Nome (Z-A)
-              </Button>
-              
-              <Button 
-                variant={localFilters.sortBy === "value" && localFilters.sortOrder === "desc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("value", "desc")}
-              >
-                Maior valor
-              </Button>
-              
-              <Button 
-                variant={localFilters.sortBy === "value" && localFilters.sortOrder === "asc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("value", "asc")}
-              >
-                Menor valor
-              </Button>
-              
-              <Button 
-                variant={localFilters.sortBy === "date" && localFilters.sortOrder === "desc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("date", "desc")}
-              >
-                Mais recentes
-              </Button>
-              
-              <Button 
-                variant={localFilters.sortBy === "date" && localFilters.sortOrder === "asc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("date", "asc")}
-              >
-                Mais antigos
-              </Button>
-              
-              <Button 
-                variant={localFilters.sortBy === "company" && localFilters.sortOrder === "asc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("company", "asc")}
-              >
-                Empresa (A-Z)
-              </Button>
-              
-              <Button 
-                variant={localFilters.sortBy === "company" && localFilters.sortOrder === "desc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("company", "desc")}
-              >
-                Empresa (Z-A)
-              </Button>
-              
-              <Button 
-                variant={localFilters.sortBy === "date" && localFilters.sortOrder === "asc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("date", "asc")}
-              >
-                Mais antigos
-              </Button>
-              
-              <Button 
-                variant={localFilters.sortBy === "company" && localFilters.sortOrder === "asc" ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => applySorting("company", "asc")}
-              >
-                Empresa (A-Z)
-              </Button>
+            <div className="grid gap-1">
+              {sortOptions.map(option => (
+                <Button 
+                  key={option.id}
+                  variant="ghost"
+                  size="sm"
+                  className={`justify-start h-9 px-2 ${
+                    localFilters.sortBy === option.sortBy && 
+                    localFilters.sortOrder === option.sortOrder 
+                      ? "bg-accent text-accent-foreground font-medium" 
+                      : ""
+                  }`}
+                  onClick={() => applyFilters({ 
+                    sortBy: option.sortBy as any, 
+                    sortOrder: option.sortOrder as any 
+                  })}
+                >
+                  <div className="flex items-center w-full">
+                    <span>{option.label}</span>
+                    {localFilters.sortBy === option.sortBy && 
+                     localFilters.sortOrder === option.sortOrder && (
+                      <CheckIcon className="h-4 w-4 ml-auto" />
+                    )}
+                  </div>
+                </Button>
+              ))}
             </div>
           </div>
         </PopoverContent>
       </Popover>
       
-      {/* Status */}
-      <Popover open={isStatusOpen} onOpenChange={setIsStatusOpen}>
+      {/* Status - Simplificado */}
+      <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className="flex items-center gap-2 relative">
             <Tag className="h-4 w-4" />
@@ -325,10 +239,10 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-56">
-          <div className="space-y-4">
-            <h4 className="font-medium">Filtrar por status</h4>
+          <div className="space-y-2">
+            <h4 className="font-medium mb-2">Filtrar por status</h4>
             
-            <div className="grid gap-2">
+            <div className="grid gap-1">
               {statusOptions.map(status => (
                 <div
                   key={status.value}

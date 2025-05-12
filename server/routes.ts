@@ -387,7 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Rota para criar novo contato no Chatwoot (via WooCommerce)
+  // Rota para criar novo contato no Chatwoot
   apiRouter.post("/chatwoot/contacts", async (req: Request, res: Response) => {
     try {
       const settings = await storage.getSettings();
@@ -410,7 +410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phone_number: phone_number || undefined,
         custom_attributes: {
           company_name: company_name || undefined,
-          source: "WooCommerce (manual)",
+          source: "CRM (manual)",
           created_via: "CRM"
         }
       };
@@ -432,12 +432,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (response.status === 200 || response.status === 201) {
         // Retornar os dados do contato criado
         res.status(201).json({
-          message: "Contato criado com sucesso no WooCommerce",
+          message: "Contato criado com sucesso no Chatwoot",
           contact: response.data
         });
       } else {
         res.status(response.status).json({
-          message: "Erro ao criar contato no WooCommerce",
+          message: "Erro ao criar contato no Chatwoot",
           apiResponse: response.data
         });
       }
@@ -446,7 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (axios.isAxiosError(error)) {
         res.status(error.response?.status || 500).json({
-          message: "Erro ao criar contato no WooCommerce",
+          message: "Erro ao criar contato no Chatwoot",
           details: error.response?.data ? JSON.stringify(error.response.data) : error.message
         });
       } else {

@@ -88,6 +88,17 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
     enabled: isOpen,
   });
   
+  // Carrega os estágios do pipeline se não foram fornecidos via props
+  const { data: fetchedPipelineStages } = useQuery<PipelineStage[]>({
+    queryKey: ['/api/pipeline-stages'],
+    enabled: isOpen && !pipelineStages.length,
+  });
+  
+  // Usa os estágios fornecidos via props ou os carregados da API
+  const availablePipelineStages = pipelineStages.length > 0 
+    ? pipelineStages 
+    : (fetchedPipelineStages || []);
+  
   const contacts = contactsData?.payload || [];
   
   // Preencher os dados do contato selecionado quando disponível
@@ -114,6 +125,13 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
       setPhone(formatPhoneNumber(selectedContact.phone_number) || "");
     }
   }, [selectedContact]);
+
+  // Efeito para definir o estágio inicial com base no initialStageId
+  useEffect(() => {
+    if (initialStageId) {
+      setStageId(initialStageId.toString());
+    }
+  }, [initialStageId]);
   
   const addDealMutation = useMutation({
     mutationFn: async () => {
@@ -322,15 +340,18 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
         setCompanyName(selectedContact.company_name);
       }
       
-      // Encontre o estágio padrão e defina-o como o estágio inicial
-      const defaultStage = pipelineStages.find(stage => stage.isDefault);
-      if (defaultStage) {
-        setStageId(defaultStage.id.toString());
-      } else if (pipelineStages.length > 0) {
-        setStageId(pipelineStages[0].id.toString());
+      // Se já tivermos um initialStageId definido, não precisamos definir aqui
+      if (!initialStageId) {
+        // Encontre o estágio padrão e defina-o como o estágio inicial
+        const defaultStage = availablePipelineStages.find(stage => stage.isDefault);
+        if (defaultStage) {
+          setStageId(defaultStage.id.toString());
+        } else if (availablePipelineStages.length > 0) {
+          setStageId(availablePipelineStages[0].id.toString());
+        }
       }
     }
-  }, [isOpen, selectedContact, pipelineStages, name]);
+  }, [isOpen, selectedContact, availablePipelineStages, name, initialStageId]);
   
   // Função para lidar com a seleção de contato da busca avançada
   const handleAdvancedSearchSelect = (contactId: string, contactName: string) => {

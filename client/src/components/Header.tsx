@@ -45,9 +45,7 @@ export default function Header({
       <div className="container mx-auto px-4">
         <div className="h-16 flex items-center justify-between">
           <div className="flex items-center">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              CRM TratorBel
-            </h1>
+            <img src="/src/assets/tbc-logo.png" alt="Grupo TBC Logo" className="h-12" />
             <span className="ml-3 text-[10px] font-medium py-1 px-2 bg-primary/10 text-primary rounded-full">
               Beta
             </span>

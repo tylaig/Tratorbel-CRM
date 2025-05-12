@@ -12,13 +12,23 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit2Icon, MoreVerticalIcon, AlertCircleIcon } from "lucide-react";
+import { Edit2Icon, MoreVerticalIcon, AlertCircleIcon, InfoIcon } from "lucide-react";
+import { FilterOptions } from "@/components/FilterBar";
 
 interface ListViewProps {
   pipelineStages: PipelineStage[];
+  filters?: FilterOptions;
 }
 
-export default function ListView({ pipelineStages }: ListViewProps) {
+export default function ListView({ pipelineStages, filters }: ListViewProps) {
+  // Use os filtros do componente pai ou crie um padrão
+  const activeFilters = filters || {
+    search: "",
+    status: [],
+    sortBy: "date",
+    sortOrder: "desc",
+    hideClosed: true
+  };
   const [stageMap, setStageMap] = useState<Map<number, string>>(new Map());
   
   // Fetch deals

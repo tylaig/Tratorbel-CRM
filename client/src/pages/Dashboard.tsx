@@ -168,11 +168,11 @@ export default function Dashboard() {
           )}
           
           {viewMode === "kanban" && (
-            <KanbanBoard pipelineStages={pipelineStages} />
+            <KanbanBoard pipelineStages={pipelineStages} filters={filters} />
           )}
           
           {viewMode === "list" && (
-            <ListView pipelineStages={pipelineStages} />
+            <ListView pipelineStages={pipelineStages} filters={filters} />
           )}
           
           {viewMode === "contacts" && (

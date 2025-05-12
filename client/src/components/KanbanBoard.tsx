@@ -39,7 +39,15 @@ interface StageWithDeals extends PipelineStage {
   totalValue: number;
 }
 
-export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
+export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProps) {
+  // Use os filtros do componente pai ou crie um padrão
+  const activeFilters = filters || {
+    search: "",
+    status: [],
+    sortBy: "date",
+    sortOrder: "desc",
+    hideClosed: true
+  };
   const [boardData, setBoardData] = useState<StageWithDeals[]>([]);
   const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
   const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
@@ -326,7 +334,14 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
       />
       
       <div className="flex flex-col h-full">
-        <div className="flex justify-end px-4 py-2">
+        <div className="flex justify-between items-center px-4 py-2">
+          {activeFilters.hideClosed && (
+            <div className="text-sm text-amber-800 flex items-center gap-2 bg-amber-100 px-3 py-1 rounded-md border border-amber-200">
+              <InfoIcon size={16} />
+              <span>Negócios concluídos estão ocultos</span>
+            </div>
+          )}
+          <div className="flex-grow"></div>
           <Button
             variant="outline"
             className="flex items-center gap-2"

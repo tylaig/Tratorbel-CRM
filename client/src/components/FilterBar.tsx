@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
   PopoverContent,
@@ -139,6 +140,7 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
     if (localFilters.search) count++;
     if (localFilters.status.length > 0) count++;
     if (localFilters.sortBy !== "date" || localFilters.sortOrder !== "desc") count++;
+    if (localFilters.hideClosed === false) count++; // Considerar como filtro ativo se mostrar negócios concluídos
     return count;
   };
   
@@ -169,6 +171,25 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
                 value={localFilters.search}
                 onChange={handleSearchChange}
               />
+            </div>
+            
+            <div className="flex items-center space-x-2 py-2">
+              <Checkbox
+                id="show-closed-deals"
+                checked={!localFilters.hideClosed}
+                onCheckedChange={(checked) => {
+                  setLocalFilters({
+                    ...localFilters,
+                    hideClosed: !checked
+                  });
+                }}
+              />
+              <Label
+                htmlFor="show-closed-deals"
+                className="text-sm font-medium cursor-pointer"
+              >
+                Mostrar negócios concluídos (ganhos/perdidos)
+              </Label>
             </div>
             
             <div className="flex justify-between pt-2">

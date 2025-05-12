@@ -10,7 +10,8 @@ export function usePipeline() {
     search: "",
     status: [],
     sortBy: "date",
-    sortOrder: "desc"
+    sortOrder: "desc",
+    hideClosed: true // Por padrão, escondemos negócios fechados (vendidos ou perdidos)
   });
   
   // Fetch deals com configurações para garantir atualização imediata

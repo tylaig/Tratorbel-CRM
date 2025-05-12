@@ -8,7 +8,8 @@ import {
   quoteItems, type QuoteItem, type InsertQuoteItem,
   leadActivities, type LeadActivity, type InsertLeadActivity,
   machineBrands, type MachineBrand, type InsertMachineBrand,
-  leads, type Lead, type InsertLead
+  leads, type Lead, type InsertLead,
+  stageHistory
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, or, like } from "drizzle-orm";

@@ -98,7 +98,7 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
       
       toast({
         title: "Contato criado com sucesso",
-        description: `O contato ${data.contact.name} foi criado no WooCommerce.`,
+        description: `O contato ${data.contact.name} foi criado no Chatwoot.`,
         variant: "default",
       });
       

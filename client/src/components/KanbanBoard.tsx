@@ -458,7 +458,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
             <span>Adicionar Estágio</span>
           </Button>
         </div>
-        <div className="flex overflow-x-auto px-2 board-container" style={{ height: 'calc(100vh - 170px)', overflowY: 'hidden' }}>
+        <div className="flex overflow-x-auto px-2 board-container" style={{ height: 'calc(100vh - 190px)', overflowY: 'auto' }}>
           {boardData.map((stage) => {
             // Definir classes e estilos específicos com base no tipo de estágio
             let stageClass = "";
@@ -535,7 +535,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
                 <Droppable droppableId={stage.id.toString()}>
                   {(provided, snapshot) => (
                     <div
-                      className={`deal-list p-2 flex-grow rounded-b-lg overflow-y-auto h-full ${
+                      className={`deal-list p-2 flex-grow rounded-b-lg overflow-y-auto max-h-[calc(100vh-250px)] ${
                         snapshot.isDraggingOver
                           ? "bg-yellow-50 dark:bg-yellow-900/20"
                           : "bg-gray-50 dark:bg-gray-800"

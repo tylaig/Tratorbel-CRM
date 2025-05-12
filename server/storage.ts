@@ -101,12 +101,16 @@ export class MemStorage implements IStorage {
     this.lossReasonCurrentId = 1;
     this.quoteItemCurrentId = 1;
     this.settingsCurrentId = 1;
+    this.machineBrandCurrentId = 1;
     
     // Initialize with default pipeline stages
     this.initDefaultStages();
     
     // Initialize with default loss reasons
     this.initDefaultLossReasons();
+    
+    // Initialize with default machine brands
+    this.initDefaultMachineBrands();
   }
   
   private initDefaultStages() {
@@ -136,6 +140,21 @@ export class MemStorage implements IStorage {
     
     defaultReasons.forEach(reason => {
       this.createLossReason(reason);
+    });
+  }
+  
+  private initDefaultMachineBrands() {
+    const defaultBrands = [
+      { name: "John Deere", description: "Fabricante global de equipamentos agrícolas", active: true },
+      { name: "Massey Ferguson", description: "Marca de tratores e equipamentos agrícolas", active: true },
+      { name: "New Holland", description: "Fabricante de máquinas agrícolas e de construção", active: true },
+      { name: "Case IH", description: "Especializada em equipamentos agrícolas de alta potência", active: true },
+      { name: "Valtra", description: "Fabricante finlandesa de tratores e implementos", active: true },
+      { name: "Jacto", description: "Fabricante brasileira de pulverizadores e equipamentos", active: true }
+    ];
+    
+    defaultBrands.forEach(brand => {
+      this.createMachineBrand(brand);
     });
   }
 

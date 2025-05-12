@@ -88,24 +88,38 @@ export function usePipeline() {
       );
     }
     
-    // Aplicar filtro de motivo de ganho
+    // Aplicar filtro de motivo de ganho (vendas realizadas)
     if (filters.winReason) {
+      // Mostrar apenas negócios com status "won" (vendidos)
       result = result.filter(deal => 
         deal.saleStatus === 'won' && 
         deal.salePerformance === filters.winReason
       );
+      
+      // Quando filtro de ganho estiver ativo, remover a ocultação de negócios fechados
+      // para mostrar os resultados mesmo que hideClosed seja true
+      if (filters.hideClosed) {
+        console.log("Ignorando hideClosed por causa do filtro de ganho");
+      }
     }
     
-    // Aplicar filtro de motivo de perda
+    // Aplicar filtro de motivo de perda (vendas perdidas)
     if (filters.lossReason) {
+      // Mostrar apenas negócios com status "lost" (perdidos)
       result = result.filter(deal => 
         deal.saleStatus === 'lost' && 
         deal.lostReason === filters.lossReason
       );
+      
+      // Quando filtro de perda estiver ativo, remover a ocultação de negócios fechados
+      // para mostrar os resultados mesmo que hideClosed seja true
+      if (filters.hideClosed) {
+        console.log("Ignorando hideClosed por causa do filtro de perda");
+      }
     }
     
     // Filtro específico para excluir negócios ganhos ou perdidos do pipeline
-    if (filters.hideClosed) {
+    if (filters.hideClosed && !filters.winReason && !filters.lossReason) {
       result = result.filter(deal => 
         deal.saleStatus !== 'won' && 
         deal.saleStatus !== 'lost'

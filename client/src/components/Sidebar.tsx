@@ -50,6 +50,33 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                 <span>Funil de Vendas</span>
               </a>
             </Link>
+            <Link href="/sales">
+              <a className={cn(
+                "sidebar-link",
+                location === "/sales" ? "active" : ""
+              )}>
+                <CheckCircleIcon className="w-5 h-5 mr-2 text-green-600" />
+                <span>Vendas Concluídas</span>
+              </a>
+            </Link>
+            <Link href="/losses">
+              <a className={cn(
+                "sidebar-link",
+                location === "/losses" ? "active" : ""
+              )}>
+                <XCircleIcon className="w-5 h-5 mr-2 text-red-600" />
+                <span>Oportunidades Perdidas</span>
+              </a>
+            </Link>
+            <Link href="/historical">
+              <a className={cn(
+                "sidebar-link",
+                location === "/historical" ? "active" : ""
+              )}>
+                <HistoryIcon className="w-5 h-5 mr-2 text-blue-600" />
+                <span>Histórico</span>
+              </a>
+            </Link>
             <Link href="/activities">
               <a className={cn(
                 "sidebar-link",

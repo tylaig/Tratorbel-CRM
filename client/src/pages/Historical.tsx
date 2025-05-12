@@ -1,308 +1,492 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Deal } from "@shared/schema";
+import { formatCurrency, formatDate } from "@/lib/formatters";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   BarChart3Icon, 
-  TrendingUpIcon, 
-  TrendingDownIcon, 
-  CalendarIcon,
-  DollarSignIcon,
-  UsersIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  PieChartIcon
+  CalendarIcon, 
+  CheckCircleIcon, 
+  DollarSignIcon, 
+  HistoryIcon, 
+  PieChartIcon,
+  XCircleIcon
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { formatCurrency } from "@/lib/formatters";
-import { Deal } from "@shared/schema";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Mock data para os charts (será substituído por dados reais depois)
-const salesByMonth = [
-  { name: "Jan", total: 120000 },
-  { name: "Fev", total: 140000 },
-  { name: "Mar", total: 90000 },
-  { name: "Abr", total: 220000 },
-  { name: "Mai", total: 180000 },
-  { name: "Jun", total: 160000 },
-];
-
-const lossReasons = [
-  { name: "Preço", value: 12, fill: "#f87171" },
-  { name: "Concorrência", value: 8, fill: "#fb923c" },
-  { name: "Prazo", value: 5, fill: "#fbbf24" },
-  { name: "Indisponibilidade", value: 3, fill: "#a3e635" },
-  { name: "Outros", value: 2, fill: "#22d3ee" },
-];
+import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 
 export default function Historical() {
-  const { data: wonDeals = [], isLoading: isLoadingWon } = useQuery<Deal[]>({
-    queryKey: ['/api/deals/sale-status', 'won'],
-    queryFn: async () => {
-      const res = await fetch('/api/deals/sale-status/won');
-      if (!res.ok) throw new Error('Erro ao carregar dados');
-      return res.json();
-    }
-  });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [timeRange, setTimeRange] = useState<"all" | "month" | "quarter" | "year">("all");
   
-  const { data: lostDeals = [], isLoading: isLoadingLost } = useQuery<Deal[]>({
-    queryKey: ['/api/deals/sale-status', 'lost'],
-    queryFn: async () => {
-      const res = await fetch('/api/deals/sale-status/lost');
-      if (!res.ok) throw new Error('Erro ao carregar dados');
-      return res.json();
-    }
-  });
-  
-  const { data: allDeals = [], isLoading: isLoadingAll } = useQuery<Deal[]>({
+  // Carregar todos os negócios
+  const { data: allDeals = [], isLoading } = useQuery<Deal[]>({
     queryKey: ['/api/deals'],
-    queryFn: async () => {
-      const res = await fetch('/api/deals');
-      if (!res.ok) throw new Error('Erro ao carregar dados');
-      return res.json();
+  });
+  
+  // Filtrar negócios por período de tempo selecionado
+  const filteredDeals = allDeals.filter(deal => {
+    if (timeRange === "all") return true;
+    
+    const dealDate = new Date(deal.updatedAt);
+    const now = new Date();
+    
+    if (timeRange === "month") {
+      // Último mês
+      const lastMonth = new Date();
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      return dealDate >= lastMonth;
+    } else if (timeRange === "quarter") {
+      // Último trimestre
+      const lastQuarter = new Date();
+      lastQuarter.setMonth(lastQuarter.getMonth() - 3);
+      return dealDate >= lastQuarter;
+    } else if (timeRange === "year") {
+      // Último ano
+      const lastYear = new Date();
+      lastYear.setFullYear(lastYear.getFullYear() - 1);
+      return dealDate >= lastYear;
+    }
+    
+    return true;
+  });
+  
+  // Separar por status
+  const wonDeals = filteredDeals.filter(deal => deal.saleStatus === "won");
+  const lostDeals = filteredDeals.filter(deal => deal.saleStatus === "lost");
+  const activeDeals = filteredDeals.filter(deal => !deal.saleStatus);
+  
+  // Calcular estatísticas
+  const totalWonValue = wonDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+  const totalLostValue = lostDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+  const totalPotentialValue = activeDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+  
+  // Calcular taxa de conversão
+  const conversionRate = wonDeals.length + lostDeals.length > 0 
+    ? Math.round((wonDeals.length / (wonDeals.length + lostDeals.length)) * 100) 
+    : 0;
+  
+  // Calcular ticket médio
+  const averageTicket = wonDeals.length > 0 ? totalWonValue / wonDeals.length : 0;
+  
+  // Calcular valor médio por estágio
+  const valueByStage: Record<number, { total: number, count: number, name: string }> = {};
+  
+  filteredDeals.forEach(deal => {
+    if (!valueByStage[deal.stageId]) {
+      valueByStage[deal.stageId] = { 
+        total: 0, 
+        count: 0, 
+        name: "Estágio " + deal.stageId // Fallback se não conseguirmos o nome
+      };
+    }
+    
+    if (deal.value) {
+      valueByStage[deal.stageId].total += deal.value;
+      valueByStage[deal.stageId].count++;
     }
   });
   
-  // Cálculos para os cards
-  const totalWonValue = wonDeals.reduce((acc, deal) => acc + (deal.value || 0), 0);
-  const totalLostValue = lostDeals.reduce((acc, deal) => acc + (deal.value || 0), 0);
-  const totalOpenValue = allDeals
-    .filter(deal => deal.status !== "won" && deal.status !== "lost")
-    .reduce((acc, deal) => acc + (deal.value || 0), 0);
+  // Razões de perda
+  const lossReasons: Record<string, number> = {};
   
-  const conversionRate = wonDeals.length + lostDeals.length > 0 
-    ? (wonDeals.length / (wonDeals.length + lostDeals.length)) * 100 
-    : 0;
-    
-  const totalClients = new Set([
-    ...wonDeals.map(d => d.contactId), 
-    ...lostDeals.map(d => d.contactId)
-  ]).size;
-  
-  const avgDealValue = wonDeals.length > 0 
-    ? totalWonValue / wonDeals.length 
-    : 0;
+  lostDeals.forEach(deal => {
+    const reason = deal.lostReason || "Não especificado";
+    lossReasons[reason] = (lossReasons[reason] || 0) + 1;
+  });
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center mb-6">
-        <BarChart3Icon className="h-8 w-8 text-primary mr-2" />
-        <h1 className="text-2xl font-bold">Dashboard de Vendas</h1>
-      </div>
+    <div className="flex flex-col h-screen">
+      <Header 
+        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        viewMode="list" 
+        toggleViewMode={() => {}}
+        onOpenApiConfig={() => {}}
+        onAddDeal={() => {}}
+        onSync={() => {}}
+        syncLoading={false}
+        hasApiConfig={true}
+      />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Vendas Totais</CardTitle>
-            <DollarSignIcon className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalWonValue)}</div>
-            <p className="text-xs text-gray-500 mt-1">{wonDeals.length} negócios fechados</p>
-          </CardContent>
-        </Card>
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar isOpen={isSidebarOpen} />
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Perdas</CardTitle>
-            <TrendingDownIcon className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalLostValue)}</div>
-            <p className="text-xs text-gray-500 mt-1">{lostDeals.length} oportunidades perdidas</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Taxa de Conversão</CardTitle>
-            <PieChartIcon className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{conversionRate.toFixed(1)}%</div>
-            <p className="text-xs text-gray-500 mt-1">
-              {wonDeals.length} ganhos / {wonDeals.length + lostDeals.length} totais
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Ticket Médio</CardTitle>
-            <TrendingUpIcon className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(avgDealValue)}</div>
-            <p className="text-xs text-gray-500 mt-1">Por negócio fechado</p>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Vendas por Mês</CardTitle>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesByMonth}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis 
-                    tickFormatter={(value) => 
-                      new Intl.NumberFormat('pt-BR', {
-                        notation: 'compact',
-                        compactDisplay: 'short',
-                        currency: 'BRL',
-                      }).format(value)
-                    } 
-                  />
-                  <Tooltip 
-                    formatter={(value) => formatCurrency(Number(value))} 
-                    labelFormatter={(label) => `Mês: ${label}`}
-                  />
-                  <Bar dataKey="total" fill="#0e7490" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+        <main className="flex-1 bg-gray-50 px-4 pt-6 overflow-y-auto">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+              <div>
+                <h1 className="text-2xl font-semibold flex items-center gap-2">
+                  <HistoryIcon className="h-6 w-6 text-blue-600" />
+                  Histórico de Desempenho
+                </h1>
+                <p className="text-gray-500">
+                  Análise histórica do funil de vendas e conversões
+                </p>
+              </div>
+              
+              <Tabs 
+                value={timeRange} 
+                onValueChange={(v) => setTimeRange(v as "all" | "month" | "quarter" | "year")}
+                className="w-full md:w-auto"
+              >
+                <TabsList className="grid grid-cols-4 w-full md:w-auto">
+                  <TabsTrigger value="all" className="text-xs md:text-sm">
+                    Todo Período
+                  </TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs md:text-sm">
+                    Último Mês
+                  </TabsTrigger>
+                  <TabsTrigger value="quarter" className="text-xs md:text-sm">
+                    Trimestre
+                  </TabsTrigger>
+                  <TabsTrigger value="year" className="text-xs md:text-sm">
+                    Último Ano
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Motivos de Perda</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={lossReasons}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {lossReasons.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => [`${value} negócios`, 'Quantidade']} />
-                </PieChart>
-              </ResponsiveContainer>
+            
+            {/* Cards de estatísticas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Taxa de Conversão</CardDescription>
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <div className="p-1 rounded-md bg-green-100">
+                      <PieChartIcon className="h-5 w-5 text-green-600" />
+                    </div>
+                    {isLoading ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <span>{conversionRate}%</span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Ticket Médio</CardDescription>
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <div className="p-1 rounded-md bg-blue-100">
+                      <DollarSignIcon className="h-5 w-5 text-blue-600" />
+                    </div>
+                    {isLoading ? (
+                      <Skeleton className="h-8 w-28" />
+                    ) : (
+                      <span>{formatCurrency(averageTicket)}</span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Vendas Fechadas</CardDescription>
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <div className="p-1 rounded-md bg-green-100">
+                      <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                    </div>
+                    {isLoading ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <span>{wonDeals.length}</span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Oportunidades Perdidas</CardDescription>
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <div className="p-1 rounded-md bg-red-100">
+                      <XCircleIcon className="h-5 w-5 text-red-600" />
+                    </div>
+                    {isLoading ? (
+                      <Skeleton className="h-8 w-16" />
+                    ) : (
+                      <span>{lostDeals.length}</span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle>Resumo de Pipeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                  <span className="text-sm">Em aberto</span>
-                </div>
-                <div className="font-medium">{formatCurrency(totalOpenValue)}</div>
-              </div>
+            
+            {/* Gráficos de valor total */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Valor Total Ganho</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-md bg-green-100">
+                        <CheckCircleIcon className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">
+                          {wonDeals.length} {wonDeals.length === 1 ? "negócio" : "negócios"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-28" />
+                      ) : (
+                        formatCurrency(totalWonValue)
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div>
-                  <span className="text-sm">Vendas</span>
-                </div>
-                <div className="font-medium">{formatCurrency(totalWonValue)}</div>
-              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Valor Perdido</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-md bg-red-100">
+                        <XCircleIcon className="h-6 w-6 text-red-600" />
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">
+                          {lostDeals.length} {lostDeals.length === 1 ? "negócio" : "negócios"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-red-600">
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-28" />
+                      ) : (
+                        formatCurrency(totalLostValue)
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                  <span className="text-sm">Perdas</span>
-                </div>
-                <div className="font-medium">{formatCurrency(totalLostValue)}</div>
-              </div>
-              
-              <div className="flex items-center justify-between pt-2 border-t">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-gray-800 mr-2"></div>
-                  <span className="text-sm font-medium">Total</span>
-                </div>
-                <div className="font-bold">
-                  {formatCurrency(totalOpenValue + totalWonValue + totalLostValue)}
-                </div>
-              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Valor em Pipeline</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-md bg-blue-100">
+                        <BarChart3Icon className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">
+                          {activeDeals.length} {activeDeals.length === 1 ? "negócio" : "negócios"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {isLoading ? (
+                        <Skeleton className="h-8 w-28" />
+                      ) : (
+                        formatCurrency(totalPotentialValue)
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle>Métricas Adicionais</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <UsersIcon className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Total de Clientes</p>
-                  <p className="text-xl font-bold">{totalClients}</p>
-                </div>
-              </div>
+            
+            {/* Gráficos detalhados */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Valor Médio por Estágio</CardTitle>
+                  <CardDescription>
+                    Comparação do valor médio dos negócios em cada etapa do funil
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  ) : Object.keys(valueByStage).length > 0 ? (
+                    <div className="space-y-4">
+                      {Object.entries(valueByStage)
+                        .filter(([_, data]) => data.count > 0)
+                        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+                        .map(([stageId, data]) => {
+                          const averageValue = data.count > 0 ? data.total / data.count : 0;
+                          
+                          // Calcular a largura da barra baseada no maior valor médio
+                          const maxAverage = Math.max(
+                            ...Object.values(valueByStage)
+                              .filter(d => d.count > 0)
+                              .map(d => d.total / d.count)
+                          );
+                          
+                          const percentage = maxAverage > 0 ? (averageValue / maxAverage) * 100 : 0;
+                          
+                          return (
+                            <div key={stageId} className="space-y-1">
+                              <div className="flex justify-between text-sm">
+                                <span className="font-medium">Estágio {stageId}</span>
+                                <span>{formatCurrency(averageValue)}</span>
+                              </div>
+                              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-blue-600 rounded-full" 
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                              <div className="text-xs text-gray-500 text-right">
+                                {data.count} {data.count === 1 ? "negócio" : "negócios"}
+                              </div>
+                            </div>
+                          );
+                        })
+                      }
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">Sem dados suficientes para análise.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
               
-              <div className="flex items-center gap-4">
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <CheckCircleIcon className="h-6 w-6 text-emerald-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Negócios Fechados</p>
-                  <p className="text-xl font-bold">{wonDeals.length}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <XCircleIcon className="h-6 w-6 text-red-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Oportunidades Perdidas</p>
-                  <p className="text-xl font-bold">{lostDeals.length}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <CalendarIcon className="h-6 w-6 text-purple-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">No Pipeline</p>
-                  <p className="text-xl font-bold">
-                    {allDeals.filter(d => d.status !== "won" && d.status !== "lost").length}
-                  </p>
-                </div>
-              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Motivos de Perda</CardTitle>
+                  <CardDescription>
+                    Distribuição dos principais motivos que levaram à perda de oportunidades
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  ) : Object.keys(lossReasons).length > 0 ? (
+                    <div className="space-y-4">
+                      {Object.entries(lossReasons)
+                        .sort(([, countA], [, countB]) => countB - countA)
+                        .map(([reason, count]) => {
+                          const percentage = Math.round((count / lostDeals.length) * 100);
+                          
+                          return (
+                            <div key={reason} className="space-y-1">
+                              <div className="flex justify-between text-sm">
+                                <span className="font-medium">{reason}</span>
+                                <span>{count} {count === 1 ? "ocorrência" : "ocorrências"} ({percentage}%)</span>
+                              </div>
+                              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-red-600 rounded-full" 
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })
+                      }
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">Nenhum registro de oportunidade perdida.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+            
+            {/* Timeline de atividades */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Linha do Tempo de Atividades</CardTitle>
+                <CardDescription>
+                  Histórico recente de conclusões de negócios
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                ) : (
+                  <div className="relative">
+                    {/* Linha vertical */}
+                    <div className="absolute left-3.5 top-3 bottom-3 w-0.5 bg-gray-200" />
+                    
+                    <div className="space-y-8 relative">
+                      {filteredDeals
+                        .filter(deal => deal.saleStatus)
+                        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+                        .slice(0, 10)
+                        .map((deal, index) => (
+                          <div key={deal.id} className="flex gap-4">
+                            <div className="relative z-10 flex items-center justify-center w-7 h-7 rounded-full shrink-0">
+                              <div className={`rounded-full p-1.5 ${deal.saleStatus === "won" ? "bg-green-100" : "bg-red-100"}`}>
+                                {deal.saleStatus === "won" ? (
+                                  <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                                ) : (
+                                  <XCircleIcon className="w-4 h-4 text-red-600" />
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex-1 pt-0.5">
+                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                                <p className="text-sm font-medium">
+                                  {deal.name} 
+                                  {deal.companyName && <span className="text-gray-500"> - {deal.companyName}</span>}
+                                </p>
+                                <span className="text-xs text-gray-500 flex items-center gap-1">
+                                  <CalendarIcon className="h-3 w-3" />
+                                  {formatDate(new Date(deal.updatedAt))}
+                                </span>
+                              </div>
+                              
+                              <p className="mt-1 text-sm">
+                                <span className={deal.saleStatus === "won" ? "text-green-700" : "text-red-700"}>
+                                  {deal.saleStatus === "won" ? "Negócio fechado" : "Oportunidade perdida"}
+                                </span>
+                                {deal.value && <span className="ml-2 font-mono">{formatCurrency(deal.value)}</span>}
+                              </p>
+                              
+                              {deal.lostReason && (
+                                <p className="mt-1 text-sm text-gray-600">
+                                  Motivo: {deal.lostReason}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      }
+                      
+                      {filteredDeals.filter(deal => deal.saleStatus).length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">Nenhum histórico de atividades disponível.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
     </div>
   );

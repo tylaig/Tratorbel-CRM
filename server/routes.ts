@@ -156,6 +156,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rota para obter negócios por status de venda (won, lost)
+  apiRouter.get("/deals/sale-status/:status", async (req: Request, res: Response) => {
+    try {
+      const status = req.params.status;
+      if (status !== "won" && status !== "lost") {
+        return res.status(400).json({ message: "Invalid status. Use 'won' or 'lost'" });
+      }
+      
+      const deals = await storage.getDealsBySaleStatus(status);
+      res.json(deals);
+    } catch (error) {
+      console.error(`Error getting ${req.params.status} deals:`, error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Rotas de motivos de perda
+  apiRouter.get("/loss-reasons", async (req: Request, res: Response) => {
+    try {
+      const reasons = await storage.getLossReasons();
+      res.json(reasons);
+    } catch (error) {
+      console.error("Error getting loss reasons:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  apiRouter.post("/loss-reasons", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertLossReasonSchema.parse(req.body);
+      const reason = await storage.createLossReason(validatedData);
+      res.status(201).json(reason);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        console.error("Error creating loss reason:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+  
+  apiRouter.put("/loss-reasons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const validatedData = insertLossReasonSchema.partial().parse(req.body);
+      const updatedReason = await storage.updateLossReason(id, validatedData);
+      
+      if (!updatedReason) {
+        return res.status(404).json({ message: "Loss reason not found" });
+      }
+      
+      res.json(updatedReason);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        console.error("Error updating loss reason:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+  
+  apiRouter.delete("/loss-reasons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const success = await storage.deleteLossReason(id);
+      if (!success) {
+        return res.status(404).json({ message: "Loss reason not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting loss reason:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   // Settings routes
   apiRouter.get("/settings", async (req: Request, res: Response) => {
     try {

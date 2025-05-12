@@ -71,6 +71,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const [status, setStatus] = useState("in_progress");
   const [activeTab, setActiveTab] = useState("details");
   
+  // Estado para gerenciar relacionamento entre negócios
+  const [showRelatedDeals, setShowRelatedDeals] = useState(false);
+  
   // Campos de tipo de cliente
   const [isCompany, setIsCompany] = useState(false);
   
@@ -134,6 +137,25 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setZipCode(deal.zipCode || "");
     }
   }, [deal]);
+  
+  // Funções para gerenciar negócios relacionados
+  const handleOpenDeal = (dealId: number) => {
+    // Fechar este modal primeiro
+    onClose();
+    
+    // Após um breve atraso, invalidar a query para atualizar e abrir o outro negócio
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+    }, 200);
+  };
+  
+  const handleCreateNewDeal = () => {
+    // Implementação futura - abrir modal de criação de novo negócio para o mesmo cliente
+    toast({
+      title: "Função em desenvolvimento",
+      description: "Em breve será possível criar um novo negócio a partir daqui."
+    });
+  };
 
   const updateDealMutation = useMutation({
     mutationFn: async () => {
@@ -362,6 +384,10 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             <TabsTrigger value="outcome" className="flex items-center gap-1">
               <CheckCircle2Icon className="h-4 w-4" />
               <span>Resultado</span>
+            </TabsTrigger>
+            <TabsTrigger value="related" className="flex items-center gap-1">
+              <FileTextIcon className="h-4 w-4" />
+              <span>Outros Negócios</span>
             </TabsTrigger>
           </TabsList>
 

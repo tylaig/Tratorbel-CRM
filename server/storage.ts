@@ -635,21 +635,53 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchLeads(query: string): Promise<Lead[]> {
+    console.log(`Buscando leads com o termo: "${query}"`);
+    // Verificamos se a busca é por CPF ou CNPJ - neste caso, buscamos exatamente
+    const isCpfOrCnpj = query.replace(/[^0-9]/g, '').length > 8;
+    
+    if (isCpfOrCnpj) {
+      const numericQuery = query.replace(/[^0-9]/g, '');
+      console.log(`Detectada busca por documento: ${numericQuery}`);
+      
+      const results = await db
+        .select()
+        .from(leads)
+        .where(
+          or(
+            like(leads.cnpj, `%${numericQuery}%`),
+            like(leads.cpf, `%${numericQuery}%`)
+          )
+        )
+        .orderBy(desc(leads.updatedAt));
+      
+      console.log(`Encontrados ${results.length} resultados para busca por documento`);
+      return results;
+    }
+    
+    // Busca normal por texto em vários campos
     const searchTerm = `%${query}%`;
-    return await db
+    console.log(`Realizando busca por texto: "${searchTerm}"`);
+    
+    const results = await db
       .select()
       .from(leads)
       .where(
         or(
           like(leads.name, searchTerm),
-          like(leads.companyName || '', searchTerm),
-          like(leads.email || '', searchTerm),
-          like(leads.phone || '', searchTerm),
-          like(leads.cnpj || '', searchTerm),
-          like(leads.cpf || '', searchTerm)
+          like(leads.companyName, searchTerm),
+          like(leads.email, searchTerm),
+          like(leads.phone, searchTerm),
+          like(leads.address, searchTerm),
+          like(leads.city, searchTerm),
+          like(leads.state, searchTerm),
+          like(leads.corporateName, searchTerm),
+          like(leads.clientCode, searchTerm)
         )
       )
       .orderBy(desc(leads.updatedAt));
+    
+    console.log(`Encontrados ${results.length} resultados para busca por texto`);
+    return results;
   }
 
   // Pipeline Stages

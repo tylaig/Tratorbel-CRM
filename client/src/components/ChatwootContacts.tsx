@@ -187,8 +187,8 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 flex-grow overflow-y-auto">
-          {filteredContacts && filteredContacts.length > 0 ? (
-            filteredContacts.map((contact) => (
+          {chatwootContacts && chatwootContacts.length > 0 ? (
+            chatwootContacts.map((contact) => (
               <Card key={contact.id} className="p-4 hover:shadow-md transition-shadow">
                 <div className="flex justify-between">
                   {editingContact && editingContact.id === contact.id ? (

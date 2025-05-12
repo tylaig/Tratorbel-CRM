@@ -926,10 +926,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteDeal(id: number): Promise<boolean> {
-    const result = await db
-      .delete(deals)
-      .where(eq(deals.id, id));
-    return !!result;
+    try {
+      // Verificar se o negócio existe
+      const existingDeal = await this.getDeal(id);
+      if (!existingDeal) {
+        console.log(`Deal com ID ${id} não encontrado`);
+        return false;
+      }
+      
+      // Primeiro, excluir todos os registros dependentes em uma transação
+      await db.transaction(async (tx) => {
+        console.log(`Iniciando exclusão em cascata para o deal ID ${id}`);
+        
+        // 1. Excluir todas as cotações (quote_items)
+        await tx
+          .delete(quoteItems)
+          .where(eq(quoteItems.dealId, id));
+        console.log(`Quote items excluídos para o deal ID ${id}`);
+        
+        // 2. Excluir todas as atividades do lead (lead_activities)
+        await tx
+          .delete(leadActivities)
+          .where(eq(leadActivities.dealId, id));
+        console.log(`Lead activities excluídos para o deal ID ${id}`);
+        
+        // 3. Excluir todas as máquinas do cliente (client_machines)
+        await tx
+          .delete(clientMachines)
+          .where(eq(clientMachines.dealId, id));
+        console.log(`Client machines excluídos para o deal ID ${id}`);
+        
+        // 4. Excluir histórico de estágios (stage_history)
+        await tx
+          .delete(stageHistory)
+          .where(eq(stageHistory.dealId, id));
+        console.log(`Stage history excluído para o deal ID ${id}`);
+        
+        // 5. Finalmente, excluir o próprio negócio
+        await tx
+          .delete(deals)
+          .where(eq(deals.id, id));
+        console.log(`Deal ID ${id} excluído com sucesso`);
+      });
+      
+      return true;
+    } catch (error) {
+      console.error(`Erro ao excluir deal ID ${id}:`, error);
+      return false;
+    }
   }
 
   async getDealsByStage(stageId: number): Promise<(Deal & Partial<Lead>)[]> {

@@ -383,17 +383,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newDeals = [];
       for (const contact of contacts) {
         if (!existingChatwootIds.has(contact.id.toString())) {
-          const newDeal = await storage.createDeal({
-            name: contact.name || `Deal for ${contact.email || 'Unknown'}`,
-            companyName: contact.company_name || '',
-            contactName: contact.name || '',
-            contactId: '',
-            chatwootContactId: contact.id.toString(),
-            stageId: firstStage.id,
-            value: 0,
-            status: 'in_progress'
-          });
-          newDeals.push(newDeal);
+          try {
+            // Obter informações da conversa associada ao contato
+            const conversationsResponse = await axios.get(
+              `${settings.chatwootUrl}/api/v1/accounts/${settings.accountId}/contacts/${contact.id}/conversations`,
+              {
+                headers: {
+                  'api_access_token': settings.chatwootApiKey
+                }
+              }
+            );
+            
+            let chatwootAgentId = null;
+            let chatwootAgentName = null;
+            let chatwootConversationId = null;
+            
+            if (conversationsResponse.data && 
+                conversationsResponse.data.payload && 
+                conversationsResponse.data.payload.length > 0) {
+              const conversation = conversationsResponse.data.payload[0];
+              chatwootConversationId = conversation.id?.toString();
+              
+              // Obter detalhes do agente se houver algum atribuído
+              if (conversation.meta?.assignee) {
+                chatwootAgentId = conversation.meta.assignee.id?.toString();
+                chatwootAgentName = conversation.meta.assignee.name || 'Agente desconhecido';
+              }
+            }
+            
+            const newDeal = await storage.createDeal({
+              name: contact.name || `Deal para ${contact.email || 'Cliente desconhecido'}`,
+              companyName: contact.company_name || '',
+              contactName: contact.name || '',
+              contactId: '',
+              chatwootContactId: contact.id.toString(),
+              stageId: firstStage.id,
+              value: 0,
+              status: 'in_progress',
+              // Incluir informações do agente do Chatwoot
+              chatwootAgentId: chatwootAgentId,
+              chatwootAgentName: chatwootAgentName,
+              chatwootConversationId: chatwootConversationId,
+              // Incluir dados de contato do Chatwoot
+              email: contact.email || '',
+              phone: contact.phone_number || ''
+            });
+            
+            newDeals.push(newDeal);
+          } catch (conversationError) {
+            console.error(`Erro ao obter conversas para o contato ${contact.id}:`, conversationError);
+            // Criar o deal mesmo sem as informações da conversa
+            const newDeal = await storage.createDeal({
+              name: contact.name || `Deal para ${contact.email || 'Cliente desconhecido'}`,
+              companyName: contact.company_name || '',
+              contactName: contact.name || '',
+              contactId: '',
+              chatwootContactId: contact.id.toString(),
+              stageId: firstStage.id,
+              value: 0,
+              status: 'in_progress',
+              email: contact.email || '',
+              phone: contact.phone_number || ''
+            });
+            newDeals.push(newDeal);
+          }
         }
       }
       

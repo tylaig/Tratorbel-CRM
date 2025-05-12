@@ -88,8 +88,15 @@ export default function Dashboard() {
         description: "Os contatos foram sincronizados com sucesso.",
         variant: "default",
       });
+      // Invalidar todas as consultas relevantes
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-      refreshPipelineData();
+      queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+      
+      // Recarregar a página para garantir que todos os dados sejam atualizados
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); // Espera 1 segundo para a mensagem de toast ser visualizada
     },
     onError: (error) => {
       toast({

@@ -71,6 +71,10 @@ export const deals = pgTable("deals", {
   lostReason: text("lost_reason"), // motivo principal da perda
   lostNotes: text("lost_notes"), // observações sobre a perda
   machineCount: integer("machine_count").default(0), // contador de máquinas do cliente
+  // Campos do Chatwoot 
+  chatwootAgentId: text("chatwoot_agent_id"), // ID do agente do Chatwoot responsável pelo contato
+  chatwootAgentName: text("chatwoot_agent_name"), // Nome do agente do Chatwoot
+  chatwootConversationId: text("chatwoot_conversation_id"), // ID da conversa associada no Chatwoot
   // Campos de rastreamento
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -108,6 +112,10 @@ export const insertDealSchema = createInsertSchema(deals).pick({
   lostReason: true,
   lostNotes: true,
   machineCount: true,
+  // Campos do Chatwoot
+  chatwootAgentId: true,
+  chatwootAgentName: true,
+  chatwootConversationId: true,
 });
 
 export type InsertDeal = z.infer<typeof insertDealSchema>;

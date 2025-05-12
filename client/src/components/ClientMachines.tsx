@@ -64,8 +64,12 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
     queryFn: async () => {
       if (!dealId) return [];
       try {
-        const result = await apiRequest('GET', `/api/client-machines/${dealId}`);
-        console.log("Máquinas carregadas:", result);
+        const response = await fetch(`/api/client-machines/${dealId}`);
+        if (!response.ok) {
+          throw new Error(`Erro ao buscar máquinas: ${response.status}`);
+        }
+        const result = await response.json();
+        console.log("Máquinas carregadas (raw):", result);
         if (Array.isArray(result)) {
           return result;
         } else {
@@ -91,7 +95,24 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
   // Mutation para criar uma máquina
   const createMachineMutation = useMutation({
     mutationFn: async (machine: { dealId: number, name: string, brand: string, model: string, year: string }) => {
-      return await apiRequest('POST', '/api/client-machines', machine);
+      try {
+        const response = await fetch('/api/client-machines', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(machine),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Erro ao adicionar máquina: ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error("Erro ao adicionar máquina:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/client-machines', dealId] });
@@ -120,7 +141,24 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
   // Mutation para atualizar uma máquina
   const updateMachineMutation = useMutation({
     mutationFn: async (data: { id: number, machine: Partial<ClientMachine> }) => {
-      return await apiRequest('PUT', `/api/client-machines/${data.id}`, data.machine);
+      try {
+        const response = await fetch(`/api/client-machines/${data.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data.machine),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Erro ao atualizar máquina: ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error("Erro ao atualizar máquina:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/client-machines', dealId] });
@@ -142,7 +180,23 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
   // Mutation para excluir uma máquina
   const deleteMachineMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest('DELETE', `/api/client-machines/${id}`);
+      try {
+        const response = await fetch(`/api/client-machines/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Erro ao excluir máquina: ${response.status}`);
+        }
+        
+        return true;
+      } catch (error) {
+        console.error("Erro ao excluir máquina:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/client-machines', dealId] });

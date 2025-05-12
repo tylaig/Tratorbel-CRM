@@ -247,6 +247,28 @@ export const stageHistoryRelations = relations(stageHistory, ({ one }) => ({
   }),
 }));
 
+// Motivos de desempenho de venda
+export const salePerformanceReasons = pgTable("sale_performance_reasons", {
+  id: serial("id").primaryKey(),
+  reason: text("reason").notNull(),                  // nome do motivo (ex: "Abaixo da cotação")
+  value: text("value").notNull().unique(),           // valor para uso interno (ex: "below_quote")
+  description: text("description"),                  // descrição para usuário
+  active: boolean("active").default(true),
+  isSystem: boolean("is_system").default(false),     // indica se é um motivo do sistema (não pode ser excluído)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertSalePerformanceReasonSchema = createInsertSchema(salePerformanceReasons).pick({
+  reason: true,
+  value: true,
+  description: true,
+  active: true,
+  isSystem: true,
+});
+
+export type InsertSalePerformanceReason = z.infer<typeof insertSalePerformanceReasonSchema>;
+export type SalePerformanceReason = typeof salePerformanceReasons.$inferSelect;
+
 // Settings
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),

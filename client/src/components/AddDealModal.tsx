@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/formatters";
 import { type PipelineStage } from "@shared/schema";
 import ClientCities from "@/components/ClientCities";
-
 import {
   Dialog,
   DialogContent,
@@ -22,6 +21,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { PlusIcon } from "lucide-react";
+
+// Função para formatar o número de telefone, removendo o formato +123456
+const formatPhoneNumber = (phone: string | undefined): string => {
+  if (!phone) return "";
+  
+  // Remove o símbolo + do início do número, se existir
+  if (phone.startsWith("+")) {
+    return phone.substring(1);
+  }
+  
+  return phone;
+};
 
 interface AddDealModalProps {
   isOpen: boolean;
@@ -105,7 +116,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
       
       // Preencher dados de contato
       setEmail(selectedContact.email || "");
-      setPhone(selectedContact.phone_number || "");
+      setPhone(formatPhoneNumber(selectedContact.phone_number) || "");
     }
   }, [selectedContact]);
   
@@ -140,7 +151,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
         // Campos de contato
         clientCode,
         email: email || selectedContact?.email || "",
-        phone: phone || selectedContact?.phone_number || "",
+        phone: phone || formatPhoneNumber(selectedContact?.phone_number) || "",
         
         // Campos de endereço
         address,

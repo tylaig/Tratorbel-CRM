@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, User, Building, Phone, AtSign, Loader2 } from "lucide-react";
 import {
@@ -13,8 +13,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useDebounce } from "@/hooks/use-debounce";
 import { formatPhoneNumber } from "@/lib/formatters";
+
+// Definindo o hook useDebounce no próprio arquivo para evitar dependências
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 interface ChatwootContact {
   id: number;
@@ -46,6 +62,8 @@ export default function AdvancedSearchModal({ isOpen, onClose, onSelectContact }
       };
     },
     enabled: debouncedSearch.length >= 2,
+    staleTime: 30000, // 30 segundos
+    refetchOnWindowFocus: false
   });
 
   const contacts = data?.contacts || [];

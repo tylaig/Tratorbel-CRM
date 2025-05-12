@@ -9,7 +9,8 @@ import {
   leadActivities, type LeadActivity, type InsertLeadActivity,
   machineBrands, type MachineBrand, type InsertMachineBrand,
   leads, type Lead, type InsertLead,
-  stageHistory
+  stageHistory,
+  salePerformanceReasons, type SalePerformanceReason, type InsertSalePerformanceReason
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, or, like } from "drizzle-orm";
@@ -28,6 +29,12 @@ export interface IStorage {
   createLead(lead: InsertLead): Promise<Lead>;
   updateLead(id: number, lead: Partial<Lead>): Promise<Lead | undefined>;
   deleteLead(id: number): Promise<boolean>;
+  
+  // Sale Performance Reasons
+  getSalePerformanceReasons(): Promise<SalePerformanceReason[]>;
+  createSalePerformanceReason(reason: InsertSalePerformanceReason): Promise<SalePerformanceReason>;
+  updateSalePerformanceReason(id: number, reason: Partial<SalePerformanceReason>): Promise<SalePerformanceReason | undefined>;
+  deleteSalePerformanceReason(id: number): Promise<boolean>;
   searchLeads(query: string): Promise<Lead[]>;
   
   // Pipeline Stages

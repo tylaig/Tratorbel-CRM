@@ -57,7 +57,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Consulta para carregar motivos de desempenho de vendas
   const { data: performanceReasons = [] } = useQuery<SalePerformanceReason[]>({
     queryKey: ['/api/sale-performance-reasons'],
-    enabled: activeTab === "sale-performance",
   });
 
   // Campos para a configuração do Chatwoot

@@ -488,8 +488,8 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
             }
             
             return (
-              <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col" style={{ maxHeight: 'calc(100vh - 190px)' }}>
-                <div className={`flex flex-col bg-white dark:bg-gray-900 rounded-t-lg border shadow-sm hover:shadow-md transition-shadow ${stageClass}`}>
+              <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full flex-grow">
+                <div className={`flex flex-col bg-white dark:bg-gray-900 rounded-t-lg border shadow-sm hover:shadow-md transition-shadow flex-shrink-0 ${stageClass}`}>
                   <div className="p-3 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -560,7 +560,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
                           : "bg-gray-50 dark:bg-gray-800"
                       }`}
                       ref={provided.innerRef}
-                      style={{ height: 'calc(100vh - 270px)' }}
+                      style={{ flex: "1 1 auto", height: 0 }}
                       {...provided.droppableProps}
                     >
                       {stage.deals.map((deal, index) => (

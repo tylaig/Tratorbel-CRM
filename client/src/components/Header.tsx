@@ -12,8 +12,10 @@ import {
   BarChart3Icon,
   GanttChartIcon,
   CheckCircle2Icon,
-  XCircleIcon
+  XCircleIcon,
+  Settings as SettingsIcon
 } from "lucide-react";
+import SettingsModal from "./SettingsModal";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -37,6 +39,7 @@ export default function Header({
   hasApiConfig = false
 }: HeaderProps) {
   const [location] = useLocation();
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="container mx-auto px-4">
@@ -52,16 +55,28 @@ export default function Header({
           
           <div className="flex items-center gap-2">
             {hasApiConfig && (
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="relative group"
-                onClick={onSync}
-                disabled={syncLoading}
-              >
-                <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-gray-600 group-hover:text-primary transition-colors'}`} />
-                <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Sincronizar</span>
-              </Button>
+              <>
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="relative group"
+                  onClick={onSync}
+                  disabled={syncLoading}
+                >
+                  <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-gray-600 group-hover:text-primary transition-colors'}`} />
+                  <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Sincronizar</span>
+                </Button>
+                
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="relative group"
+                  onClick={() => setIsSettingsModalOpen(true)}
+                >
+                  <SettingsIcon className="h-4 w-4 text-gray-600 group-hover:text-primary transition-colors" />
+                  <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Configurações</span>
+                </Button>
+              </>
             )}
             
             {!hasApiConfig && (
@@ -161,6 +176,12 @@ export default function Header({
           </div>
         </div>
       </div>
+      
+      {/* Modal de Configurações */}
+      <SettingsModal 
+        isOpen={isSettingsModalOpen} 
+        onClose={() => setIsSettingsModalOpen(false)} 
+      />
     </header>
   );
 }

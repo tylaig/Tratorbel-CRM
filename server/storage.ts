@@ -6,7 +6,8 @@ import {
   clientMachines, type ClientMachine, type InsertClientMachine,
   lossReasons, type LossReason, type InsertLossReason,
   quoteItems, type QuoteItem, type InsertQuoteItem,
-  leadActivities, type LeadActivity, type InsertLeadActivity
+  leadActivities, type LeadActivity, type InsertLeadActivity,
+  machineBrands, type MachineBrand, type InsertMachineBrand
 } from "@shared/schema";
 
 // Modify the interface with any CRUD methods you might need
@@ -44,6 +45,13 @@ export interface IStorage {
   createLossReason(reason: InsertLossReason): Promise<LossReason>;
   updateLossReason(id: number, reason: Partial<LossReason>): Promise<LossReason | undefined>;
   deleteLossReason(id: number): Promise<boolean>;
+  
+  // Machine Brands (Marcas de máquinas)
+  getMachineBrands(): Promise<MachineBrand[]>;
+  getMachineBrand(id: number): Promise<MachineBrand | undefined>;
+  createMachineBrand(brand: InsertMachineBrand): Promise<MachineBrand>;
+  updateMachineBrand(id: number, brand: Partial<MachineBrand>): Promise<MachineBrand | undefined>;
+  deleteMachineBrand(id: number): Promise<boolean>;
   
   // Quote Items (Itens da cotação)
   getQuoteItems(dealId: number): Promise<QuoteItem[]>;

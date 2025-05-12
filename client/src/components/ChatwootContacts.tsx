@@ -19,6 +19,18 @@ import {
 import AddDealModal from "@/components/AddDealModal";
 import { toast } from "@/hooks/use-toast";
 
+// Função para formatar o número de telefone, removendo o formato +123456
+const formatPhoneNumber = (phone: string | undefined): string => {
+  if (!phone) return "";
+  
+  // Remove o símbolo + do início do número, se existir
+  if (phone.startsWith("+")) {
+    return phone.substring(1);
+  }
+  
+  return phone;
+};
+
 interface ChatwootContactsProps {
   pipelineStages: PipelineStage[];
   settings: Settings | undefined;
@@ -267,7 +279,7 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
                     {contact.phone_number && (
                       <div className="flex items-center text-sm text-gray-600">
                         <Phone className="mr-2 h-4 w-4 text-gray-400" />
-                        <span>{contact.phone_number}</span>
+                        <span>{formatPhoneNumber(contact.phone_number)}</span>
                       </div>
                     )}
                   </div>

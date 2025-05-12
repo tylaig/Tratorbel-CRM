@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Edit2Icon, 
   Trash2Icon,
@@ -28,7 +30,15 @@ import {
   TrashIcon,
   CheckCircle2Icon,
   XCircleIcon,
-  PlusCircleIcon
+  PlusCircleIcon,
+  UserIcon,
+  BuildingIcon,
+  MapPinIcon,
+  PhoneIcon,
+  MailIcon,
+  CreditCardIcon,
+  CheckIcon,
+  XIcon
 } from "lucide-react";
 import {
   Tabs,
@@ -321,10 +331,14 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="details" className="flex items-center gap-1">
               <FileTextIcon className="h-4 w-4" />
               <span>Detalhes</span>
+            </TabsTrigger>
+            <TabsTrigger value="client" className="flex items-center gap-1">
+              <UserIcon className="h-4 w-4" />
+              <span>Cliente</span>
             </TabsTrigger>
             <TabsTrigger value="machines" className="flex items-center gap-1">
               <PlusCircleIcon className="h-4 w-4" />

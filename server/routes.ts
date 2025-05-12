@@ -327,9 +327,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = req.query.q as string;
       
-      if (!query || query.trim().length < 2) {
+      if (!query) {
         return res.status(400).json({ 
-          message: "O termo de busca deve ter pelo menos 2 caracteres",
+          message: "É necessário fornecer um termo de busca",
           results: []
         });
       }
@@ -340,7 +340,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const lead = await storage.getLeadByChatwootId(query.trim());
         if (lead) {
           return res.json({ results: [lead] });
+        } else {
+          // Se não achou, retorna um array vazio (não é erro)
+          return res.json({ results: [] });
         }
+      }
+      
+      // Para buscas de texto, exige pelo menos 2 caracteres
+      if (query.trim().length < 2) {
+        return res.status(400).json({ 
+          message: "O termo de busca deve ter pelo menos 2 caracteres",
+          results: []
+        });
       }
       
       // Caso contrário, busca normal por texto

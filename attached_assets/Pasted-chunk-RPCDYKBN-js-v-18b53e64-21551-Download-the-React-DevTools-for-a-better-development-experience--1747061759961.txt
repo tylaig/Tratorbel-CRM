@@ -1,0 +1,36 @@
+chunk-RPCDYKBN.js?v=18b53e64:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-RPCDYKBN.js?v=18b53e64:521 Warning: Connect(Droppable): Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.
+    at div
+    at div
+    at div
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:945:20)
+    at App (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:7462:25)
+    at ErrorBoundary2 (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:1959:35)
+    at DragDropContext (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:7582:19)
+    at KanbanBoard (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/components/KanbanBoard.tsx:45:39)
+    at main
+    at div
+    at div
+    at Dashboard (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/pages/Dashboard.tsx?t=1747050507676:34:41)
+    at Route (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18b53e64:323:16)
+    at Switch (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18b53e64:379:17)
+    at App
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TONAP5II.js?v=18b53e64:43:15)
+    at TooltipProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=18b53e64:61:5)
+    at QueryClientProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=18b53e64:2805:3)
+printWarning @ chunk-RPCDYKBN.js?v=18b53e64:521
+/sales:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+/sales:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+/sales:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+/api/leads/search?q=9:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 (Bad Request)
+AddDealModal.tsx:161 Erro ao obter/criar lead: Error: 400: {"message":"O termo de busca deve ter pelo menos 2 caracteres","results":[]}
+    at throwIfResNotOk (queryClient.ts:6:11)
+    at async apiRequest (queryClient.ts:22:3)
+    at async Object.mutationFn (AddDealModal.tsx:126:33)
+mutationFn @ AddDealModal.tsx:161
+AddDealModal.tsx:214 Add deal error: Error: Falha ao criar ou obter lead necessário para o negócio
+    at Object.mutationFn (AddDealModal.tsx:162:17)
+onError @ AddDealModal.tsx:214

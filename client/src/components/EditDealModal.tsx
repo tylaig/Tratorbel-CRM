@@ -27,7 +27,9 @@ import {
   ClipboardListIcon,
   PlusCircleIcon,
   PlusIcon,
-  TrashIcon
+  TrashIcon,
+  CheckCircle2Icon,
+  XCircleIcon
 } from "lucide-react";
 import {
   Tabs,
@@ -35,6 +37,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import DealOutcomeForm from "@/components/DealOutcomeForm";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 
@@ -228,7 +231,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="details" className="flex items-center gap-1">
               <FileTextIcon className="h-4 w-4" />
               <span>Detalhes</span>
@@ -240,6 +243,10 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             <TabsTrigger value="quote" className="flex items-center gap-1">
               <ReceiptIcon className="h-4 w-4" />
               <span>Cotação</span>
+            </TabsTrigger>
+            <TabsTrigger value="outcome" className="flex items-center gap-1">
+              <CheckCircle2Icon className="h-4 w-4" />
+              <span>Resultado</span>
             </TabsTrigger>
           </TabsList>
 
@@ -440,6 +447,76 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
               {updateDealMutation.isPending ? "Salvando..." : "Salvar"}
             </Button>
           </div>
+          
+          <TabsContent value="outcome" className="p-1">
+            <div className="py-2">
+              <h3 className="text-lg font-medium mb-4">
+                {deal?.saleStatus === "won" ? (
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle2Icon className="h-5 w-5" />
+                    <span>Negócio Ganho</span>
+                  </div>
+                ) : deal?.saleStatus === "lost" ? (
+                  <div className="flex items-center gap-2 text-red-600">
+                    <XCircleIcon className="h-5 w-5" />
+                    <span>Negócio Perdido</span>
+                    <span className="text-sm font-normal text-gray-500 ml-2">
+                      {deal?.lostReason && `Razão: ${deal.lostReason}`}
+                    </span>
+                  </div>
+                ) : (
+                  <span>Concluir Negócio</span>
+                )}
+              </h3>
+              
+              {!deal?.saleStatus && (
+                <DealOutcomeForm deal={deal} onSuccess={onClose} />
+              )}
+              
+              {deal?.saleStatus && (
+                <div className="p-4 bg-gray-50 rounded-md mb-4">
+                  {deal.saleStatus === "won" ? (
+                    <div className="space-y-2">
+                      <p className="text-green-700 font-medium">Este negócio foi concluído com sucesso.</p>
+                      <p>Valor final: {deal.value ? formatCurrency(deal.value) : "Não informado"}</p>
+                      <p className="text-sm text-gray-500">Concluído em: {formatDate(new Date(deal.updatedAt))}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-red-700 font-medium">Este negócio foi perdido.</p>
+                      <p><strong>Motivo:</strong> {deal.lostReason || "Não informado"}</p>
+                      {deal.lostNotes && (
+                        <div>
+                          <p><strong>Observações:</strong></p>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">{deal.lostNotes}</p>
+                        </div>
+                      )}
+                      <p className="text-sm text-gray-500">Registrado em: {formatDate(new Date(deal.updatedAt))}</p>
+                    </div>
+                  )}
+                  
+                  <div className="mt-4 border-t pt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (deal && confirm("Deseja reabrir este negócio? Isso removerá o status atual.")) {
+                          updateDealMutation.mutate({
+                            ...deal,
+                            saleStatus: null,
+                            lostReason: null,
+                            lostNotes: null
+                          });
+                        }
+                      }}
+                    >
+                      Reabrir Negócio
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </DialogFooter>
       </DialogContent>
     </Dialog>

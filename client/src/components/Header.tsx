@@ -117,7 +117,7 @@ export default function Header({
                     : "flex items-center gap-2 text-white hover:text-primary hover:bg-white/10"}
                 >
                   <GanttChartIcon className="h-4 w-4" />
-                  <span>Pipeline</span>
+                  <span>Funis de Vendas</span>
                 </Button>
               </Link>
               
@@ -165,63 +165,88 @@ export default function Header({
             
             {location === "/" && (
               <div className="flex items-center space-x-2">
-                <Button 
-                  variant={viewMode === "kanban" ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => toggleViewMode("kanban")}
-                  className={viewMode === "kanban" 
-                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
-                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
-                  title="Visão Kanban"
-                >
-                  <LayoutIcon className="h-5 w-5" />
-                </Button>
-                <Button 
-                  variant={viewMode === "list" ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => toggleViewMode("list")}
-                  className={viewMode === "list" 
-                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
-                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
-                  title="Visão Lista"
-                >
-                  <ListIcon className="h-5 w-5" />
-                </Button>
-                <Button 
-                  variant={viewMode === "results" ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => toggleViewMode("results")}
-                  className={viewMode === "results" 
-                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
-                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
-                  title="Resultados de Vendas"
-                >
-                  <GanttChartIcon className="h-5 w-5" />
-                </Button>
-                {hasApiConfig && (
+                <div className="relative group">
                   <Button 
-                    variant={viewMode === "contacts" ? "default" : "ghost"} 
+                    variant={viewMode === "kanban" ? "default" : "ghost"} 
                     size="icon"
-                    onClick={() => toggleViewMode("contacts")}
-                    className={viewMode === "contacts" 
-                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
-                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
-                    title="Contatos Chatwoot"
+                    onClick={() => toggleViewMode("kanban")}
+                    className={viewMode === "kanban" 
+                      ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                      : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
+                    title="Visão Kanban"
                   >
-                    <UsersIcon className="h-5 w-5" />
+                    <LayoutIcon className="h-5 w-5" />
                   </Button>
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                    Visão Kanban
+                  </div>
+                </div>
+                
+                <div className="relative group">
+                  <Button 
+                    variant={viewMode === "list" ? "default" : "ghost"} 
+                    size="icon"
+                    onClick={() => toggleViewMode("list")}
+                    className={viewMode === "list" 
+                      ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                      : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
+                  >
+                    <ListIcon className="h-5 w-5" />
+                  </Button>
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                    Visão Lista
+                  </div>
+                </div>
+                
+                <div className="relative group">
+                  <Button 
+                    variant={viewMode === "results" ? "default" : "ghost"} 
+                    size="icon"
+                    onClick={() => toggleViewMode("results")}
+                    className={viewMode === "results" 
+                      ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                      : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
+                  >
+                    <GanttChartIcon className="h-5 w-5" />
+                  </Button>
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                    Resultados de Vendas
+                  </div>
+                </div>
+                
+                {hasApiConfig && (
+                  <div className="relative group">
+                    <Button 
+                      variant={viewMode === "contacts" ? "default" : "ghost"} 
+                      size="icon"
+                      onClick={() => toggleViewMode("contacts")}
+                      className={viewMode === "contacts" 
+                      ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                      : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
+                    >
+                      <UsersIcon className="h-5 w-5" />
+                    </Button>
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                      Contatos Chatwoot
+                    </div>
+                  </div>
                 )}
-                <Button 
-                  variant={viewMode === "heatmap" ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => toggleViewMode("heatmap")}
-                  className={viewMode === "heatmap" 
-                    ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
-                    : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
-                  title="Mapa de Calor"
-                >
-                  <MapIcon className="h-5 w-5" />
-                </Button>
+                
+                <div className="relative group">
+                  <Button 
+                    variant={viewMode === "heatmap" ? "default" : "ghost"} 
+                    size="icon"
+                    onClick={() => toggleViewMode("heatmap")}
+                    className={viewMode === "heatmap" 
+                      ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
+                      : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
+                  >
+                    <MapIcon className="h-5 w-5" />
+                  </Button>
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                    Mapa de Calor
+                  </div>
+                </div>
               </div>
             )}
           </div>

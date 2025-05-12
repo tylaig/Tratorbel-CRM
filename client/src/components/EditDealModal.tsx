@@ -314,8 +314,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       // Campos específicos tipo de cliente
       cnpj: clientType === "company" ? cnpj : null,
       corporateName: clientType === "company" ? corporateName : null,
+      // Inscrição estadual agora é para ambos pessoa física e jurídica
+      stateRegistration: stateRegistration,
       cpf: clientType === "person" ? cpf : null,
-      stateRegistration: clientType === "person" ? stateRegistration : null,
       
       // Dados de contato
       clientCode,
@@ -515,7 +516,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                           setClientType("company");
                           setIsCompany(true);
                           setCpf("");
-                          setStateRegistration("");
+                          // Não limpar a inscrição estadual, pois agora é usado para pessoa jurídica também
                         }
                       }}
                     >
@@ -544,7 +545,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                             setCorporateName("");
                           } else if (value === "company") {
                             setCpf("");
-                            setStateRegistration("");
+                            // Não limpar a inscrição estadual, pois agora é usado para pessoa jurídica também
                           }
                         }}
                       >
@@ -578,6 +579,15 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                           value={corporateName}
                           onChange={(e) => setCorporateName(e.target.value)}
                           placeholder="Razão Social da Empresa"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="state-registration">Inscrição Estadual</Label>
+                        <Input
+                          id="state-registration"
+                          value={stateRegistration}
+                          onChange={(e) => setStateRegistration(e.target.value)}
+                          placeholder="Inscrição Estadual"
                         />
                       </div>
                     </>

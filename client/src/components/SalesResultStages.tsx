@@ -125,9 +125,12 @@ export default function SalesResultStages({ pipelineStages, filters }: SalesResu
   return (
     <div className="flex flex-col gap-6 pb-6">
       {/* Seção de Vendas Ganhas */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
+      <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border stage-completed">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-green-600">Vendas Realizadas</h2>
+          <h2 className="text-lg font-bold text-green-600 dark:text-green-400 flex items-center gap-2">
+            <span className="bg-green-600 dark:bg-green-500 h-3 w-3 rounded-full"></span>
+            Vendas Realizadas
+          </h2>
           <Select 
             value={salePerformanceFilter} 
             onValueChange={setSalePerformanceFilter}
@@ -146,13 +149,13 @@ export default function SalesResultStages({ pipelineStages, filters }: SalesResu
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {!isLoading && getFilteredDeals('won').map(deal => (
-            <Card key={deal.id} className="p-4 border border-green-200 bg-green-50">
+            <Card key={deal.id} className="p-4 border-green-200 dark:border-green-800 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-gray-800 truncate">{deal.name}</h3>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{deal.name}</h3>
                 <div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
                         <span className="sr-only">Abrir menu</span>
                         <MoreVerticalIcon className="h-4 w-4" />
                       </Button>
@@ -167,36 +170,34 @@ export default function SalesResultStages({ pipelineStages, filters }: SalesResu
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-3">
                 <div className="flex items-center text-sm">
-                  <Building className="mr-1 h-4 w-4 text-gray-500" />
-                  <span className="text-gray-600 truncate">{deal.companyName || 'Sem empresa'}</span>
+                  <Building className="mr-1 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <span className="text-gray-600 dark:text-gray-300 truncate">{deal.companyName || 'Sem empresa'}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-500">
-                    Valor: <span className="font-semibold text-gray-900">{formatCurrency(deal.value || 0)}</span>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                    Valor: <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(deal.value || 0)}</span>
                   </div>
                   
-                  <Badge 
-                    className={`
-                      ${deal.salePerformance === 'below_quote' ? 'bg-yellow-500' : ''}
-                      ${deal.salePerformance === 'according_to_quote' ? 'bg-green-500' : ''}
-                      ${deal.salePerformance === 'above_quote' ? 'bg-blue-500' : ''}
-                    `}
-                  >
+                  <div className={`
+                    ${deal.salePerformance === 'below_quote' ? 'performance-below' : ''}
+                    ${deal.salePerformance === 'according_to_quote' ? 'performance-according' : ''}
+                    ${deal.salePerformance === 'above_quote' ? 'performance-above' : ''}
+                  `}>
                     {deal.salePerformance === 'below_quote' && 'Abaixo da cotação'}
                     {deal.salePerformance === 'according_to_quote' && 'De acordo com a cotação'}
                     {deal.salePerformance === 'above_quote' && 'Acima da cotação'}
                     {!deal.salePerformance && 'Não categorizado'}
-                  </Badge>
+                  </div>
                 </div>
               </div>
             </Card>
           ))}
 
           {getFilteredDeals('won').length === 0 && (
-            <div className="col-span-full flex justify-center items-center p-6 border rounded-lg border-dashed text-gray-500">
+            <div className="col-span-full flex justify-center items-center p-6 border rounded-lg border-dashed text-gray-500 dark:text-gray-400">
               Nenhuma venda realizada encontrada com os filtros atuais
             </div>
           )}
@@ -204,9 +205,12 @@ export default function SalesResultStages({ pipelineStages, filters }: SalesResu
       </div>
 
       {/* Seção de Vendas Perdidas */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
+      <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm border stage-lost">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-red-600">Vendas Perdidas</h2>
+          <h2 className="text-lg font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+            <span className="bg-red-600 dark:bg-red-500 h-3 w-3 rounded-full"></span>
+            Vendas Perdidas
+          </h2>
           <Select 
             value={lossReasonFilter} 
             onValueChange={setLossReasonFilter}
@@ -227,13 +231,13 @@ export default function SalesResultStages({ pipelineStages, filters }: SalesResu
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {!isLoading && getFilteredDeals('lost').map(deal => (
-            <Card key={deal.id} className="p-4 border border-red-200 bg-red-50">
+            <Card key={deal.id} className="p-4 border-red-200 dark:border-red-800 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-gray-800 truncate">{deal.name}</h3>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{deal.name}</h3>
                 <div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
                         <span className="sr-only">Abrir menu</span>
                         <MoreVerticalIcon className="h-4 w-4" />
                       </Button>
@@ -248,26 +252,26 @@ export default function SalesResultStages({ pipelineStages, filters }: SalesResu
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-3">
                 <div className="flex items-center text-sm">
-                  <Building className="mr-1 h-4 w-4 text-gray-500" />
-                  <span className="text-gray-600 truncate">{deal.companyName || 'Sem empresa'}</span>
+                  <Building className="mr-1 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <span className="text-gray-600 dark:text-gray-300 truncate">{deal.companyName || 'Sem empresa'}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-500">
-                    Valor cotado: <span className="font-semibold text-gray-900">{formatCurrency(deal.quoteValue || 0)}</span>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                    Valor cotado: <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(deal.quoteValue || 0)}</span>
                   </div>
                   
-                  <Badge variant="secondary">
+                  <span className="performance-below">
                     {deal.lostReason || 'Motivo não especificado'}
-                  </Badge>
+                  </span>
                 </div>
 
                 {deal.lostNotes && (
-                  <div className="mt-2 text-sm text-gray-600">
-                    <p className="font-semibold">Observações:</p>
-                    <p className="text-xs text-gray-500">{deal.lostNotes}</p>
+                  <div className="mt-2 text-sm border-t border-gray-100 dark:border-gray-700 pt-2">
+                    <p className="font-medium text-gray-700 dark:text-gray-300">Observações:</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{deal.lostNotes}</p>
                   </div>
                 )}
               </div>
@@ -275,7 +279,7 @@ export default function SalesResultStages({ pipelineStages, filters }: SalesResu
           ))}
 
           {getFilteredDeals('lost').length === 0 && (
-            <div className="col-span-full flex justify-center items-center p-6 border rounded-lg border-dashed text-gray-500">
+            <div className="col-span-full flex justify-center items-center p-6 border rounded-lg border-dashed text-gray-500 dark:text-gray-400">
               Nenhuma venda perdida encontrada com os filtros atuais
             </div>
           )}

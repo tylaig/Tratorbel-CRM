@@ -5,81 +5,81 @@
 :root {
   --background: 0 0% 100%;
   --foreground: 0 0% 0%;
-  --muted: 0 0% 95.9%;
-  --muted-foreground: 0 0% 45%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 30%;
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 0%;
   --card: 0 0% 100%;
   --card-foreground: 0 0% 0%;
-  --border: 0 0% 90%;
+  --border: 0 0% 85%;
   --input: 0 0% 90%;
-  --primary: 47 91% 48%;  /* #f0c504 - amarelo TratorBel */
+  --primary: 47 95% 50%;  /* Amarelo mais vivo #f0c504 - TratorBel */
   --primary-foreground: 0 0% 0%;
-  --secondary: 0 0% 0%;
+  --secondary: 0 0% 15%;  /* Cinza escuro quase preto */
   --secondary-foreground: 0 0% 100%;
-  --accent: 47 91% 48%;
-  --accent-foreground: 0 0% 0%;
+  --accent: 0 0% 25%;  /* Cinza médio-escuro */
+  --accent-foreground: 0 0% 100%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 100%;
-  --ring: 47 91% 48%;
+  --ring: 47 95% 50%;
   --radius: 0.5rem;
   
   /* Chart colors */
-  --chart-1: 47 91% 48%;
-  --chart-2: 0 0% 0%;
-  --chart-3: 0 0% 30%;
-  --chart-4: 0 0% 50%;
-  --chart-5: 0 0% 70%;
+  --chart-1: 47 95% 50%;  /* Amarelo */
+  --chart-2: 0 0% 0%;     /* Preto */
+  --chart-3: 0 0% 25%;    /* Cinza escuro */
+  --chart-4: 0 0% 55%;    /* Cinza médio */
+  --chart-5: 0 0% 85%;    /* Cinza claro */
   
   /* Sidebar colors */
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 0 0% 0%;
-  --sidebar-primary: 47 91% 48%;
+  --sidebar-background: 0 0% 15%;  /* Fundo escuro como na imagem */
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 47 95% 50%;
   --sidebar-primary-foreground: 0 0% 0%;
   --sidebar-accent: 0 0% 0%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 0 0% 90%;
-  --sidebar-ring: 47 91% 48%;
+  --sidebar-border: 0 0% 20%;
+  --sidebar-ring: 47 95% 50%;
 }
 
 .dark {
   --background: 0 0% 10%;
   --foreground: 0 0% 98%;
   --muted: 0 0% 15%;
-  --muted-foreground: 0 0% 65%;
+  --muted-foreground: 0 0% 75%;
   --popover: 0 0% 10%;
   --popover-foreground: 0 0% 98%;
-  --card: 0 0% 10%;
+  --card: 0 0% 15%;
   --card-foreground: 0 0% 98%;
-  --border: 0 0% 20%;
+  --border: 0 0% 25%;
   --input: 0 0% 20%;
-  --primary: 47 91% 48%;  /* #f0c504 - amarelo TratorBel */
+  --primary: 47 95% 50%;  /* Amarelo mais vivo #f0c504 - TratorBel */
   --primary-foreground: 0 0% 0%;
-  --secondary: 0 0% 98%;
+  --secondary: 0 0% 85%;  /* Cinza claro */
   --secondary-foreground: 0 0% 0%;
-  --accent: 47 91% 48%;
+  --accent: 47 95% 50%;
   --accent-foreground: 0 0% 0%;
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 70% 40%;
   --destructive-foreground: 0 0% 98%;
-  --ring: 47 91% 48%;
+  --ring: 47 95% 50%;
   --radius: 0.5rem;
   
   /* Chart colors */
-  --chart-1: 47 91% 48%;
-  --chart-2: 0 0% 100%;
-  --chart-3: 0 0% 80%;
-  --chart-4: 0 0% 60%;
-  --chart-5: 0 0% 40%;
+  --chart-1: 47 95% 50%;  /* Amarelo */
+  --chart-2: 0 0% 100%;   /* Branco */
+  --chart-3: 0 0% 85%;    /* Cinza claro */
+  --chart-4: 0 0% 65%;    /* Cinza médio */
+  --chart-5: 0 0% 45%;    /* Cinza escuro */
   
   /* Sidebar colors */
   --sidebar-background: 0 0% 10%;
   --sidebar-foreground: 0 0% 98%;
-  --sidebar-primary: 47 91% 48%;
+  --sidebar-primary: 47 95% 50%;
   --sidebar-primary-foreground: 0 0% 0%;
   --sidebar-accent: 0 0% 98%;
   --sidebar-accent-foreground: 0 0% 0%;
   --sidebar-border: 0 0% 20%;
-  --sidebar-ring: 47 91% 48%;
+  --sidebar-ring: 47 95% 50%;
 }
 
 @layer base {
@@ -102,7 +102,19 @@
 }
 
 .deal-card {
-  @apply border rounded-md bg-white p-3 mb-2 hover:shadow-md transition-shadow;
+  @apply border border-gray-200 rounded-md bg-white p-3 mb-2 hover:shadow-md transition-shadow;
+}
+
+.dark .deal-card {
+  @apply border-gray-700 bg-gray-800 text-gray-100;
+}
+
+.stage-title {
+  @apply font-medium text-gray-800 border-b pb-2 mb-3;
+}
+
+.dark .stage-title {
+  @apply text-gray-200 border-gray-700;
 }
 
 .dragging {
@@ -114,9 +126,51 @@
 }
 
 .sidebar-link.active {
-  @apply bg-amber-100 text-primary;
+  @apply bg-primary bg-opacity-10 text-primary font-medium;
 }
 
 .sidebar-link:not(.active) {
-  @apply text-gray-900 hover:bg-amber-50;
+  @apply text-gray-900 hover:bg-gray-100;
+}
+
+.dark .sidebar-link:not(.active) {
+  @apply text-gray-200 hover:bg-gray-800;
+}
+
+/* Resultado de vendas */
+.stage-completed {
+  @apply bg-green-50 border-green-300;
+}
+
+.dark .stage-completed {
+  @apply bg-green-900 bg-opacity-20 border-green-800;
+}
+
+.stage-lost {
+  @apply bg-red-50 border-red-300;
+}
+
+.dark .stage-lost {
+  @apply bg-red-900 bg-opacity-20 border-red-800;
+}
+
+/* Desempenho de venda */
+.performance-above {
+  @apply text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded text-xs;
+}
+
+.dark .performance-above {
+  @apply text-green-400 bg-green-900 bg-opacity-30;
+}
+
+.performance-according {
+  @apply text-primary font-medium bg-primary bg-opacity-10 px-2 py-0.5 rounded text-xs;
+}
+
+.performance-below {
+  @apply text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded text-xs;
+}
+
+.dark .performance-below {
+  @apply text-red-400 bg-red-900 bg-opacity-30;
 }

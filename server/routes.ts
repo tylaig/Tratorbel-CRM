@@ -5,7 +5,10 @@ import axios from "axios";
 import { 
   insertDealSchema, 
   insertPipelineStageSchema, 
-  insertSettingsSchema 
+  insertSettingsSchema,
+  insertClientMachineSchema,
+  insertLossReasonSchema,
+  insertQuoteItemSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -279,6 +282,229 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rotas para deals por status de venda (won/lost)
+  apiRouter.get("/deals/sale-status/:status", async (req: Request, res: Response) => {
+    try {
+      const status = req.params.status;
+      if (!status || !["won", "lost", "negotiation"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      const deals = await storage.getDealsBySaleStatus(status);
+      res.json(deals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch deals by status" });
+    }
+  });
+  
+  // Rotas para máquinas do cliente
+  apiRouter.get("/client-machines/:dealId", async (req: Request, res: Response) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
+      
+      const machines = await storage.getClientMachines(dealId);
+      res.json(machines);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch client machines" });
+    }
+  });
+  
+  apiRouter.post("/client-machines", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertClientMachineSchema.parse(req.body);
+      const machine = await storage.createClientMachine(validatedData);
+      res.status(201).json(machine);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create client machine" });
+      }
+    }
+  });
+  
+  apiRouter.put("/client-machines/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const validatedData = insertClientMachineSchema.partial().parse(req.body);
+      const updatedMachine = await storage.updateClientMachine(id, validatedData);
+      
+      if (!updatedMachine) {
+        return res.status(404).json({ message: "Client machine not found" });
+      }
+      
+      res.json(updatedMachine);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update client machine" });
+      }
+    }
+  });
+  
+  apiRouter.delete("/client-machines/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const success = await storage.deleteClientMachine(id);
+      if (!success) {
+        return res.status(404).json({ message: "Client machine not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete client machine" });
+    }
+  });
+  
+  // Rotas para motivos de perda
+  apiRouter.get("/loss-reasons", async (req: Request, res: Response) => {
+    try {
+      const reasons = await storage.getLossReasons();
+      res.json(reasons);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch loss reasons" });
+    }
+  });
+  
+  apiRouter.post("/loss-reasons", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertLossReasonSchema.parse(req.body);
+      const reason = await storage.createLossReason(validatedData);
+      res.status(201).json(reason);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create loss reason" });
+      }
+    }
+  });
+  
+  apiRouter.put("/loss-reasons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const validatedData = insertLossReasonSchema.partial().parse(req.body);
+      const updatedReason = await storage.updateLossReason(id, validatedData);
+      
+      if (!updatedReason) {
+        return res.status(404).json({ message: "Loss reason not found" });
+      }
+      
+      res.json(updatedReason);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update loss reason" });
+      }
+    }
+  });
+  
+  apiRouter.delete("/loss-reasons/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const success = await storage.deleteLossReason(id);
+      if (!success) {
+        return res.status(404).json({ message: "Loss reason not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete loss reason" });
+    }
+  });
+  
+  // Rotas para itens de cotação
+  apiRouter.get("/quote-items/:dealId", async (req: Request, res: Response) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
+      
+      const items = await storage.getQuoteItems(dealId);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch quote items" });
+    }
+  });
+  
+  apiRouter.post("/quote-items", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertQuoteItemSchema.parse(req.body);
+      const item = await storage.createQuoteItem(validatedData);
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create quote item" });
+      }
+    }
+  });
+  
+  apiRouter.put("/quote-items/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const validatedData = insertQuoteItemSchema.partial().parse(req.body);
+      const updatedItem = await storage.updateQuoteItem(id, validatedData);
+      
+      if (!updatedItem) {
+        return res.status(404).json({ message: "Quote item not found" });
+      }
+      
+      res.json(updatedItem);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update quote item" });
+      }
+    }
+  });
+  
+  apiRouter.delete("/quote-items/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const success = await storage.deleteQuoteItem(id);
+      if (!success) {
+        return res.status(404).json({ message: "Quote item not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete quote item" });
+    }
+  });
+
   app.use("/api", apiRouter);
   
   const httpServer = createServer(app);

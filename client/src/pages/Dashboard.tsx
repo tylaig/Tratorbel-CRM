@@ -122,6 +122,7 @@ export default function Dashboard() {
         onAddDeal={() => setIsAddDealModalOpen(true)}
         onSync={handleSync}
         syncLoading={syncMutation.isPending}
+        hasApiConfig={!!settings?.chatwootApiKey}
       />
       
       <div className="flex flex-1 overflow-hidden">

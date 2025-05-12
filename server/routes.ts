@@ -12,7 +12,9 @@ import {
   insertLeadActivitySchema,
   insertMachineBrandSchema,
   insertLeadSchema,
-  Deal
+  insertSalePerformanceReasonSchema,
+  Deal,
+  SalePerformanceReason
 } from "@shared/schema";
 import { z } from "zod";
 

@@ -38,6 +38,11 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
   const [filters, setFilters] = useState<FilterOptions>(activeFilters);
   const { toast } = useToast();
   
+  // Log inicial para debug
+  useEffect(() => {
+    console.log("FilterBar recebeu activeFilters:", activeFilters);
+  }, []);
+  
   // Sincronizar com prop activeFilters
   useEffect(() => {
     setFilters(activeFilters);
@@ -55,13 +60,20 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
     let newStatus: string[];
     
     if (filters.status.includes(status)) {
+      // Remover status se já estiver selecionado
       newStatus = filters.status.filter(s => s !== status);
+      console.log(`Removendo status ${status}, nova lista:`, newStatus);
     } else {
+      // Adicionar status se não estiver selecionado
       newStatus = [...filters.status, status];
+      console.log(`Adicionando status ${status}, nova lista:`, newStatus);
     }
     
-    console.log("Novo status selecionado:", newStatus);
-    updateFilter({ status: newStatus });
+    // Atualizar o estado local e propagar para o componente pai
+    setFilters(prev => ({ ...prev, status: newStatus }));
+    onFilterChange({ ...filters, status: newStatus });
+    
+    console.log("Filtros atualizados:", { ...filters, status: newStatus });
   };
   
   // Resetar filtros
@@ -74,8 +86,11 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
       hideClosed: true
     };
     
+    // Atualizar o estado local e propagar para o componente pai
     setFilters(defaultFilters);
     onFilterChange(defaultFilters);
+    
+    console.log("Filtros redefinidos para padrão:", defaultFilters);
     
     toast({
       title: "Filtros limpos",
@@ -107,7 +122,10 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
   const getActiveFilterCount = (): number => {
     let count = 0;
     if (filters.search) count++;
-    if (filters.status.length > 0) count++;
+    if (filters.status.length > 0) {
+      count++;
+      console.log("Status ativos:", filters.status);
+    }
     if (filters.hideClosed === false) count++;
     if (filters.sortBy !== "date" || filters.sortOrder !== "desc") count++;
     return count;
@@ -205,13 +223,18 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
                 {statusOptions.map(status => (
                   <Badge
                     key={status.value}
-                    variant={filters.status.includes(status.value) ? "default" : "outline"}
+                    variant="outline"
                     className={`cursor-pointer px-3 py-1 ${
-                      filters.status.includes(status.value) ? status.color : ""
+                      filters.status.includes(status.value) 
+                        ? status.color + " border font-semibold" 
+                        : "bg-transparent text-gray-700 border-gray-300"
                     }`}
                     onClick={() => toggleStatus(status.value)}
                   >
                     {status.label}
+                    {filters.status.includes(status.value) && (
+                      <span className="ml-1 text-xs">✓</span>
+                    )}
                   </Badge>
                 ))}
               </div>

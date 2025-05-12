@@ -79,7 +79,9 @@ export function usePipeline() {
     if (filters.status && filters.status.length > 0) {
       result = result.filter(deal => {
         // Verificar se o status do negócio está no array de filtros
-        return deal.status && filters.status.includes(deal.status);
+        const matched = deal.status && filters.status.includes(deal.status);
+        console.log(`Deal ${deal.id} (${deal.name}) has status ${deal.status}, match: ${matched}`);
+        return matched;
       });
     }
     

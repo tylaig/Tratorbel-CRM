@@ -1,24 +1,23 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  FilterIcon, 
   Search, 
-  ArrowDownIcon,
-  ArrowUpIcon,
-  Tag, 
-  X,
-  CheckIcon
+  SlidersHorizontal,
+  XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 
 export interface FilterOptions {
   search: string;
@@ -35,17 +34,37 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ onFilterChange, activeFilters }: FilterBarProps) {
-  // Usando useEffect para garantir que os filtros locais estejam sempre sincronizados com os ativos
-  const [localFilters, setLocalFilters] = useState<FilterOptions>(activeFilters);
-  
-  useEffect(() => {
-    setLocalFilters(activeFilters);
-  }, [activeFilters]);
-  
+  const [expanded, setExpanded] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>(activeFilters);
   const { toast } = useToast();
   
-  // Limpar filtros
-  const clearFilters = () => {
+  // Sincronizar com prop activeFilters
+  useEffect(() => {
+    setFilters(activeFilters);
+  }, [activeFilters]);
+  
+  // Aplicar filtros imediatamente
+  const updateFilter = (newFilters: Partial<FilterOptions>) => {
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
+    onFilterChange(updatedFilters);
+  };
+  
+  // Alternar status
+  const toggleStatus = (status: string) => {
+    let newStatus: string[];
+    
+    if (filters.status.includes(status)) {
+      newStatus = filters.status.filter(s => s !== status);
+    } else {
+      newStatus = [...filters.status, status];
+    }
+    
+    updateFilter({ status: newStatus });
+  };
+  
+  // Resetar filtros
+  const resetFilters = () => {
     const defaultFilters: FilterOptions = {
       search: "",
       status: [],
@@ -54,228 +73,171 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
       hideClosed: true
     };
     
-    setLocalFilters(defaultFilters);
+    setFilters(defaultFilters);
     onFilterChange(defaultFilters);
     
     toast({
       title: "Filtros limpos",
-      description: "Todos os filtros foram removidos.",
+      description: "Todos os filtros foram removidos."
     });
   };
   
-  // Aplicar filtros de forma imediata
-  const applyFilters = (newFilters: Partial<FilterOptions>) => {
-    const updatedFilters = { ...localFilters, ...newFilters };
-    setLocalFilters(updatedFilters);
-    onFilterChange(updatedFilters);
+  // Status disponíveis
+  const statusOptions = [
+    { value: "in_progress", label: "Em andamento", color: "bg-blue-100 text-blue-700 border-blue-200" },
+    { value: "waiting", label: "Aguardando", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+    { value: "completed", label: "Concluído", color: "bg-green-100 text-green-700 border-green-200" },
+    { value: "canceled", label: "Cancelado", color: "bg-red-100 text-red-700 border-red-200" }
+  ];
+  
+  // Opções de ordenação
+  const sortOptions = [
+    { value: "name-asc", label: "Nome (A-Z)" },
+    { value: "name-desc", label: "Nome (Z-A)" },
+    { value: "value-desc", label: "Maior valor" },
+    { value: "value-asc", label: "Menor valor" },
+    { value: "date-desc", label: "Mais recentes" },
+    { value: "date-asc", label: "Mais antigos" },
+    { value: "company-asc", label: "Empresa (A-Z)" },
+    { value: "company-desc", label: "Empresa (Z-A)" }
+  ];
+  
+  // Verificar quantos filtros estão ativos
+  const getActiveFilterCount = (): number => {
+    let count = 0;
+    if (filters.search) count++;
+    if (filters.status.length > 0) count++;
+    if (filters.hideClosed === false) count++;
+    if (filters.sortBy !== "date" || filters.sortOrder !== "desc") count++;
+    return count;
   };
   
-  // Alternar status
-  const toggleStatus = (status: string) => {
-    let newStatusFilters: string[];
-    
-    if (localFilters.status.includes(status)) {
-      newStatusFilters = localFilters.status.filter(s => s !== status);
-    } else {
-      newStatusFilters = [...localFilters.status, status];
-    }
-    
-    applyFilters({ status: newStatusFilters });
-  };
-  
-  // Controlar a busca com debounce
+  // Controlar mudança no campo de busca com debounce
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
-    setLocalFilters(prev => ({ ...prev, search: searchTerm }));
+    setFilters(prev => ({ ...prev, search: searchTerm }));
     
     const timer = setTimeout(() => {
-      onFilterChange({ ...localFilters, search: searchTerm });
+      updateFilter({ search: searchTerm });
     }, 300);
     
     return () => clearTimeout(timer);
   };
   
-  // Status options with colors
-  const statusOptions = [
-    { value: "in_progress", label: "Em andamento", bgColor: "bg-blue-100", borderColor: "border-blue-200", textColor: "text-blue-800" },
-    { value: "waiting", label: "Aguardando", bgColor: "bg-yellow-100", borderColor: "border-yellow-200", textColor: "text-yellow-800" },
-    { value: "completed", label: "Concluído", bgColor: "bg-green-100", borderColor: "border-green-200", textColor: "text-green-800" },
-    { value: "canceled", label: "Cancelado", bgColor: "bg-red-100", borderColor: "border-red-200", textColor: "text-red-800" }
-  ];
-  
-  // Opções de ordenação
-  const sortOptions = [
-    { id: "name-asc", label: "Nome (A-Z)", sortBy: "name", sortOrder: "asc" },
-    { id: "name-desc", label: "Nome (Z-A)", sortBy: "name", sortOrder: "desc" },
-    { id: "value-desc", label: "Maior valor", sortBy: "value", sortOrder: "desc" },
-    { id: "value-asc", label: "Menor valor", sortBy: "value", sortOrder: "asc" },
-    { id: "date-desc", label: "Mais recentes", sortBy: "date", sortOrder: "desc" },
-    { id: "date-asc", label: "Mais antigos", sortBy: "date", sortOrder: "asc" },
-    { id: "company-asc", label: "Empresa (A-Z)", sortBy: "company", sortOrder: "asc" },
-    { id: "company-desc", label: "Empresa (Z-A)", sortBy: "company", sortOrder: "desc" }
-  ];
-  
-  // Contagem de filtros ativos
-  const getActiveFilterCount = (): number => {
-    let count = 0;
-    if (localFilters.search) count++;
-    if (localFilters.status.length > 0) count++;
-    if (localFilters.sortBy !== "date" || localFilters.sortOrder !== "desc") count++;
-    if (localFilters.hideClosed === false) count++;
-    return count;
+  // Processar mudança na ordenação
+  const handleSortChange = (value: string) => {
+    const [sortBy, sortOrder] = value.split("-") as [
+      "name" | "value" | "date" | "company", 
+      "asc" | "desc"
+    ];
+    
+    updateFilter({ sortBy, sortOrder });
   };
   
+  // Valor atual de ordenação
+  const currentSortValue = `${filters.sortBy}-${filters.sortOrder}`;
+  
   return (
-    <div className="flex items-center space-x-2 mb-4">
-      {/* Filtro - Mostrar/Ocultar Concluídos */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="flex items-center gap-2 relative">
-            <FilterIcon className="h-4 w-4" />
-            <span>Filtros</span>
-            {getActiveFilterCount() > 0 && (
-              <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">
-                {getActiveFilterCount()}
-              </Badge>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80">
-          <div className="space-y-4">
-            <h4 className="font-medium">Filtrar negócios</h4>
-            
-            <div className="space-y-2">
-              <Label htmlFor="filter-search">Busca</Label>
-              <Input
-                id="filter-search"
-                placeholder="Nome, empresa, etc."
-                value={localFilters.search}
-                onChange={handleSearchChange}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2 py-2">
-              <Checkbox
-                id="show-closed-deals"
-                checked={!localFilters.hideClosed}
-                onCheckedChange={(checked) => {
-                  applyFilters({ hideClosed: !checked });
-                }}
-              />
-              <Label
-                htmlFor="show-closed-deals"
-                className="text-sm font-medium cursor-pointer"
-              >
-                Mostrar negócios concluídos (ganhos/perdidos)
-              </Label>
-            </div>
-            
-            <div className="flex justify-end pt-2">
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                Limpar Tudo
-              </Button>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-      
-      {/* Ordenação - Simplificada */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-          >
-            {localFilters.sortOrder === "asc" ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />}
-            <span>Ordenar</span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-56">
-          <div className="space-y-2">
-            <h4 className="font-medium mb-2">Ordenar por</h4>
-            
-            <div className="grid gap-1">
-              {sortOptions.map(option => (
-                <Button 
-                  key={option.id}
-                  variant="ghost"
-                  size="sm"
-                  className={`justify-start h-9 px-2 ${
-                    localFilters.sortBy === option.sortBy && 
-                    localFilters.sortOrder === option.sortOrder 
-                      ? "bg-accent text-accent-foreground font-medium" 
-                      : ""
-                  }`}
-                  onClick={() => applyFilters({ 
-                    sortBy: option.sortBy as any, 
-                    sortOrder: option.sortOrder as any 
-                  })}
-                >
-                  <div className="flex items-center w-full">
-                    <span>{option.label}</span>
-                    {localFilters.sortBy === option.sortBy && 
-                     localFilters.sortOrder === option.sortOrder && (
-                      <CheckIcon className="h-4 w-4 ml-auto" />
-                    )}
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-      
-      {/* Status - Simplificado */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="flex items-center gap-2 relative">
-            <Tag className="h-4 w-4" />
-            <span>Status</span>
-            {localFilters.status.length > 0 && (
-              <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">
-                {localFilters.status.length}
-              </Badge>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-56">
-          <div className="space-y-2">
-            <h4 className="font-medium mb-2">Filtrar por status</h4>
-            
-            <div className="grid gap-1">
-              {statusOptions.map(status => (
-                <div
-                  key={status.value}
-                  className={`p-2 rounded-md cursor-pointer flex items-center justify-between ${
-                    localFilters.status.includes(status.value) 
-                      ? `${status.bgColor} border ${status.borderColor}` 
-                      : 'border border-gray-200 hover:bg-gray-50'
-                  }`}
-                  onClick={() => toggleStatus(status.value)}
-                >
-                  <span className={localFilters.status.includes(status.value) ? status.textColor : 'text-gray-700'}>
-                    {status.label}
-                  </span>
-                  {localFilters.status.includes(status.value) && (
-                    <X className="h-4 w-4" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-      
-      {/* Busca */}
-      <div className="flex-1 relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Buscar negócios"
-          className="pl-10"
-          value={localFilters.search}
-          onChange={handleSearchChange}
-        />
+    <div className="space-y-3 mb-4">
+      {/* Barra principal */}
+      <div className="flex items-center space-x-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={() => setExpanded(!expanded)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          <span>Filtros</span>
+          {getActiveFilterCount() > 0 && (
+            <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
+              {getActiveFilterCount()}
+            </Badge>
+          )}
+        </Button>
+        
+        {/* Campo de busca sempre visível */}
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Buscar negócios por nome, empresa, cidade..."
+            className="pl-10"
+            value={filters.search}
+            onChange={handleSearchChange}
+          />
+        </div>
+        
+        {/* Ordenação sempre visível */}
+        <Select
+          value={currentSortValue}
+          onValueChange={handleSortChange}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Ordenação" />
+          </SelectTrigger>
+          <SelectContent>
+            {sortOptions.map(option => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+      
+      {/* Painel expandido de filtros */}
+      {expanded && (
+        <Card className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Filtros Avançados</h3>
+            <Button variant="ghost" size="sm" onClick={resetFilters}>
+              <XCircle className="h-4 w-4 mr-2" />
+              Limpar filtros
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Status */}
+            <div>
+              <Label className="block mb-2">Status</Label>
+              <div className="flex flex-wrap gap-2">
+                {statusOptions.map(status => (
+                  <Badge
+                    key={status.value}
+                    variant={filters.status.includes(status.value) ? "default" : "outline"}
+                    className={`cursor-pointer px-3 py-1 ${
+                      filters.status.includes(status.value) ? status.color : ""
+                    }`}
+                    onClick={() => toggleStatus(status.value)}
+                  >
+                    {status.label}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            
+            {/* Mostrar/ocultar negócios fechados */}
+            <div>
+              <Label className="block mb-2">Visibilidade</Label>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="show-closed-deals"
+                  checked={!filters.hideClosed}
+                  onCheckedChange={(checked) => {
+                    updateFilter({ hideClosed: !checked });
+                  }}
+                />
+                <Label
+                  htmlFor="show-closed-deals"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Mostrar negócios concluídos (ganhos/perdidos)
+                </Label>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

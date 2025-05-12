@@ -251,10 +251,12 @@ export default function Heatmap() {
                           ))}
                           
                           {machineData.length === 0 && (
-                            <div className="flex items-center justify-center h-full">
-                              <div className="text-center text-gray-500">
-                                <p>Sem dados de equipamentos</p>
-                              </div>
+                            <div className="flex flex-col items-center justify-center h-full py-6">
+                              <Settings2 className="h-10 w-10 text-gray-300 mb-3" />
+                              <h3 className="text-lg font-medium text-gray-500">Sem dados de máquinas</h3>
+                              <p className="mt-1 text-sm text-gray-400 max-w-md text-center px-4">
+                                Registre equipamentos nas negociações para visualizar estatísticas por marca.
+                              </p>
                             </div>
                           )}
                         </div>
@@ -271,8 +273,14 @@ export default function Heatmap() {
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-6 text-gray-500">
-                            Nenhum dado disponível para exibição
+                          <div className="py-8 text-center border rounded-md">
+                            <div className="flex flex-col items-center justify-center">
+                              <HardDrive className="h-10 w-10 text-gray-300 mb-3" />
+                              <h3 className="text-lg font-medium text-gray-500">Sem dados de máquinas</h3>
+                              <p className="mt-1 text-sm text-gray-400 max-w-md text-center px-4">
+                                Registre os equipamentos nos negócios para visualizar estatísticas de marca.
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -402,14 +410,8 @@ function processCityData(deals: Deal[]) {
 
 // Processa dados combinando estatísticas de marcas de máquinas
 function processMachineData(deals: Deal[]) {
-  // Usamos um objeto para evitar conflitos com o Map do JavaScript
-  const brandData: Record<string, number> = {
-    "Caterpillar": 0,
-    "John Deere": 0,
-    "Komatsu": 0,
-    "Case": 0,
-    "New Holland": 0
-  };
+  // Objeto vazio para armazenar apenas marcas que existem de fato
+  const brandData: Record<string, number> = {};
   
   // Adicionamos algumas estatísticas iniciais para demonstração
   // Normalmente estes dados viriam de uma chamada API para client-machines

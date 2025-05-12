@@ -41,6 +41,9 @@ interface StageWithDeals extends PipelineStage {
 }
 
 export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProps) {
+  // Logamos os estágios recebidos do componente pai
+  console.log("KanbanBoard recebeu estágios:", pipelineStages?.length, pipelineStages?.map(s => s.name));
+  
   // Use os filtros do componente pai ou crie um padrão
   const activeFilters = filters || {
     search: "",
@@ -131,6 +134,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       
       // Filtrar estágios que não estão ocultos (isHidden === false)
       const visibleStages = pipelineStages.filter(stage => !stage.isHidden);
+      console.log("Estágios visíveis:", visibleStages.length, visibleStages.map(s => s.name));
       
       const stagesWithDeals = visibleStages.map(stage => {
         let stageDeals: Deal[] = [];

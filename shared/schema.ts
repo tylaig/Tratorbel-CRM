@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, foreignKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Users schema from original file
 export const users = pgTable("users", {
@@ -16,6 +17,73 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Leads/Contacts - Contatos/Leads
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  // Informações básicas do contato
+  name: text("name").notNull(),
+  companyName: text("company_name"),
+  chatwootContactId: text("chatwoot_contact_id"),
+  // Tipo de cliente
+  clientCategory: text("client_category").default("final_consumer"), // "final_consumer" (Consumidor Final) ou "reseller" (Revenda)
+  clientType: text("client_type").default("person"), // "person" (Pessoa Física) ou "company" (Pessoa Jurídica)
+  cnpj: text("cnpj"),
+  corporateName: text("corporate_name"), // razão social
+  cpf: text("cpf"),
+  stateRegistration: text("state_registration"), // inscrição estadual
+  clientCode: text("client_code"), // código do cliente
+  // Contato
+  email: text("email"),
+  phone: text("phone"),
+  // Endereço
+  address: text("address"),
+  addressNumber: text("address_number"),
+  addressComplement: text("address_complement"),
+  neighborhood: text("neighborhood"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  // Campos do Chatwoot 
+  chatwootAgentId: text("chatwoot_agent_id"), // ID do agente do Chatwoot responsável pelo contato
+  chatwootAgentName: text("chatwoot_agent_name"), // Nome do agente do Chatwoot
+  // Campos de rastreamento
+  notes: text("notes"), // anotações gerais sobre o lead
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertLeadSchema = createInsertSchema(leads).pick({
+  name: true,
+  companyName: true,
+  chatwootContactId: true,
+  clientCategory: true,
+  clientType: true,
+  cnpj: true,
+  corporateName: true,
+  cpf: true,
+  stateRegistration: true,
+  clientCode: true,
+  email: true,
+  phone: true,
+  address: true,
+  addressNumber: true,
+  addressComplement: true,
+  neighborhood: true,
+  city: true,
+  state: true,
+  zipCode: true,
+  chatwootAgentId: true,
+  chatwootAgentName: true,
+  notes: true,
+});
+
+export type InsertLead = z.infer<typeof insertLeadSchema>;
+export type Lead = typeof leads.$inferSelect;
+
+export const leadsRelations = relations(leads, ({ many }) => ({
+  deals: many(deals)
+}));
 
 // Pipeline Stages
 export const pipelineStages = pgTable("pipeline_stages", {
@@ -37,97 +105,76 @@ export const insertPipelineStageSchema = createInsertSchema(pipelineStages).pick
 export type InsertPipelineStage = z.infer<typeof insertPipelineStageSchema>;
 export type PipelineStage = typeof pipelineStages.$inferSelect;
 
+export const pipelineStagesRelations = relations(pipelineStages, ({ many }) => ({
+  deals: many(deals),
+  stageHistory: many(stageHistory),
+}));
+
 // Deals - Negócios
 export const deals = pgTable("deals", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  companyName: text("company_name"),
-  contactName: text("contact_name"),
-  contactId: text("contact_id"),
-  chatwootContactId: text("chatwoot_contact_id"),
+  leadId: integer("lead_id").notNull(),
   stageId: integer("stage_id").notNull(),
   order: integer("order").default(0), // Posição do deal dentro do estágio para ordenação
   value: doublePrecision("value").default(0),
   quoteValue: doublePrecision("quote_value").default(0),
   status: text("status").default("in_progress"),
-  // Novos campos para clientes
-  clientCategory: text("client_category").default("final_consumer"), // "final_consumer" (Consumidor Final) ou "reseller" (Revenda)
-  clientType: text("client_type").default("person"), // "person" (Pessoa Física) ou "company" (Pessoa Jurídica)
-  isCompany: boolean("is_company").default(false), // campo legado (manter por compatibilidade)
-  cnpj: text("cnpj"),
-  corporateName: text("corporate_name"), // razão social
-  cpf: text("cpf"),
-  stateRegistration: text("state_registration"), // inscrição estadual
-  clientCode: text("client_code"), // código do cliente
-  email: text("email"),
-  phone: text("phone"),
-  // Endereço
-  address: text("address"),
-  addressNumber: text("address_number"),
-  addressComplement: text("address_complement"),
-  neighborhood: text("neighborhood"),
-  city: text("city"),
-  state: text("state"),
-  zipCode: text("zip_code"),
   // Status da venda
   saleStatus: text("sale_status").default("negotiation"), // negotiation, won, lost
   lostReason: text("lost_reason"), // motivo principal da perda
   lostNotes: text("lost_notes"), // observações sobre a perda
   notes: text("notes"), // anotações gerais do negócio
-  machineCount: integer("machine_count").default(0), // contador de máquinas do cliente
   // Campos do Chatwoot 
-  chatwootAgentId: text("chatwoot_agent_id"), // ID do agente do Chatwoot responsável pelo contato
-  chatwootAgentName: text("chatwoot_agent_name"), // Nome do agente do Chatwoot
   chatwootConversationId: text("chatwoot_conversation_id"), // ID da conversa associada no Chatwoot
   // Campos de rastreamento
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => {
+  return {
+    leadIdForeignKey: foreignKey({
+      columns: [table.leadId],
+      foreignColumns: [leads.id],
+    }),
+    stageIdForeignKey: foreignKey({
+      columns: [table.stageId],
+      foreignColumns: [pipelineStages.id],
+    }),
+  }
 });
 
 export const insertDealSchema = createInsertSchema(deals).pick({
   name: true,
-  companyName: true,
-  contactName: true,
-  contactId: true,
-  chatwootContactId: true,
+  leadId: true,
   stageId: true,
   order: true,
   value: true,
   quoteValue: true,
   status: true,
-  // Novos campos do cliente
-  clientCategory: true,
-  clientType: true,
-  isCompany: true,
-  cnpj: true,
-  corporateName: true,
-  cpf: true,
-  stateRegistration: true,
-  clientCode: true,
-  email: true,
-  phone: true,
-  // Endereço
-  address: true,
-  addressNumber: true,
-  addressComplement: true,
-  neighborhood: true,
-  city: true,
-  state: true,
-  zipCode: true,
   // Status da venda
   saleStatus: true,
   lostReason: true,
   lostNotes: true,
   notes: true,
-  machineCount: true,
-  // Campos do Chatwoot
-  chatwootAgentId: true,
-  chatwootAgentName: true,
   chatwootConversationId: true,
 });
 
 export type InsertDeal = z.infer<typeof insertDealSchema>;
 export type Deal = typeof deals.$inferSelect;
+
+export const dealsRelations = relations(deals, ({ one, many }) => ({
+  lead: one(leads, {
+    fields: [deals.leadId],
+    references: [leads.id],
+  }),
+  stage: one(pipelineStages, {
+    fields: [deals.stageId],
+    references: [pipelineStages.id],
+  }),
+  quoteItems: many(quoteItems),
+  clientMachines: many(clientMachines),
+  leadActivities: many(leadActivities),
+}));
 
 // Quote Items
 export const quoteItems = pgTable("quote_items", {
@@ -137,6 +184,13 @@ export const quoteItems = pgTable("quote_items", {
   quantity: integer("quantity").notNull().default(1),
   unitPrice: doublePrecision("unit_price").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => {
+  return {
+    dealIdForeignKey: foreignKey({
+      columns: [table.dealId],
+      foreignColumns: [deals.id],
+    }),
+  }
 });
 
 export const insertQuoteItemSchema = createInsertSchema(quoteItems).pick({
@@ -149,6 +203,13 @@ export const insertQuoteItemSchema = createInsertSchema(quoteItems).pick({
 export type InsertQuoteItem = z.infer<typeof insertQuoteItemSchema>;
 export type QuoteItem = typeof quoteItems.$inferSelect;
 
+export const quoteItemsRelations = relations(quoteItems, ({ one }) => ({
+  deal: one(deals, {
+    fields: [quoteItems.dealId],
+    references: [deals.id],
+  }),
+}));
+
 // Stage History
 export const stageHistory = pgTable("stage_history", {
   id: serial("id").primaryKey(),
@@ -156,7 +217,29 @@ export const stageHistory = pgTable("stage_history", {
   stageId: integer("stage_id").notNull(),
   enteredAt: timestamp("entered_at").notNull().defaultNow(),
   leftAt: timestamp("left_at"),
+}, (table) => {
+  return {
+    dealIdForeignKey: foreignKey({
+      columns: [table.dealId],
+      foreignColumns: [deals.id],
+    }),
+    stageIdForeignKey: foreignKey({
+      columns: [table.stageId],
+      foreignColumns: [pipelineStages.id],
+    }),
+  }
 });
+
+export const stageHistoryRelations = relations(stageHistory, ({ one }) => ({
+  deal: one(deals, {
+    fields: [stageHistory.dealId],
+    references: [deals.id],
+  }),
+  stage: one(pipelineStages, {
+    fields: [stageHistory.stageId],
+    references: [pipelineStages.id],
+  }),
+}));
 
 // Settings
 export const settings = pgTable("settings", {
@@ -185,6 +268,13 @@ export const clientMachines = pgTable("client_machines", {
   model: text("model").notNull(),
   year: text("year"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => {
+  return {
+    dealIdForeignKey: foreignKey({
+      columns: [table.dealId],
+      foreignColumns: [deals.id],
+    }),
+  }
 });
 
 export const insertClientMachineSchema = createInsertSchema(clientMachines).pick({
@@ -197,6 +287,13 @@ export const insertClientMachineSchema = createInsertSchema(clientMachines).pick
 
 export type InsertClientMachine = z.infer<typeof insertClientMachineSchema>;
 export type ClientMachine = typeof clientMachines.$inferSelect;
+
+export const clientMachinesRelations = relations(clientMachines, ({ one }) => ({
+  deal: one(deals, {
+    fields: [clientMachines.dealId],
+    references: [deals.id],
+  }),
+}));
 
 // Motivos de perda de negócio
 export const lossReasons = pgTable("loss_reasons", {
@@ -222,6 +319,13 @@ export const leadActivities = pgTable("lead_activities", {
   description: text("description").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   createdBy: text("created_by"), // Nome de quem criou a atividade
+}, (table) => {
+  return {
+    dealIdForeignKey: foreignKey({
+      columns: [table.dealId],
+      foreignColumns: [deals.id],
+    }),
+  }
 });
 
 export const insertLeadActivitySchema = createInsertSchema(leadActivities).pick({
@@ -233,6 +337,13 @@ export const insertLeadActivitySchema = createInsertSchema(leadActivities).pick(
 
 export type InsertLeadActivity = z.infer<typeof insertLeadActivitySchema>;
 export type LeadActivity = typeof leadActivities.$inferSelect;
+
+export const leadActivitiesRelations = relations(leadActivities, ({ one }) => ({
+  deal: one(deals, {
+    fields: [leadActivities.dealId],
+    references: [deals.id],
+  }),
+}));
 
 // Marcas de máquinas
 export const machineBrands = pgTable("machine_brands", {

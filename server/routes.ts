@@ -427,6 +427,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Obter lead pelo ID
+  apiRouter.get("/leads/:id", async (req: Request, res: Response) => {
+    try {
+      const leadId = parseInt(req.params.id, 10);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "ID do lead inválido" });
+      }
+      
+      const lead = await storage.getLead(leadId);
+      if (!lead) {
+        return res.status(404).json({ message: `Lead com ID ${leadId} não encontrado` });
+      }
+      
+      res.json(lead);
+    } catch (error) {
+      console.error(`Erro ao buscar lead ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Erro ao buscar lead", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Criar novo lead
   apiRouter.post("/leads", async (req: Request, res: Response) => {
     try {
@@ -454,6 +477,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Enviar mensagem mais detalhada
         res.status(500).json({ 
           message: "Erro interno do servidor", 
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+  });
+  
+  // Atualizar lead existente
+  apiRouter.put("/leads/:id", async (req: Request, res: Response) => {
+    try {
+      const leadId = parseInt(req.params.id, 10);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "ID do lead inválido" });
+      }
+
+      console.log(`Atualizando lead com ID ${leadId}:`, JSON.stringify(req.body));
+      
+      // Verificar se o lead existe
+      const existingLead = await storage.getLead(leadId);
+      if (!existingLead) {
+        return res.status(404).json({ message: `Lead com ID ${leadId} não encontrado` });
+      }
+      
+      // Remover campo isCompany se existir (não está no esquema)
+      if ('isCompany' in req.body) {
+        delete req.body.isCompany;
+      }
+      
+      // Validar apenas os campos presentes na requisição
+      const partialLeadSchema = insertLeadSchema.partial();
+      const validatedData = partialLeadSchema.parse(req.body);
+      console.log("Dados validados com sucesso:", JSON.stringify(validatedData));
+      
+      // Atualizar o lead
+      const updatedLead = await storage.updateLead(leadId, validatedData);
+      if (!updatedLead) {
+        return res.status(500).json({ message: "Falha ao atualizar o lead" });
+      }
+      
+      console.log("Lead atualizado com sucesso:", JSON.stringify(updatedLead));
+      res.json(updatedLead);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error("Erro de validação:", JSON.stringify(error.errors));
+        res.status(400).json({
+          message: "Dados inválidos",
+          errors: error.errors
+        });
+      } else {
+        console.error("Erro ao atualizar lead:", error);
+        res.status(500).json({
+          message: "Erro ao atualizar lead",
           error: error instanceof Error ? error.message : String(error)
         });
       }

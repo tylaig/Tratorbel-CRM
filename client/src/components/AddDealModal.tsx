@@ -252,15 +252,14 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
       if (defaultStage) {
         setStageId(defaultStage.id.toString());
       } else if (pipelineStages.length > 0) {
-        // Se não houver estágio padrão, use o primeiro estágio
         setStageId(pipelineStages[0].id.toString());
       }
     }
-  }, [isOpen, selectedContact, pipelineStages]);
+  }, [isOpen, selectedContact, pipelineStages, name]);
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PlusIcon className="h-5 w-5 text-primary" />
@@ -347,6 +346,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
                     <SelectItem value="in_progress">Em andamento</SelectItem>
                     <SelectItem value="waiting">Aguardando</SelectItem>
                     <SelectItem value="completed">Concluído</SelectItem>
+                    <SelectItem value="canceled">Cancelado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

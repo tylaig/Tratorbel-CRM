@@ -72,7 +72,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       stageId?: number; 
       order?: number
     }) => {
-      return await apiRequest('PUT', `/api/deals/${data.dealId}`, data);
+      return await apiRequest(`/api/deals/${data.dealId}`, 'PUT', data);
     }
   });
   
@@ -229,7 +229,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
             
           try {
             // Adicionar atividade de movimentação ao histórico
-            await apiRequest('POST', '/api/lead-activities', {
+            await apiRequest('/api/lead-activities', 'POST', {
               dealId: dealId,
               description: activityText,
               activityType: 'move'

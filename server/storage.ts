@@ -37,15 +37,15 @@ export interface IStorage {
   deletePipelineStage(id: number): Promise<boolean>;
   
   // Deals
-  getDeals(): Promise<Deal[]>;
-  getDeal(id: number): Promise<Deal | undefined>;
-  createDeal(deal: InsertDeal): Promise<Deal>;
+  getDeals(): Promise<(Deal & Partial<Lead>)[]>;
+  getDeal(id: number): Promise<(Deal & Partial<Lead>) | undefined>;
+  createDeal(deal: InsertDeal): Promise<Deal & Partial<Lead>>;
   updateDeal(id: number, deal: Partial<Deal>): Promise<Deal | undefined>;
   deleteDeal(id: number): Promise<boolean>;
-  getDealsByStage(stageId: number): Promise<Deal[]>;
+  getDealsByStage(stageId: number): Promise<(Deal & Partial<Lead>)[]>;
   // Métodos para filtrar deals
-  getDealsBySaleStatus(saleStatus: string): Promise<Deal[]>;
-  getDealsByLeadId(leadId: number): Promise<Deal[]>;
+  getDealsBySaleStatus(saleStatus: string): Promise<(Deal & Partial<Lead>)[]>;
+  getDealsByLeadId(leadId: number): Promise<(Deal & Partial<Lead>)[]>;
   
   // Client Machines (Máquinas do cliente)
   getClientMachines(dealId: number): Promise<ClientMachine[]>;
@@ -751,21 +751,87 @@ export class DatabaseStorage implements IStorage {
     return deal || undefined;
   }
 
-  async createDeal(insertDeal: InsertDeal): Promise<Deal> {
+  async createDeal(insertDeal: InsertDeal): Promise<Deal & Partial<Lead>> {
+    // Primeiro cria o deal
     const [deal] = await db
       .insert(deals)
       .values(insertDeal)
       .returning();
-    return deal;
+    
+    // Depois consulta o deal com os dados do lead para retornar todos os dados
+    const [dealWithLead] = await db
+      .select({
+        ...deals,
+        // Campos do Lead com prefixo para evitar conflitos
+        companyName: leads.companyName,
+        clientCategory: leads.clientCategory,
+        clientType: leads.clientType,
+        cnpj: leads.cnpj,
+        corporateName: leads.corporateName,
+        cpf: leads.cpf,
+        stateRegistration: leads.stateRegistration,
+        clientCode: leads.clientCode,
+        email: leads.email,
+        phone: leads.phone,
+        address: leads.address,
+        addressNumber: leads.addressNumber,
+        addressComplement: leads.addressComplement,
+        neighborhood: leads.neighborhood,
+        city: leads.city,
+        state: leads.state,
+        zipCode: leads.zipCode,
+        chatwootContactId: leads.chatwootContactId,
+        chatwootAgentId: leads.chatwootAgentId,
+        chatwootAgentName: leads.chatwootAgentName,
+      })
+      .from(deals)
+      .leftJoin(leads, eq(deals.leadId, leads.id))
+      .where(eq(deals.id, deal.id));
+    
+    return dealWithLead || deal;
   }
 
-  async updateDeal(id: number, updateData: Partial<Deal>): Promise<Deal | undefined> {
+  async updateDeal(id: number, updateData: Partial<Deal>): Promise<(Deal & Partial<Lead>) | undefined> {
+    // Primeiro atualiza os dados
     const [deal] = await db
       .update(deals)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(deals.id, id))
       .returning();
-    return deal || undefined;
+      
+    if (!deal) return undefined;
+    
+    // Depois obtém os dados completos com a relação ao lead
+    const [dealWithLead] = await db
+      .select({
+        ...deals,
+        // Campos do Lead com prefixo para evitar conflitos
+        companyName: leads.companyName,
+        clientCategory: leads.clientCategory,
+        clientType: leads.clientType,
+        cnpj: leads.cnpj,
+        corporateName: leads.corporateName,
+        cpf: leads.cpf,
+        stateRegistration: leads.stateRegistration,
+        clientCode: leads.clientCode,
+        email: leads.email,
+        phone: leads.phone,
+        address: leads.address,
+        addressNumber: leads.addressNumber,
+        addressComplement: leads.addressComplement,
+        neighborhood: leads.neighborhood,
+        city: leads.city,
+        state: leads.state,
+        zipCode: leads.zipCode,
+        chatwootContactId: leads.chatwootContactId,
+        chatwootAgentId: leads.chatwootAgentId,
+        chatwootAgentName: leads.chatwootAgentName,
+      })
+      .from(deals)
+      .leftJoin(leads, eq(deals.leadId, leads.id))
+      .where(eq(deals.id, deal.id));
+      
+    return dealWithLead || deal;
   }
 
   async deleteDeal(id: number): Promise<boolean> {

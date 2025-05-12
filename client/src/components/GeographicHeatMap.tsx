@@ -121,6 +121,7 @@ export default function GeographicHeatMap() {
     }
     
     // Conta os negócios por localização
+    if (Array.isArray(allDeals)) {
     allDeals.forEach((deal: Deal) => {
       let key: string | undefined;
       
@@ -152,6 +153,7 @@ export default function GeographicHeatMap() {
         results[key].lost += 1;
       }
     });
+    }
     
     // Calcula taxa de vitória
     Object.keys(results).forEach(key => {
@@ -166,6 +168,7 @@ export default function GeographicHeatMap() {
 
   // Ordenar localizações por número total de negócios
   const sortedLocations = useMemo(() => {
+    if (!locationAnalysis) return [];
     return Object.entries(locationAnalysis)
       .filter(([_, data]) => data.total > 0) // Mostra apenas locais com dados
       .sort((a, b) => b[1].total - a[1].total);
@@ -173,8 +176,13 @@ export default function GeographicHeatMap() {
 
   // Gera classes CSS para o mapa de calor com base no número de negócios
   const getHeatMapClass = (total: number) => {
-    const max = Math.max(...Object.values(locationAnalysis).map(data => data.total));
-    const intensity = Math.min(Math.ceil((total / max) * 10), 10);
+    if (!locationAnalysis) return 'heat-level-0';
+    
+    const values = Object.values(locationAnalysis).map(data => data.total);
+    if (values.length === 0) return 'heat-level-0';
+    
+    const max = Math.max(...values);
+    const intensity = max === 0 ? 0 : Math.min(Math.ceil((total / max) * 10), 10);
     return `heat-level-${intensity}`;
   };
 
@@ -358,7 +366,7 @@ export default function GeographicHeatMap() {
         </CardContent>
       </Card>
 
-      <style jsx>{`
+      <style>{`
         .heat-level-1 { background-color: rgba(59, 130, 246, 0.05); }
         .heat-level-2 { background-color: rgba(59, 130, 246, 0.1); }
         .heat-level-3 { background-color: rgba(59, 130, 246, 0.15); }

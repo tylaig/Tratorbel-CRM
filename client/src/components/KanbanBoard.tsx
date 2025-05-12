@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import EditDealModal from "@/components/EditDealModal";
+import AddDealModal from "@/components/AddDealModal";
 import EditStageModal from "@/components/EditStageModal";
 import AddStageModal from "@/components/AddStageModal";
 import DealOutcomeModal from "@/components/DealOutcomeModal";

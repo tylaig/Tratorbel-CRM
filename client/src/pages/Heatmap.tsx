@@ -10,7 +10,7 @@ import {
   BarChart3,
   TrendingUp,
   Calendar,
-  Map,
+  Map as MapIcon,
   Home,
   Building2,
   Cpu
@@ -33,7 +33,7 @@ export default function Heatmap() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <Map className="mr-2 h-6 w-6 text-primary" />
+            <MapIcon className="mr-2 h-6 w-6 text-primary" />
             Mapa de Calor
           </h1>
           <p className="text-gray-500 mt-1">
@@ -76,7 +76,7 @@ export default function Heatmap() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="h-[400px] bg-gray-100 rounded-md p-4 flex items-center justify-center">
                       <div className="text-center text-gray-500">
-                        <Map className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                        <MapIcon className="h-12 w-12 mx-auto mb-2 text-gray-400" />
                         <p>Visualização do mapa do Brasil</p>
                         <p className="text-sm">(Implementação visual futura)</p>
                       </div>
@@ -223,6 +223,7 @@ export default function Heatmap() {
 
 // Funções auxiliares para processar os dados
 function processStateData(deals: Deal[]) {
+  // Estamos usando o objeto Map do JavaScript, não o componente Map do Lucide
   const stateMap = new Map<string, { count: number, value: number }>();
   
   deals.forEach(deal => {

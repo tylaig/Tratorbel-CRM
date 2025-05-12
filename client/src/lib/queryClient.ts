@@ -11,7 +11,7 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-): Promise<Response> {
+): Promise<any> {
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -20,7 +20,19 @@ export async function apiRequest(
   });
 
   await throwIfResNotOk(res);
-  return res;
+  
+  // Para métodos que podem não retornar JSON (como DELETE)
+  if (method === "DELETE" || res.headers.get("content-length") === "0") {
+    return { success: true };
+  }
+  
+  // Tentar retornar o resultado como JSON
+  try {
+    return await res.json();
+  } catch (e) {
+    // Se não conseguir converter para JSON, retorna um objeto com success
+    return { success: true };
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

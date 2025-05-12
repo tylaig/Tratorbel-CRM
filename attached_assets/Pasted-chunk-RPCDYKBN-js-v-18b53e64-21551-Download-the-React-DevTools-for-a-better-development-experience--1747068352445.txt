@@ -1,0 +1,39 @@
+chunk-RPCDYKBN.js?v=18b53e64:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-RPCDYKBN.js?v=18b53e64:521 Warning: Connect(Droppable): Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.
+    at div
+    at div
+    at div
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:945:20)
+    at App (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:7462:25)
+    at ErrorBoundary2 (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:1959:35)
+    at DragDropContext (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:7582:19)
+    at KanbanBoard (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/components/KanbanBoard.tsx?t=1747068260334:45:39)
+    at main
+    at div
+    at div
+    at Dashboard (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/pages/Dashboard.tsx?t=1747068260334:35:41)
+    at Route (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18b53e64:323:16)
+    at Switch (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18b53e64:379:17)
+    at App
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TONAP5II.js?v=18b53e64:43:15)
+    at TooltipProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=18b53e64:61:5)
+    at QueryClientProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=18b53e64:2805:3)
+printWarning @ chunk-RPCDYKBN.js?v=18b53e64:521
+error @ chunk-RPCDYKBN.js?v=18b53e64:505
+updateMemoComponent @ chunk-RPCDYKBN.js?v=18b53e64:14382
+beginWork @ chunk-RPCDYKBN.js?v=18b53e64:15977
+beginWork$1 @ chunk-RPCDYKBN.js?v=18b53e64:19753
+performUnitOfWork @ chunk-RPCDYKBN.js?v=18b53e64:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=18b53e64:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=18b53e64:19116
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=18b53e64:18678
+workLoop @ chunk-RPCDYKBN.js?v=18b53e64:197
+flushWork @ chunk-RPCDYKBN.js?v=18b53e64:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=18b53e64:384
+EditDealModal.tsx:130 Lead carregado: Object
+queryClient.ts:15 API Request: GET /api/deals/1 undefined
+queryClient.ts:26 API Response status: 200 OK
+queryClient.ts:42 Não foi possível converter resposta para JSON SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+queryClient.ts:15 API Request: GET /api/deals/1 undefined
+queryClient.ts:26 API Response status: 200 OK
+queryClient.ts:42 Não foi possível converter resposta para JSON SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON

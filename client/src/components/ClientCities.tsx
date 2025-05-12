@@ -118,21 +118,26 @@ export default function ClientCities({ dealId, isExisting, currentCity, currentS
     }
   }, [currentCity, currentState]);
   
+  // Query para obter os dados do deal (incluindo leadId)
+  const { data: dealData } = useQuery({
+    queryKey: [`/api/deals/${dealId}`],
+    queryFn: async () => {
+      if (!dealId) return null;
+      const response = await apiRequest(`/api/deals/${dealId}`, 'GET');
+      return response;
+    },
+    enabled: !!dealId && isExisting,  // Só executa se existir um dealId válido e for um deal existente
+  });
+  
   // Mutation para atualizar dados de cidade do lead associado ao deal
   const updateCityMutation = useMutation({
     mutationFn: async (data: { city: string, state: string }) => {
-      if (!dealId) return null;
-      
-      // Primeiro, obter o leadId associado ao dealId
-      const dealResponse = await apiRequest(`/api/deals/${dealId}`, 'GET');
-      const leadId = dealResponse?.leadId;
-      
-      if (!leadId) {
-        throw new Error("Lead não encontrado para este negócio");
+      if (!dealId || !dealData || !dealData.leadId) {
+        throw new Error("Dados do negócio ou lead não encontrados");
       }
       
-      // Atualizar os dados de cidade/estado no lead
-      return await apiRequest(`/api/leads/${leadId}`, 'PUT', {
+      // Atualizar os dados de cidade/estado diretamente no lead
+      return await apiRequest(`/api/leads/${dealData.leadId}`, 'PUT', {
         city: data.city,
         state: data.state
       });

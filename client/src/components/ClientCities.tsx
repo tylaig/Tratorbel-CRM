@@ -148,14 +148,26 @@ export default function ClientCities({ dealId, leadId, isExisting, currentCity, 
         state: data.state
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Localização atualizada",
         description: "A cidade e estado foram atualizados com sucesso.",
       });
+      
+      // Atualizar cache para todas as queries afetadas
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/leads'] });
+      
+      // Atualizar cache específico para este lead
+      if (effectiveLeadId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/leads/${effectiveLeadId}`] });
+      }
+      
+      // Fechar o modo de edição
       setIsEditing(false);
+      
+      // Garantir que o componente pai seja atualizado com os novos valores
+      onCityChange(city, state);
     },
     onError: (error) => {
       toast({

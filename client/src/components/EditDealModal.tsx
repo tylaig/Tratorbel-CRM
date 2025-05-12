@@ -107,7 +107,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const { toast } = useToast();
 
   // Buscar os dados do lead associado
-  const { data: leadData } = useQuery<Lead>({
+  const { data: leadData, refetch: refetchLeadData } = useQuery<Lead>({
     queryKey: [`/api/leads/${deal?.leadId}`],
     enabled: !!deal?.leadId,
   });
@@ -652,9 +652,19 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                     isExisting={!!deal}
                     currentCity={city}
                     currentState={state}
-                    onCityChange={(city, state) => {
-                      setCity(city);
-                      setState(state);
+                    onCityChange={(updatedCity, updatedState) => {
+                      // Atualizar os estados locais com os novos valores
+                      setCity(updatedCity);
+                      setState(updatedState);
+                      
+                      // Se a atualização foi feita pelo componente, também atualizar nosso objeto leadData
+                      if (deal?.leadId && leadData) {
+                        // Invalidar a query para que os dados sejam recarregados na próxima vez
+                        queryClient.invalidateQueries({ queryKey: [`/api/leads/${deal.leadId}`] });
+                        
+                        // Forçar refetch para atualizar os dados em memória
+                        refetchLeadData();
+                      }
                     }}
                   />
                   

@@ -7,8 +7,11 @@ import {
   lossReasons, type LossReason, type InsertLossReason,
   quoteItems, type QuoteItem, type InsertQuoteItem,
   leadActivities, type LeadActivity, type InsertLeadActivity,
-  machineBrands, type MachineBrand, type InsertMachineBrand
+  machineBrands, type MachineBrand, type InsertMachineBrand,
+  leads, type Lead, type InsertLead
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc, asc, or, like } from "drizzle-orm";
 
 // Modify the interface with any CRUD methods you might need
 export interface IStorage {
@@ -16,6 +19,15 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Leads (Contatos)
+  getLeads(): Promise<Lead[]>;
+  getLead(id: number): Promise<Lead | undefined>;
+  getLeadByChatwootId(chatwootContactId: string): Promise<Lead | undefined>;
+  createLead(lead: InsertLead): Promise<Lead>;
+  updateLead(id: number, lead: Partial<Lead>): Promise<Lead | undefined>;
+  deleteLead(id: number): Promise<boolean>;
+  searchLeads(query: string): Promise<Lead[]>;
   
   // Pipeline Stages
   getPipelineStages(): Promise<PipelineStage[]>;
@@ -33,7 +45,7 @@ export interface IStorage {
   getDealsByStage(stageId: number): Promise<Deal[]>;
   // Métodos para filtrar deals
   getDealsBySaleStatus(saleStatus: string): Promise<Deal[]>;
-  getDealsByContactId(contactId: string): Promise<Deal[]>;
+  getDealsByLeadId(leadId: number): Promise<Deal[]>;
   
   // Client Machines (Máquinas do cliente)
   getClientMachines(dealId: number): Promise<ClientMachine[]>;
@@ -548,4 +560,448 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // Users
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  // Leads (Contatos)
+  async getLeads(): Promise<Lead[]> {
+    return await db.select().from(leads).orderBy(desc(leads.updatedAt));
+  }
+
+  async getLead(id: number): Promise<Lead | undefined> {
+    const [lead] = await db.select().from(leads).where(eq(leads.id, id));
+    return lead || undefined;
+  }
+
+  async getLeadByChatwootId(chatwootContactId: string): Promise<Lead | undefined> {
+    const [lead] = await db.select().from(leads).where(eq(leads.chatwootContactId, chatwootContactId));
+    return lead || undefined;
+  }
+
+  async createLead(insertLead: InsertLead): Promise<Lead> {
+    const [lead] = await db
+      .insert(leads)
+      .values(insertLead)
+      .returning();
+    return lead;
+  }
+
+  async updateLead(id: number, updateData: Partial<Lead>): Promise<Lead | undefined> {
+    const [lead] = await db
+      .update(leads)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(leads.id, id))
+      .returning();
+    return lead || undefined;
+  }
+
+  async deleteLead(id: number): Promise<boolean> {
+    const result = await db
+      .delete(leads)
+      .where(eq(leads.id, id));
+    return !!result;
+  }
+
+  async searchLeads(query: string): Promise<Lead[]> {
+    const searchTerm = `%${query}%`;
+    return await db
+      .select()
+      .from(leads)
+      .where(
+        or(
+          like(leads.name, searchTerm),
+          like(leads.companyName || '', searchTerm),
+          like(leads.email || '', searchTerm),
+          like(leads.phone || '', searchTerm),
+          like(leads.cnpj || '', searchTerm),
+          like(leads.cpf || '', searchTerm)
+        )
+      )
+      .orderBy(desc(leads.updatedAt));
+  }
+
+  // Pipeline Stages
+  async getPipelineStages(): Promise<PipelineStage[]> {
+    return await db.select().from(pipelineStages).orderBy(asc(pipelineStages.order));
+  }
+
+  async getPipelineStage(id: number): Promise<PipelineStage | undefined> {
+    const [stage] = await db.select().from(pipelineStages).where(eq(pipelineStages.id, id));
+    return stage || undefined;
+  }
+
+  async createPipelineStage(insertStage: InsertPipelineStage): Promise<PipelineStage> {
+    const [stage] = await db
+      .insert(pipelineStages)
+      .values(insertStage)
+      .returning();
+    return stage;
+  }
+
+  async updatePipelineStage(id: number, updateData: Partial<PipelineStage>): Promise<PipelineStage | undefined> {
+    const [stage] = await db
+      .update(pipelineStages)
+      .set(updateData)
+      .where(eq(pipelineStages.id, id))
+      .returning();
+    return stage || undefined;
+  }
+
+  async deletePipelineStage(id: number): Promise<boolean> {
+    const result = await db
+      .delete(pipelineStages)
+      .where(eq(pipelineStages.id, id));
+    return !!result;
+  }
+
+  // Deals
+  async getDeals(): Promise<Deal[]> {
+    return await db.select().from(deals).orderBy(desc(deals.updatedAt));
+  }
+
+  async getDeal(id: number): Promise<Deal | undefined> {
+    const [deal] = await db.select().from(deals).where(eq(deals.id, id));
+    return deal || undefined;
+  }
+
+  async createDeal(insertDeal: InsertDeal): Promise<Deal> {
+    const [deal] = await db
+      .insert(deals)
+      .values(insertDeal)
+      .returning();
+    return deal;
+  }
+
+  async updateDeal(id: number, updateData: Partial<Deal>): Promise<Deal | undefined> {
+    const [deal] = await db
+      .update(deals)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(deals.id, id))
+      .returning();
+    return deal || undefined;
+  }
+
+  async deleteDeal(id: number): Promise<boolean> {
+    const result = await db
+      .delete(deals)
+      .where(eq(deals.id, id));
+    return !!result;
+  }
+
+  async getDealsByStage(stageId: number): Promise<Deal[]> {
+    return await db
+      .select()
+      .from(deals)
+      .where(eq(deals.stageId, stageId))
+      .orderBy(desc(deals.updatedAt));
+  }
+
+  async getDealsBySaleStatus(saleStatus: string): Promise<Deal[]> {
+    return await db
+      .select()
+      .from(deals)
+      .where(eq(deals.saleStatus, saleStatus))
+      .orderBy(desc(deals.updatedAt));
+  }
+
+  async getDealsByLeadId(leadId: number): Promise<Deal[]> {
+    return await db
+      .select()
+      .from(deals)
+      .where(eq(deals.leadId, leadId))
+      .orderBy(desc(deals.updatedAt));
+  }
+
+  // Client Machines
+  async getClientMachines(dealId: number): Promise<ClientMachine[]> {
+    return await db
+      .select()
+      .from(clientMachines)
+      .where(eq(clientMachines.dealId, dealId))
+      .orderBy(desc(clientMachines.createdAt));
+  }
+
+  async createClientMachine(insertMachine: InsertClientMachine): Promise<ClientMachine> {
+    const [machine] = await db
+      .insert(clientMachines)
+      .values(insertMachine)
+      .returning();
+    
+    // Atualizar contador de máquinas no negócio
+    const deal = await this.getDeal(insertMachine.dealId);
+    if (deal) {
+      const currentCount = deal.machineCount || 0;
+      await this.updateDeal(deal.id, { machineCount: currentCount + 1 });
+    }
+    
+    return machine;
+  }
+
+  async updateClientMachine(id: number, updateData: Partial<ClientMachine>): Promise<ClientMachine | undefined> {
+    const [machine] = await db
+      .update(clientMachines)
+      .set(updateData)
+      .where(eq(clientMachines.id, id))
+      .returning();
+    return machine || undefined;
+  }
+
+  async deleteClientMachine(id: number): Promise<boolean> {
+    const [machine] = await db
+      .select()
+      .from(clientMachines)
+      .where(eq(clientMachines.id, id));
+    
+    if (!machine) return false;
+    
+    const result = await db
+      .delete(clientMachines)
+      .where(eq(clientMachines.id, id));
+    
+    if (result) {
+      const deal = await this.getDeal(machine.dealId);
+      if (deal && deal.machineCount && deal.machineCount > 0) {
+        await this.updateDeal(deal.id, { machineCount: deal.machineCount - 1 });
+      }
+    }
+    
+    return !!result;
+  }
+
+  // Loss Reasons
+  async getLossReasons(): Promise<LossReason[]> {
+    return await db
+      .select()
+      .from(lossReasons)
+      .where(eq(lossReasons.active, true))
+      .orderBy(asc(lossReasons.reason));
+  }
+
+  async createLossReason(insertReason: InsertLossReason): Promise<LossReason> {
+    const [reason] = await db
+      .insert(lossReasons)
+      .values(insertReason)
+      .returning();
+    return reason;
+  }
+
+  async updateLossReason(id: number, updateData: Partial<LossReason>): Promise<LossReason | undefined> {
+    const [reason] = await db
+      .update(lossReasons)
+      .set(updateData)
+      .where(eq(lossReasons.id, id))
+      .returning();
+    return reason || undefined;
+  }
+
+  async deleteLossReason(id: number): Promise<boolean> {
+    // Soft delete - apenas marcamos como inativo
+    const [reason] = await db
+      .update(lossReasons)
+      .set({ active: false })
+      .where(eq(lossReasons.id, id))
+      .returning();
+    return !!reason;
+  }
+
+  // Quote Items
+  async getQuoteItems(dealId: number): Promise<QuoteItem[]> {
+    return await db
+      .select()
+      .from(quoteItems)
+      .where(eq(quoteItems.dealId, dealId))
+      .orderBy(asc(quoteItems.createdAt));
+  }
+
+  async createQuoteItem(insertItem: InsertQuoteItem): Promise<QuoteItem> {
+    const [item] = await db
+      .insert(quoteItems)
+      .values(insertItem)
+      .returning();
+    
+    // Atualizar valor da cotação no negócio
+    const deal = await this.getDeal(insertItem.dealId);
+    if (deal) {
+      const total = (deal.quoteValue || 0) + (insertItem.unitPrice * insertItem.quantity);
+      await this.updateDeal(deal.id, { quoteValue: total });
+    }
+    
+    return item;
+  }
+
+  async updateQuoteItem(id: number, updateData: Partial<QuoteItem>): Promise<QuoteItem | undefined> {
+    const oldItem = (await db
+      .select()
+      .from(quoteItems)
+      .where(eq(quoteItems.id, id)))[0];
+    
+    if (!oldItem) return undefined;
+    
+    // Calcular diferença no valor para atualizar o negócio
+    let priceDifference = 0;
+    if (updateData.unitPrice !== undefined || updateData.quantity !== undefined) {
+      const oldValue = oldItem.unitPrice * oldItem.quantity;
+      const newUnitPrice = updateData.unitPrice !== undefined ? updateData.unitPrice : oldItem.unitPrice;
+      const newQuantity = updateData.quantity !== undefined ? updateData.quantity : oldItem.quantity;
+      const newValue = newUnitPrice * newQuantity;
+      priceDifference = newValue - oldValue;
+    }
+    
+    const [item] = await db
+      .update(quoteItems)
+      .set(updateData)
+      .where(eq(quoteItems.id, id))
+      .returning();
+    
+    // Atualizar valor da cotação no negócio se houve mudança de preço
+    if (priceDifference !== 0) {
+      const deal = await this.getDeal(oldItem.dealId);
+      if (deal) {
+        const total = (deal.quoteValue || 0) + priceDifference;
+        await this.updateDeal(deal.id, { quoteValue: total });
+      }
+    }
+    
+    return item || undefined;
+  }
+
+  async deleteQuoteItem(id: number): Promise<boolean> {
+    const [item] = await db
+      .select()
+      .from(quoteItems)
+      .where(eq(quoteItems.id, id));
+    
+    if (!item) return false;
+    
+    const result = await db
+      .delete(quoteItems)
+      .where(eq(quoteItems.id, id));
+    
+    if (result) {
+      const deal = await this.getDeal(item.dealId);
+      if (deal) {
+        const valueToSubtract = item.unitPrice * item.quantity;
+        const newTotal = Math.max(0, (deal.quoteValue || 0) - valueToSubtract);
+        await this.updateDeal(deal.id, { quoteValue: newTotal });
+      }
+    }
+    
+    return !!result;
+  }
+
+  // Settings
+  async getSettings(): Promise<Settings | undefined> {
+    const [setting] = await db.select().from(settings);
+    return setting || undefined;
+  }
+
+  async updateSettings(insertSettings: InsertSettings): Promise<Settings> {
+    // Verificar se já existe configuração
+    const existingSettings = await this.getSettings();
+    
+    if (existingSettings) {
+      // Atualizar configuração existente
+      const [updated] = await db
+        .update(settings)
+        .set({ ...insertSettings, updatedAt: new Date() })
+        .where(eq(settings.id, existingSettings.id))
+        .returning();
+      return updated;
+    } else {
+      // Criar nova configuração
+      const [created] = await db
+        .insert(settings)
+        .values(insertSettings)
+        .returning();
+      return created;
+    }
+  }
+
+  // Lead Activities
+  async getLeadActivities(dealId: number): Promise<LeadActivity[]> {
+    return await db
+      .select()
+      .from(leadActivities)
+      .where(eq(leadActivities.dealId, dealId))
+      .orderBy(desc(leadActivities.createdAt));
+  }
+
+  async createLeadActivity(insertActivity: InsertLeadActivity): Promise<LeadActivity> {
+    const [activity] = await db
+      .insert(leadActivities)
+      .values(insertActivity)
+      .returning();
+    return activity;
+  }
+
+  async deleteLeadActivity(id: number): Promise<boolean> {
+    const result = await db
+      .delete(leadActivities)
+      .where(eq(leadActivities.id, id));
+    return !!result;
+  }
+
+  // Machine Brands
+  async getMachineBrands(): Promise<MachineBrand[]> {
+    return await db
+      .select()
+      .from(machineBrands)
+      .where(eq(machineBrands.active, true))
+      .orderBy(asc(machineBrands.name));
+  }
+
+  async getMachineBrand(id: number): Promise<MachineBrand | undefined> {
+    const [brand] = await db
+      .select()
+      .from(machineBrands)
+      .where(eq(machineBrands.id, id));
+    return brand || undefined;
+  }
+
+  async createMachineBrand(insertBrand: InsertMachineBrand): Promise<MachineBrand> {
+    const [brand] = await db
+      .insert(machineBrands)
+      .values(insertBrand)
+      .returning();
+    return brand;
+  }
+
+  async updateMachineBrand(id: number, updateData: Partial<MachineBrand>): Promise<MachineBrand | undefined> {
+    const [brand] = await db
+      .update(machineBrands)
+      .set(updateData)
+      .where(eq(machineBrands.id, id))
+      .returning();
+    return brand || undefined;
+  }
+
+  async deleteMachineBrand(id: number): Promise<boolean> {
+    // Soft delete - apenas marcamos como inativo
+    const [brand] = await db
+      .update(machineBrands)
+      .set({ active: false })
+      .where(eq(machineBrands.id, id))
+      .returning();
+    return !!brand;
+  }
+}
+
+// Inicializar o storage usando o DatabaseStorage
+export const storage = new DatabaseStorage();

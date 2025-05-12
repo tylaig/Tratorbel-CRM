@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatPhoneNumber } from "@/lib/formatters";
 import { type PipelineStage } from "@shared/schema";
 import ClientCities from "@/components/ClientCities";
 import {
@@ -22,17 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { PlusIcon } from "lucide-react";
 
-// Função para formatar o número de telefone, removendo o formato +123456
-const formatPhoneNumber = (phone: string | undefined): string => {
-  if (!phone) return "";
-  
-  // Remove o símbolo + do início do número, se existir
-  if (phone.startsWith("+")) {
-    return phone.substring(1);
-  }
-  
-  return phone;
-};
+// A função formatPhoneNumber foi movida para lib/formatters.ts
 
 interface AddDealModalProps {
   isOpen: boolean;

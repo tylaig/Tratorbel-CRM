@@ -47,3 +47,29 @@ export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
 }
+
+export function formatPhoneNumber(phone?: string | null): string {
+  if (!phone) return '';
+  
+  // Remove o código do país (+55) e qualquer prefixo de contato (+123456)
+  const cleanPhone = phone.replace(/^\+\d+\s*/, '');
+  
+  // Se já estiver formatado no padrão brasileiro (00) 00000-0000, retornar como está
+  if (/^\(\d{2}\)\s*\d{5}-\d{4}$/.test(cleanPhone)) {
+    return cleanPhone;
+  }
+  
+  // Limpa outros caracteres não numéricos
+  const numbers = cleanPhone.replace(/\D/g, '');
+  
+  // Formata como (XX) XXXXX-XXXX se tiver 11 dígitos
+  // ou como (XX) XXXX-XXXX se tiver 10 dígitos
+  if (numbers.length === 11) {
+    return `(${numbers.substring(0, 2)}) ${numbers.substring(2, 7)}-${numbers.substring(7)}`;
+  } else if (numbers.length === 10) {
+    return `(${numbers.substring(0, 2)}) ${numbers.substring(2, 6)}-${numbers.substring(6)}`;
+  }
+  
+  // Se não tiver o formato esperado, retorna como está
+  return cleanPhone;
+}

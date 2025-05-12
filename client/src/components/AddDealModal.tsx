@@ -386,18 +386,62 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
           {/* Aba de Informações do Cliente */}
           <TabsContent value="client" className="space-y-4 py-4">
             <div className="grid gap-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is-company"
-                  checked={isCompany}
-                  onCheckedChange={setIsCompany}
-                />
-                <Label htmlFor="is-company">
-                  {isCompany ? "Pessoa Jurídica" : "Pessoa Física"}
-                </Label>
+              <div className="grid gap-2">
+                <Label htmlFor="client-category">Categoria do Cliente</Label>
+                <Select 
+                  value={clientCategory} 
+                  onValueChange={(value) => {
+                    setClientCategory(value);
+                    // Se for Revenda, forçar para Pessoa Jurídica
+                    if (value === "reseller") {
+                      setClientType("company");
+                      setIsCompany(true);
+                      setCpf("");
+                      setStateRegistration("");
+                    }
+                  }}
+                >
+                  <SelectTrigger id="client-category">
+                    <SelectValue placeholder="Selecione a categoria do cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="final_consumer">Consumidor Final</SelectItem>
+                    <SelectItem value="reseller">Revenda</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
-              {isCompany ? (
+              {clientCategory === "final_consumer" && (
+                <div className="grid gap-2">
+                  <Label htmlFor="client-type">Tipo de Cliente</Label>
+                  <Select 
+                    value={clientType} 
+                    onValueChange={(value) => {
+                      setClientType(value);
+                      setIsCompany(value === "company"); // manter compatibilidade
+                      
+                      // Resetar campos não relevantes quando muda o tipo
+                      if (value === "person") {
+                        setCnpj("");
+                        setCorporateName("");
+                      } else if (value === "company") {
+                        setCpf("");
+                        setStateRegistration("");
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="client-type">
+                      <SelectValue placeholder="Selecione o tipo de cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="person">Pessoa Física</SelectItem>
+                      <SelectItem value="company">Pessoa Jurídica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {clientType === "company" ? (
                 <>
                   <div className="grid gap-2">
                     <Label htmlFor="deal-company">Nome Fantasia</Label>
@@ -429,7 +473,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
                     />
                   </div>
                 </>
-              ) : (
+              ) : clientType === "person" ? (
                 <>
                   <div className="grid gap-2">
                     <Label htmlFor="deal-cpf">CPF</Label>
@@ -440,18 +484,23 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
                       placeholder="000.000.000-00"
                     />
                   </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="deal-state-registration">Inscrição Estadual</Label>
+                    <Input
+                      id="deal-state-registration"
+                      value={stateRegistration}
+                      onChange={(e) => setStateRegistration(e.target.value)}
+                      placeholder="Inscrição estadual"
+                    />
+                  </div>
                 </>
+              ) : (
+                // Consumidor final não tem campos específicos
+                <div className="rounded-md bg-gray-50 p-4 text-sm text-gray-500">
+                  Este tipo de cliente não requer documentos específicos.
+                </div>
               )}
-              
-              <div className="grid gap-2">
-                <Label htmlFor="deal-state-registration">Inscrição Estadual</Label>
-                <Input
-                  id="deal-state-registration"
-                  value={stateRegistration}
-                  onChange={(e) => setStateRegistration(e.target.value)}
-                  placeholder="Inscrição estadual"
-                />
-              </div>
               
               <div className="grid gap-2">
                 <Label htmlFor="deal-client-code">Código Cliente</Label>

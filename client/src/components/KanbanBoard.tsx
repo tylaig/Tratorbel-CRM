@@ -91,6 +91,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       const stagesWithDeals = visibleStages.map(stage => {
         // Apenas mostrar deals ativos para cada estágio
         const stageDeals = activeDeals.filter(deal => deal.stageId === stage.id);
+        // Calcular o total apenas baseado no valor do deal (que já inclui o valor da cotação quando apropriado)
         const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
         
         return {
@@ -164,6 +165,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
         newBoardData[stageIndex] = {
           ...newBoardData[stageIndex],
           deals: updatedStageDeals,
+          // Use apenas o valor do deal (que já inclui o valor da cotação quando apropriado)
           totalValue: updatedStageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0)
         };
         
@@ -429,7 +431,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
                                     <span className="font-medium">Cotação:</span> {formatCurrency(deal.quoteValue || 0)}
                                   </div>
                                   <div className="text-xs font-medium text-gray-700">
-                                    <span>Total:</span> {formatCurrency((deal.value || 0) + (deal.quoteValue || 0))}
+                                    <span>Total:</span> {formatCurrency(deal.value || 0)}
                                   </div>
                                 </div>
                               </div>

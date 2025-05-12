@@ -57,7 +57,9 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
   };
   const [boardData, setBoardData] = useState<StageWithDeals[]>([]);
   const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
+  const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
   const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
+  const [selectedStageForNewDeal, setSelectedStageForNewDeal] = useState<PipelineStage | null>(null);
   const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
   const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
@@ -511,6 +513,22 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
                       <span className="text-sm text-gray-500 dark:text-gray-400">{stage.deals.length} negócios</span>
                       <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">{formatCurrency(stage.totalValue)}</span>
                     </div>
+                    
+                    {/* Botão de adicionar negócio na coluna */}
+                    {!stage.isSystem && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                        onClick={() => {
+                          setSelectedStageForNewDeal(stage);
+                          setIsAddDealModalOpen(true);
+                        }}
+                      >
+                        <PlusIcon className="h-3 w-3" />
+                        <span>Adicionar Negócio</span>
+                      </Button>
+                    )}
                   </div>
                 </div>
                 

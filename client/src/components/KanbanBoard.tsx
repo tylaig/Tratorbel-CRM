@@ -27,6 +27,7 @@ import {
 import EditDealModal from "@/components/EditDealModal";
 import EditStageModal from "@/components/EditStageModal";
 import AddStageModal from "@/components/AddStageModal";
+import DealOutcomeModal from "@/components/DealOutcomeModal";
 import { FilterOptions } from "@/components/FilterBar";
 
 interface KanbanBoardProps {
@@ -52,8 +53,10 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
   const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
   const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
   const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
+  const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [selectedStage, setSelectedStage] = useState<PipelineStage | null>(null);
+  const [targetStageInfo, setTargetStageInfo] = useState<{id: number, type: 'completed' | 'lost' | null}>({ id: 0, type: null });
   const { toast } = useToast();
   
   // Get deals com configurações para garantir atualização imediata e tempo real
@@ -142,6 +145,24 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       // Encontrar o deal que está sendo movido
       const movedDeal = deals.find(d => d.id === dealId);
       if (!movedDeal) return;
+      
+      // Encontrar o estágio de destino para verificar se é um estágio especial
+      const targetStage = pipelineStages.find(s => s.id === targetStageId);
+      if (!targetStage) return;
+      
+      // Se for um estágio especial (concluído ou perdido), abrir o modal de confirmação
+      if (targetStage.stageType === 'completed' || targetStage.stageType === 'lost') {
+        // Configurar o estado para o modal
+        setSelectedDeal(movedDeal);
+        setTargetStageInfo({
+          id: targetStageId,
+          type: targetStage.stageType as 'completed' | 'lost'
+        });
+        setIsOutcomeModalOpen(true);
+        
+        // Não prosseguir com a operação de drag, o modal vai cuidar disso
+        return;
+      }
       
       // Dados atualizados que enviaremos para o servidor
       const updateData: { dealId: number; stageId?: number; order?: number } = { 
@@ -345,6 +366,21 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
         onClose={() => setIsAddStageModalOpen(false)}
         pipelineStages={pipelineStages}
       />
+      
+      {/* Modal de definição de resultado de negócio */}
+      {selectedDeal && (
+        <DealOutcomeModal
+          isOpen={isOutcomeModalOpen}
+          onClose={() => {
+            setIsOutcomeModalOpen(false);
+            setSelectedDeal(null);
+            setTargetStageInfo({ id: 0, type: null });
+          }}
+          deal={selectedDeal}
+          targetStageId={targetStageInfo.id}
+          targetStageType={targetStageInfo.type}
+        />
+      )}
       
       <div className="flex flex-col h-full">
         <div className="flex justify-between items-center px-4 py-2">

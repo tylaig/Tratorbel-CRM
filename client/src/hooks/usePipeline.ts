@@ -32,7 +32,15 @@ export function usePipeline() {
       const searchLower = filters.search.toLowerCase();
       result = result.filter(deal => 
         deal.name.toLowerCase().includes(searchLower) ||
-        (deal.companyName && deal.companyName.toLowerCase().includes(searchLower))
+        (deal.companyName && deal.companyName.toLowerCase().includes(searchLower)) ||
+        (deal.contactName && deal.contactName.toLowerCase().includes(searchLower)) ||
+        (deal.contactId && deal.contactId.toLowerCase().includes(searchLower)) ||
+        (deal.chatwootContactId && deal.chatwootContactId.toLowerCase().includes(searchLower)) ||
+        (deal.email && deal.email.toLowerCase().includes(searchLower)) ||
+        (deal.phone && deal.phone.toLowerCase().includes(searchLower)) ||
+        (deal.address && deal.address.toLowerCase().includes(searchLower)) ||
+        (deal.city && deal.city.toLowerCase().includes(searchLower)) ||
+        (deal.state && deal.state.toLowerCase().includes(searchLower))
       );
     }
     
@@ -52,14 +60,17 @@ export function usePipeline() {
       
       switch (filters.sortBy) {
         case "name":
-          return sortMultiplier * a.name.localeCompare(b.name);
+          return sortMultiplier * (a.name || "").localeCompare(b.name || "");
         case "value":
           return sortMultiplier * ((a.value || 0) - (b.value || 0));
         case "company":
           return sortMultiplier * ((a.companyName || "").localeCompare(b.companyName || ""));
         case "date":
         default:
-          return sortMultiplier * (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime());
+          // Se a data for inválida, use a data atual como fallback
+          const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : Date.now();
+          const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : Date.now();
+          return sortMultiplier * (dateA - dateB);
       }
     });
     

@@ -256,6 +256,33 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
               >
                 Empresa (A-Z)
               </Button>
+              
+              <Button 
+                variant={localFilters.sortBy === "company" && localFilters.sortOrder === "desc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("company", "desc")}
+              >
+                Empresa (Z-A)
+              </Button>
+              
+              <Button 
+                variant={localFilters.sortBy === "date" && localFilters.sortOrder === "asc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("date", "asc")}
+              >
+                Mais antigos
+              </Button>
+              
+              <Button 
+                variant={localFilters.sortBy === "company" && localFilters.sortOrder === "asc" ? "default" : "outline"}
+                size="sm"
+                className="justify-start"
+                onClick={() => applySorting("company", "asc")}
+              >
+                Empresa (A-Z)
+              </Button>
             </div>
           </div>
         </PopoverContent>

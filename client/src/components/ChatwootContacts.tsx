@@ -55,15 +55,66 @@ interface ChatwootContact {
   company_name?: string;
 }
 
+// Schema para validação do formulário de contato
+const newContactSchema = z.object({
+  name: z.string().min(2, { message: "Nome é obrigatório e deve ter pelo menos 2 caracteres" }),
+  email: z.string().email({ message: "Email inválido" }).optional().or(z.literal("")),
+  phone_number: z.string().optional().or(z.literal("")),
+  company_name: z.string().optional().or(z.literal(""))
+});
+
+type NewContactFormValues = z.infer<typeof newContactSchema>;
+
 export default function ChatwootContacts({ pipelineStages, settings }: ChatwootContactsProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
+  const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<ChatwootContact | null>(null);
   const [editingContact, setEditingContact] = useState<ChatwootContact | null>(null);
   const [editName, setEditName] = useState("");
   
   // Encontre o estágio padrão para contatos do Chatwoot
   const defaultStage = pipelineStages.find(stage => stage.isDefault);
+  
+  // Formulário para adicionar novo contato
+  const form = useForm<NewContactFormValues>({
+    resolver: zodResolver(newContactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone_number: "",
+      company_name: ""
+    }
+  });
+  
+  // Mutação para criar contato
+  const createContactMutation = useMutation({
+    mutationFn: async (data: NewContactFormValues) => {
+      return await apiRequest("/api/chatwoot/contacts", "POST", data);
+    },
+    onSuccess: (data) => {
+      // Atualizar cache de contatos
+      queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
+      
+      toast({
+        title: "Contato criado com sucesso",
+        description: `O contato ${data.contact.name} foi criado no WooCommerce.`,
+        variant: "default",
+      });
+      
+      // Fechar modal e limpar formulário
+      setIsAddContactModalOpen(false);
+      form.reset();
+    },
+    onError: (error) => {
+      console.error("Erro ao criar contato:", error);
+      toast({
+        title: "Erro ao criar contato",
+        description: "Não foi possível criar o contato no WooCommerce. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Interfaces para resposta da API Chatwoot
   interface ChatwootResponse {
@@ -180,6 +231,22 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
     );
   }
   
+  // Função para criar novo contato
+  const onSubmit = (data: NewContactFormValues) => {
+    // Se o telefone estiver presente, formate-o para enviar ao Chatwoot
+    if (data.phone_number) {
+      // Remover formatação e caracteres não numéricos
+      data.phone_number = data.phone_number.replace(/\D/g, '');
+      
+      // Adicionar formato internacional se necessário
+      if (data.phone_number && !data.phone_number.startsWith('+')) {
+        data.phone_number = `+55${data.phone_number}`;
+      }
+    }
+    
+    createContactMutation.mutate(data);
+  };
+
   return (
     <>
       <AddDealModal 
@@ -192,10 +259,112 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
         selectedContact={selectedContact}
       />
       
+      {/* Modal para adicionar novo contato */}
+      <Dialog open={isAddContactModalOpen} onOpenChange={setIsAddContactModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Contato no WooCommerce</DialogTitle>
+            <DialogDescription>
+              Crie um novo contato que será sincronizado com o WooCommerce e ficará disponível no Chatwoot.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome <span className="text-red-500">*</span></FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome do contato" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="email@exemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="phone_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="(99) 99999-9999" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="company_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome da Empresa</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome da empresa (opcional)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsAddContactModalOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={createContactMutation.isPending}
+                >
+                  {createContactMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Criando...
+                    </>
+                  ) : "Criar Contato"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
       <div className="flex flex-col h-full">
         <div className="flex justify-between items-center px-4 py-2 bg-white border-b">
           <h2 className="text-lg font-semibold">Contatos do Chatwoot</h2>
           <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={() => setIsAddContactModalOpen(true)}
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Criar Contato</span>
+            </Button>
             <div className="relative">
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input

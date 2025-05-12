@@ -5,6 +5,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/formatters";
 import { type PipelineStage } from "@shared/schema";
+import ClientCities from "@/components/ClientCities";
 
 import {
   Dialog,

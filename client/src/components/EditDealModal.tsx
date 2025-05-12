@@ -101,6 +101,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
   
+  // Estado para armazenar o valor da cotação selecionada
+  const [selectedQuoteValue, setSelectedQuoteValue] = useState<number | null>(null);
+  
   // Ref para armazenar os dados do lead durante a atualização
   const leadUpdateDataRef = useRef<Partial<Lead> | null>(null);
 
@@ -111,6 +114,23 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     queryKey: [`/api/leads/${deal?.leadId}`],
     enabled: !!deal?.leadId,
   });
+  
+  // Buscar os itens da cotação para calcular o valor total
+  const { data: quoteItems } = useQuery<any[]>({
+    queryKey: [`/api/quote-items/${deal?.id}`],
+    enabled: !!deal?.id
+  });
+  
+  // Calcular o valor total da cotação quando os itens estiverem disponíveis
+  useEffect(() => {
+    if (quoteItems && quoteItems.length > 0) {
+      const quoteTotal = quoteItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+      if (quoteTotal > 0) {
+        setSelectedQuoteValue(quoteTotal);
+        setValue(formatCurrency(quoteTotal));
+      }
+    }
+  }, [quoteItems]);
 
   // Carregar dados do deal quando o modal abrir
   useEffect(() => {
@@ -336,20 +356,12 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     setZipCode("");
   };
 
-  // Format currency input
+  // Não permite mais edição manual do valor
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/[^\d]/g, "");
-    const numericValue = parseInt(rawValue) / 100;
-
-    if (!isNaN(numericValue)) {
-      setValue(formatCurrency(numericValue));
-    } else if (rawValue === "") {
-      setValue("");
-    }
+    // O valor é definido apenas pela cotação selecionada
+    // Esta função permanece para compatibilidade, mas não faz nada
+    return;
   };
-
-  // Estado para controlar o valor da cotação selecionada
-  const [selectedQuoteValue, setSelectedQuoteValue] = useState<number | null>(null);
 
   // Callback para quando uma cotação é selecionada
   const handleQuoteSelected = (quoteTotal: number) => {
@@ -452,13 +464,20 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       </Select>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="deal-value">Valor</Label>
-                      <Input
-                        id="deal-value"
-                        value={value}
-                        onChange={handleValueChange}
-                        placeholder="R$ 0,00"
-                      />
+                      <Label htmlFor="deal-value" className="flex items-center justify-between">
+                        <span>Valor</span>
+                        <span className="text-xs text-muted-foreground">(definido pela cotação)</span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="deal-value"
+                          value={value}
+                          readOnly={true}
+                          className="bg-muted pr-10"
+                          placeholder="R$ 0,00"
+                        />
+                        <ReceiptIcon className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                      </div>
                     </div>
                   </div>
                 </div>

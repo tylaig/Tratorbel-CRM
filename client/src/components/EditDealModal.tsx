@@ -288,11 +288,16 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       address,
       addressNumber,
       addressComplement,
-      neighborhood,
-      city,
-      state,
-      zipCode,
+      neighborhood
+      // NÃO incluir city e state aqui para não sobrescrever os dados
+      // cidade e estado são gerenciados pelo componente ClientCities
+      // e devem ser preservados quando já existentes
     };
+    
+    // Incluir ZIP code, que não é gerenciado pelo componente ClientCities
+    if (zipCode) {
+      leadUpdateData.zipCode = zipCode;
+    }
     
     // Salvar na ref para usar no callback de sucesso
     leadUpdateDataRef.current = leadUpdateData;

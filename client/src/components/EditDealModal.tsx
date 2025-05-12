@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/tabs";
 import DealOutcomeForm from "@/components/DealOutcomeForm";
 import LeadActivities from "@/components/LeadActivities";
+import ClientMachines from "@/components/ClientMachines";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 
@@ -54,6 +55,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const [stageId, setStageId] = useState("");
   const [value, setValue] = useState("");
   const [status, setStatus] = useState("in_progress");
+  const [activeTab, setActiveTab] = useState("details");
 
   const { toast } = useToast();
 
@@ -172,7 +174,6 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     }
   };
 
-  const [activeTab, setActiveTab] = useState("details");
   const [quoteItems, setQuoteItems] = useState<{description: string, quantity: number, unitPrice: number}[]>([
     { description: "", quantity: 1, unitPrice: 0 }
   ]);
@@ -214,10 +215,14 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="details" className="flex items-center gap-1">
               <FileTextIcon className="h-4 w-4" />
               <span>Detalhes</span>
+            </TabsTrigger>
+            <TabsTrigger value="machines" className="flex items-center gap-1">
+              <PlusCircleIcon className="h-4 w-4" />
+              <span>Máquinas</span>
             </TabsTrigger>
             <TabsTrigger value="activities" className="flex items-center gap-1">
               <MessageCircleIcon className="h-4 w-4" />
@@ -298,6 +303,10 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                 />
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="machines" className="p-1">
+            <ClientMachines dealId={deal?.id || null} isExisting={!!deal?.id} />
           </TabsContent>
 
           <TabsContent value="activities" className="p-1">

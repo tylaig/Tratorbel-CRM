@@ -15,7 +15,8 @@ import {
   XCircleIcon,
   Settings as SettingsIcon,
   UserIcon,
-  UsersIcon
+  UsersIcon,
+  MapIcon
 } from "lucide-react";
 import SettingsModal from "./SettingsModal";
 import tbcLogo from "../assets/tbc-logo.png";
@@ -149,6 +150,17 @@ export default function Header({
                   >
                     <XCircleIcon className="h-4 w-4" />
                     <span>Perdas</span>
+                  </Button>
+                </Link>
+
+                <Link href="/heatmap">
+                  <Button 
+                    variant={location === "/heatmap" ? "default" : "ghost"} 
+                    size="sm"
+                    className="flex items-center gap-2 ml-1"
+                  >
+                    <MapIcon className="h-4 w-4" />
+                    <span>Mapa de Calor</span>
                   </Button>
                 </Link>
               </div>

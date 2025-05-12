@@ -23,8 +23,8 @@ import tbcLogo from "../assets/tbc-logo.png";
 
 interface HeaderProps {
   toggleSidebar: () => void;
-  viewMode: "kanban" | "list" | "contacts";
-  toggleViewMode: (mode: "kanban" | "list" | "contacts") => void;
+  viewMode: "kanban" | "list" | "contacts" | "heatmap";
+  toggleViewMode: (mode: "kanban" | "list" | "contacts" | "heatmap") => void;
   onOpenApiConfig: () => void;
   onAddDeal: () => void;
   onSync: () => void;
@@ -153,16 +153,15 @@ export default function Header({
                   </Button>
                 </Link>
 
-                <Link href="/heatmap">
-                  <Button 
-                    variant={location === "/heatmap" ? "default" : "ghost"} 
-                    size="sm"
-                    className="flex items-center gap-2 ml-1"
-                  >
-                    <MapIcon className="h-4 w-4" />
-                    <span>Mapa de Calor</span>
-                  </Button>
-                </Link>
+                <Button 
+                  variant={viewMode === "heatmap" ? "default" : "ghost"} 
+                  size="sm"
+                  className="flex items-center gap-2 ml-1"
+                  onClick={() => toggleViewMode("heatmap")}
+                >
+                  <MapIcon className="h-4 w-4" />
+                  <span>Mapa de Calor</span>
+                </Button>
               </div>
             </div>
             

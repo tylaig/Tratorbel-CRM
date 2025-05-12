@@ -12,10 +12,11 @@ import { usePipeline } from "@/hooks/usePipeline";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { type Settings } from "@shared/schema";
+import HeatmapView from "@/pages/Heatmap";
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"kanban" | "list" | "contacts">("kanban");
+  const [viewMode, setViewMode] = useState<"kanban" | "list" | "contacts" | "heatmap">("kanban");
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
   
@@ -116,7 +117,7 @@ export default function Dashboard() {
     setSidebarOpen(!sidebarOpen);
   };
   
-  const toggleViewMode = (mode: "kanban" | "list" | "contacts") => {
+  const toggleViewMode = (mode: "kanban" | "list" | "contacts" | "heatmap") => {
     setViewMode(mode);
   };
   
@@ -135,7 +136,7 @@ export default function Dashboard() {
       
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 bg-gray-50 px-4 pt-6 overflow-y-auto">
-          {viewMode !== "contacts" && (
+          {viewMode !== "contacts" && viewMode !== "heatmap" && (
             <FilterBar 
               onFilterChange={updateFilters}
               activeFilters={filters}
@@ -152,6 +153,10 @@ export default function Dashboard() {
           
           {viewMode === "contacts" && (
             <ChatwootContacts pipelineStages={pipelineStages} settings={settings} />
+          )}
+          
+          {viewMode === "heatmap" && (
+            <HeatmapView />
           )}
         </main>
       </div>

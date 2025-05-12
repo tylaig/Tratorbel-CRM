@@ -686,7 +686,12 @@ export class DatabaseStorage implements IStorage {
 
   // Pipeline Stages
   async getPipelineStages(): Promise<PipelineStage[]> {
-    return await db.select().from(pipelineStages).orderBy(asc(pipelineStages.order));
+    try {
+      return await db.select().from(pipelineStages).orderBy(asc(pipelineStages.order));
+    } catch (error) {
+      console.error('Error fetching pipeline stages:', error);
+      throw new Error(`Failed to fetch pipeline stages: ${error.message}`);
+    }
   }
 
   async getPipelineStage(id: number): Promise<PipelineStage | undefined> {

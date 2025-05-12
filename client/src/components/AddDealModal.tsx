@@ -154,13 +154,21 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
       };
       return await apiRequest('POST', '/api/deals', payload);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Negócio adicionado",
         description: "O negócio foi adicionado com sucesso ao seu pipeline.",
         variant: "default",
       });
+      
+      // Atualiza o cache para garantir que o novo negócio apareça imediatamente
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      
+      // Alternativamente, podemos atualizar o cache manualmente para evitar uma nova requisição
+      // queryClient.setQueryData(['/api/deals'], (oldData: Deal[] = []) => {
+      //   return [...oldData, data];
+      // });
+      
       resetForm();
       onClose();
     },

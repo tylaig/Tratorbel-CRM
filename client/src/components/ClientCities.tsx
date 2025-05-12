@@ -22,6 +22,7 @@ import { MapPin, MapPinned, Save, MapIcon } from "lucide-react";
 
 interface ClientCitiesProps {
   dealId: number | null;
+  leadId?: number | null; // Adicionando leadId como prop opcional
   isExisting: boolean;
   currentCity: string | null;
   currentState: string | null;
@@ -90,7 +91,7 @@ const PRINCIPAIS_CIDADES: Record<string, string[]> = {
   'TO': ['Palmas', 'Araguaína', 'Gurupi']
 };
 
-export default function ClientCities({ dealId, isExisting, currentCity, currentState, onCityChange }: ClientCitiesProps) {
+export default function ClientCities({ dealId, leadId, isExisting, currentCity, currentState, onCityChange }: ClientCitiesProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -126,18 +127,23 @@ export default function ClientCities({ dealId, isExisting, currentCity, currentS
       const response = await apiRequest(`/api/deals/${dealId}`, 'GET');
       return response;
     },
-    enabled: !!dealId && isExisting,  // Só executa se existir um dealId válido e for um deal existente
+    enabled: !!dealId && isExisting && !leadId,  // Só executa se não tivermos leadId direto e for um deal existente
   });
   
-  // Mutation para atualizar dados de cidade do lead associado ao deal
+  // Determinar qual leadId usar - o passado diretamente ou o obtido via dealData
+  const effectiveLeadId = leadId || dealData?.leadId;
+  
+  // Mutation para atualizar dados de cidade do lead
   const updateCityMutation = useMutation({
     mutationFn: async (data: { city: string, state: string }) => {
-      if (!dealId || !dealData || !dealData.leadId) {
-        throw new Error("Dados do negócio ou lead não encontrados");
+      if (!effectiveLeadId) {
+        throw new Error("Dados do lead não encontrados");
       }
       
+      console.log("Atualizando localização para o lead:", effectiveLeadId, data);
+      
       // Atualizar os dados de cidade/estado diretamente no lead
-      return await apiRequest(`/api/leads/${dealData.leadId}`, 'PUT', {
+      return await apiRequest(`/api/leads/${effectiveLeadId}`, 'PUT', {
         city: data.city,
         state: data.state
       });

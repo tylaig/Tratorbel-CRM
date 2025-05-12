@@ -648,6 +648,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   
                   <ClientCities
                     dealId={deal?.id || null}
+                    leadId={deal?.leadId || null}
                     isExisting={!!deal}
                     currentCity={city}
                     currentState={state}

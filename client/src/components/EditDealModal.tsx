@@ -24,12 +24,11 @@ import {
   MessageCircleIcon,
   ReceiptIcon,
   FileTextIcon,
-  ClipboardListIcon,
-  PlusCircleIcon,
   PlusIcon,
   TrashIcon,
   CheckCircle2Icon,
-  XCircleIcon
+  XCircleIcon,
+  PlusCircleIcon
 } from "lucide-react";
 import {
   Tabs,
@@ -195,13 +194,11 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     return quoteItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   };
 
-    const removeQuoteItem = (index: number) => {
+  const removeQuoteItem = (index: number) => {
     const newItems = [...quoteItems];
     newItems.splice(index, 1);
     setQuoteItems(newItems);
   };
-
-  // Todas as atividades agora são gerenciadas pelo componente LeadActivities
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -373,29 +370,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
               </div>
             </div>
           </TabsContent>
-        </Tabs>
 
-        <DialogFooter className="flex justify-between">
-          <Button 
-            variant="destructive" 
-            className="flex items-center gap-2" 
-            onClick={handleDelete}
-          >
-            <Trash2Icon className="h-4 w-4" />
-            <span>Excluir</span>
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleSave}
-              disabled={updateDealMutation.isPending || deleteDealMutation.isPending}
-            >
-              {updateDealMutation.isPending ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
-          
           <TabsContent value="outcome" className="p-1">
             <div className="py-2">
               <h3 className="text-lg font-medium mb-4">
@@ -432,39 +407,37 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   ) : (
                     <div className="space-y-2">
                       <p className="text-red-700 font-medium">Este negócio foi perdido.</p>
-                      <p><strong>Motivo:</strong> {deal.lostReason || "Não informado"}</p>
-                      {deal.lostNotes && (
-                        <div>
-                          <p><strong>Observações:</strong></p>
-                          <p className="text-sm text-gray-600 whitespace-pre-wrap">{deal.lostNotes}</p>
-                        </div>
-                      )}
+                      <p>Motivo: {deal.lostReason || "Não informado"}</p>
+                      {deal.lostNotes && <p>Notas: {deal.lostNotes}</p>}
                       <p className="text-sm text-gray-500">Registrado em: {formatDate(new Date(deal.updatedAt))}</p>
                     </div>
                   )}
-                  
-                  <div className="mt-4 border-t pt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (deal && confirm("Deseja reabrir este negócio? Isso removerá o status atual.")) {
-                          updateDealMutation.mutate({
-                            ...deal,
-                            saleStatus: null,
-                            lostReason: null,
-                            lostNotes: null
-                          });
-                        }
-                      }}
-                    >
-                      Reabrir Negócio
-                    </Button>
-                  </div>
                 </div>
               )}
             </div>
           </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="flex justify-between">
+          <Button 
+            variant="destructive" 
+            className="flex items-center gap-2" 
+            onClick={handleDelete}
+          >
+            <Trash2Icon className="h-4 w-4" />
+            <span>Excluir</span>
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSave}
+              disabled={updateDealMutation.isPending || deleteDealMutation.isPending}
+            >
+              {updateDealMutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

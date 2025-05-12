@@ -50,9 +50,27 @@ export function usePipeline() {
       );
     }
     
-    // Apply status filter
-    if (filters.status.length > 0) {
-      result = result.filter(deal => deal.status && filters.status.includes(deal.status));
+    // Apply status filters (status e saleStatus)
+    if (filters.status && filters.status.length > 0) {
+      result = result.filter(deal => {
+        // O filtro pode ser por status ou por saleStatus
+        // O status se refere ao estado do negócio (em andamento, concluído, etc.)
+        // O saleStatus se refere ao resultado da venda (ganho, perdido, aberto)
+        
+        // Verificar se algum dos filtros aplicados corresponde ao status ou saleStatus do negócio
+        const matchStatus = deal.status && filters.status.includes(deal.status);
+        const matchSaleStatus = deal.saleStatus && filters.status.includes(deal.saleStatus);
+        
+        return matchStatus || matchSaleStatus;
+      });
+    }
+    
+    // Filtro específico para excluir negócios ganhos ou perdidos do pipeline
+    if (filters.hideClosed) {
+      result = result.filter(deal => 
+        deal.saleStatus !== 'won' && 
+        deal.saleStatus !== 'lost'
+      );
     }
     
     // Apply stage filter

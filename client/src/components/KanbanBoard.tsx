@@ -70,8 +70,15 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
       // Filtrar estágios que não estão ocultos (isHidden === false)
       const visibleStages = pipelineStages.filter(stage => !stage.isHidden);
       
+      // Filtrar deals ativos (nem ganhos nem perdidos)
+      const activeDeals = deals.filter(deal => 
+        deal.saleStatus !== 'won' && 
+        deal.saleStatus !== 'lost'
+      );
+      
       const stagesWithDeals = visibleStages.map(stage => {
-        const stageDeals = deals.filter(deal => deal.stageId === stage.id);
+        // Apenas mostrar deals ativos para cada estágio
+        const stageDeals = activeDeals.filter(deal => deal.stageId === stage.id);
         const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
         
         return {

@@ -34,6 +34,7 @@ export interface FilterOptions {
   sortBy: "name" | "value" | "date" | "company";
   sortOrder: "asc" | "desc";
   stageId?: number;
+  hideClosed?: boolean; // Ocultar negócios vencidos/perdidos do pipeline
 }
 
 interface FilterBarProps {
@@ -66,7 +67,8 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
       search: "",
       status: [],
       sortBy: "date",
-      sortOrder: "desc"
+      sortOrder: "desc",
+      hideClosed: true // Por padrão, escondemos negócios fechados (vendidos ou perdidos)
     };
     
     setLocalFilters(defaultFilters);

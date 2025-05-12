@@ -14,7 +14,6 @@ import {
   MoreVerticalIcon, 
   Building, 
   PlusIcon,
-  PlusCircleIcon,
   UserCircle
 } from "lucide-react";
 import {
@@ -54,63 +53,6 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   const updateDealMutation = useMutation({
     mutationFn: async ({ dealId, stageId }: { dealId: number; stageId: number }) => {
       return await apiRequest('PUT', `/api/deals/${dealId}`, { stageId });
-    },
-    onMutate: async ({ dealId, stageId }) => {
-      // Lógica de atualização otimista é movida para aqui
-      // Cancelar consultas de fundo para evitar sobrescrever a atualização otimista
-      await queryClient.cancelQueries({ queryKey: ['/api/deals'] });
-      
-      // Salvar o estado anterior para poder fazer rollback se necessário
-      const previousDeals = queryClient.getQueryData<Deal[]>(['/api/deals']);
-      
-      // Atualização otimista da UI com a alteração
-      if (deals) {
-        const updatedDeals = deals.map(deal => 
-          deal.id === dealId ? { ...deal, stageId } : deal
-        );
-        
-        // Atualizar o cache com a nova lista otimista
-        queryClient.setQueryData(['/api/deals'], updatedDeals);
-        
-        // Reorganizar o board com os dados atualizados
-        // Filtrar estágios que não estão ocultos
-        const visibleStages = pipelineStages.filter(stage => !stage.isHidden);
-        
-        const stagesWithDeals = visibleStages.map(stage => {
-          const stageDeals = updatedDeals.filter(deal => deal.stageId === stage.id);
-          const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
-          
-          return {
-            ...stage,
-            deals: stageDeals,
-            totalValue
-          };
-        });
-        
-        setBoardData(stagesWithDeals);
-      }
-      
-      // Retornar o contexto para usar em caso de erro
-      return { previousDeals };
-    },
-    onSuccess: () => {
-      // Invalidar a consulta para buscar os dados atualizados do servidor
-      queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-    },
-    onError: (error, _, context) => {
-      // Em caso de erro, reverter para o estado anterior
-      if (context?.previousDeals) {
-        queryClient.setQueryData(['/api/deals'], context.previousDeals);
-        // Reorganizar o board com os dados anteriores
-        organizeBoardData();
-      }
-      
-      toast({
-        title: "Erro ao mover negócio",
-        description: "Não foi possível mover o negócio para outra etapa. Tentando novamente.",
-        variant: "destructive",
-      });
-      console.error("Move deal error:", error);
     }
   });
   
@@ -141,7 +83,7 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   }, [pipelineStages, deals]);
   
   // Handle drag and drop
-  const onDragEnd = (result: DropResult) => {
+  const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
     
     // If there's no destination or the item is dropped back in the same place
@@ -155,32 +97,45 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
     const dealId = parseInt(draggableId);
     const targetStageId = parseInt(destination.droppableId);
     
-    // Mostrar feedback de transição para o usuário
-    toast({
-      title: "Negócio movido",
-      description: "Negócio movido com sucesso para nova etapa.",
-      variant: "default",
-      duration: 1500,
-    });
-    
-    // Update the deal's stage in the database
-    updateDealMutation.mutate({ dealId, stageId: targetStageId });
-    
-    // Reorganizar o board imediatamente para feedback visual
-    const currentDeals = queryClient.getQueryData<Deal[]>(['/api/deals']) || [];
-    const updatedDealsData = currentDeals.map(deal => {
-      if (deal.id === dealId) {
-        // Mantemos o mesmo tipo de Date para updatedAt
-        return { ...deal, stageId: targetStageId };
-      }
-      return deal;
-    });
-    
-    // Atualizar o queryClient para refletir a mudança
-    queryClient.setQueryData(['/api/deals'], updatedDealsData);
-    
-    // Forçar a reorganização visual do board
-    organizeBoardData();
+    try {
+      // Fazer uma cópia dos dados atuais
+      if (!deals) return;
+      
+      // Atualização otimista - atualizamos a UI antes da resposta do servidor
+      const updatedDeals = deals.map(deal => 
+        deal.id === dealId ? { ...deal, stageId: targetStageId } : deal
+      );
+      
+      // Atualizar o cache local para feedback visual imediato
+      queryClient.setQueryData(['/api/deals'], updatedDeals);
+      
+      // Forçar reorganização do quadro
+      organizeBoardData();
+      
+      // Enviar atualização para o servidor
+      await updateDealMutation.mutateAsync({ dealId, stageId: targetStageId });
+      
+      // Invalidar e buscar dados novamente após salvar no servidor
+      await queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      
+      toast({
+        title: "Negócio movido",
+        description: "Negócio movido com sucesso para nova etapa.",
+        variant: "default",
+        duration: 1500,
+      });
+    } catch (error) {
+      console.error("Erro ao mover negócio:", error);
+      
+      // Em caso de erro, recarregar todos os dados
+      await queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+      
+      toast({
+        title: "Erro ao mover",
+        description: "Não foi possível mover o negócio. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
   
   // Get status badge based on deal status

@@ -7,9 +7,26 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export function formatTimeAgo(date: Date): string {
+export function formatTimeAgo(date: Date | string | null | undefined): string {
+  if (!date) return 'data desconhecida';
+  
+  // Converter para Date se for string
+  let dateObj: Date;
+  if (typeof date === 'string') {
+    dateObj = new Date(date);
+  } else if (date instanceof Date) {
+    dateObj = date;
+  } else {
+    return 'data inválida';
+  }
+  
+  // Verificar se é uma data válida
+  if (isNaN(dateObj.getTime())) {
+    return 'data inválida';
+  }
+  
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
   
   if (diffInSeconds < 60) {
     return 'agora mesmo';
@@ -39,8 +56,25 @@ export function formatTimeAgo(date: Date): string {
   return `${diffInYears} anos atrás`;
 }
 
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('pt-BR').format(date);
+export function formatDate(date: Date | string | null | undefined): string {
+  if (!date) return 'data desconhecida';
+  
+  // Converter para Date se for string
+  let dateObj: Date;
+  if (typeof date === 'string') {
+    dateObj = new Date(date);
+  } else if (date instanceof Date) {
+    dateObj = date;
+  } else {
+    return 'data inválida';
+  }
+  
+  // Verificar se é uma data válida
+  if (isNaN(dateObj.getTime())) {
+    return 'data inválida';
+  }
+  
+  return new Intl.DateTimeFormat('pt-BR').format(dateObj);
 }
 
 export function truncateText(text: string, maxLength: number): string {

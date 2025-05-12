@@ -778,6 +778,25 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
               )}
             </div>
           </TabsContent>
+
+          <TabsContent value="related" className="p-1">
+            <div className="py-2">
+              {deal?.chatwootContactId ? (
+                <RelatedDeals 
+                  contactId={deal.chatwootContactId}
+                  currentDealId={deal.id}
+                  onOpenDeal={handleOpenDeal}
+                  onCreateNewDeal={handleCreateNewDeal}
+                />
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-md mb-4 text-center">
+                  <p className="text-gray-500">
+                    Este negócio não está vinculado a um contato do Chatwoot.
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
 
         <DialogFooter className="flex justify-between">

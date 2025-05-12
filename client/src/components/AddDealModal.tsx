@@ -293,7 +293,23 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
               </div>
               
               <div className="grid gap-2">
-                <Label htmlFor="deal-contact">Contato do Chatwoot</Label>
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="deal-contact">Contato do Chatwoot</Label>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-6 px-0 text-primary"
+                    onClick={() => {
+                      // Implementação futura: abrir modal de busca avançada de contatos
+                      toast({
+                        title: "Busca avançada",
+                        description: "Busca avançada de contatos será implementada em breve.",
+                      });
+                    }}
+                  >
+                    Busca avançada
+                  </Button>
+                </div>
                 <Select value={contactId} onValueChange={handleContactChange}>
                   <SelectTrigger id="deal-contact">
                     <SelectValue placeholder="Selecione um contato" />

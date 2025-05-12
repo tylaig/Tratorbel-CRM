@@ -125,7 +125,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
         try {
           // Tentar buscar um lead existente pelo chatwootContactId
           console.log("Buscando lead existente para chatwootContactId:", contactId);
-          const leadsResponse = await apiRequest('GET', `/api/leads/search?q=${contactId}`);
+          const leadsResponse = await apiRequest(`/api/leads/search?q=${contactId}`, 'GET');
           const existingLeads = leadsResponse?.results || [];
           console.log("Leads encontrados:", existingLeads);
           
@@ -160,7 +160,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
             };
             
             console.log("Dados do novo lead:", leadPayload);
-            const leadResponse = await apiRequest('POST', '/api/leads', leadPayload);
+            const leadResponse = await apiRequest('/api/leads', 'POST', leadPayload);
             console.log("Lead criado com sucesso:", leadResponse);
             leadId = leadResponse.id;
             console.log("ID do novo lead:", leadId);

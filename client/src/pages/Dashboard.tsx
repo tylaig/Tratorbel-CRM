@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
 import ListView from "@/components/ListView";
 import ChatwootContacts from "@/components/ChatwootContacts";
+import SalesResultStages from "@/components/SalesResultStages";
 import FilterBar, { FilterOptions } from "@/components/FilterBar";
 import ApiConfigModal from "@/components/ApiConfigModal";
 import AddDealModal from "@/components/AddDealModal";
@@ -17,7 +18,7 @@ import HeatmapView from "@/pages/Heatmap";
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"kanban" | "list" | "contacts" | "heatmap">("kanban");
+  const [viewMode, setViewMode] = useState<"kanban" | "list" | "contacts" | "heatmap" | "results">("kanban");
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
   
@@ -141,7 +142,7 @@ export default function Dashboard() {
     setSidebarOpen(!sidebarOpen);
   };
   
-  const toggleViewMode = (mode: "kanban" | "list" | "contacts" | "heatmap") => {
+  const toggleViewMode = (mode: "kanban" | "list" | "contacts" | "heatmap" | "results") => {
     setViewMode(mode);
   };
   

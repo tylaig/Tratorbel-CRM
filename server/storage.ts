@@ -687,12 +687,67 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Deals
-  async getDeals(): Promise<Deal[]> {
-    return await db.select().from(deals).orderBy(desc(deals.updatedAt));
+  async getDeals(): Promise<(Deal & Partial<Lead>)[]> {
+    // Fazer um join com a tabela leads para trazer os dados do lead junto com o deal
+    return await db
+      .select({
+        ...deals,
+        // Campos do Lead com prefixo para evitar conflitos
+        companyName: leads.companyName,
+        clientCategory: leads.clientCategory,
+        clientType: leads.clientType,
+        cnpj: leads.cnpj,
+        corporateName: leads.corporateName,
+        cpf: leads.cpf,
+        stateRegistration: leads.stateRegistration,
+        clientCode: leads.clientCode,
+        email: leads.email,
+        phone: leads.phone,
+        address: leads.address,
+        addressNumber: leads.addressNumber,
+        addressComplement: leads.addressComplement,
+        neighborhood: leads.neighborhood,
+        city: leads.city,
+        state: leads.state,
+        zipCode: leads.zipCode,
+        chatwootContactId: leads.chatwootContactId,
+        chatwootAgentId: leads.chatwootAgentId,
+        chatwootAgentName: leads.chatwootAgentName,
+      })
+      .from(deals)
+      .leftJoin(leads, eq(deals.leadId, leads.id))
+      .orderBy(desc(deals.updatedAt));
   }
 
-  async getDeal(id: number): Promise<Deal | undefined> {
-    const [deal] = await db.select().from(deals).where(eq(deals.id, id));
+  async getDeal(id: number): Promise<(Deal & Partial<Lead>) | undefined> {
+    const [deal] = await db
+      .select({
+        ...deals,
+        // Campos do Lead com prefixo para evitar conflitos
+        companyName: leads.companyName,
+        clientCategory: leads.clientCategory,
+        clientType: leads.clientType,
+        cnpj: leads.cnpj,
+        corporateName: leads.corporateName,
+        cpf: leads.cpf,
+        stateRegistration: leads.stateRegistration,
+        clientCode: leads.clientCode,
+        email: leads.email,
+        phone: leads.phone,
+        address: leads.address,
+        addressNumber: leads.addressNumber,
+        addressComplement: leads.addressComplement,
+        neighborhood: leads.neighborhood,
+        city: leads.city,
+        state: leads.state,
+        zipCode: leads.zipCode,
+        chatwootContactId: leads.chatwootContactId,
+        chatwootAgentId: leads.chatwootAgentId,
+        chatwootAgentName: leads.chatwootAgentName,
+      })
+      .from(deals)
+      .leftJoin(leads, eq(deals.leadId, leads.id))
+      .where(eq(deals.id, id));
     return deal || undefined;
   }
 

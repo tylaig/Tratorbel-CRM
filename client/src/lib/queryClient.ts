@@ -12,26 +12,44 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<any> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
+  console.log(`API Request: ${method} ${url}`, data);
   
-  // Para métodos que podem não retornar JSON (como DELETE)
-  if (method === "DELETE" || res.headers.get("content-length") === "0") {
-    return { success: true };
-  }
-  
-  // Tentar retornar o resultado como JSON
   try {
-    return await res.json();
-  } catch (e) {
-    // Se não conseguir converter para JSON, retorna um objeto com success
-    return { success: true };
+    const res = await fetch(url, {
+      method,
+      headers: data ? { "Content-Type": "application/json" } : {},
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+
+    // Log da resposta
+    console.log(`API Response status: ${res.status} ${res.statusText}`);
+    
+    try {
+      await throwIfResNotOk(res);
+      
+      // Para métodos que podem não retornar JSON (como DELETE)
+      if (method === "DELETE" || res.headers.get("content-length") === "0") {
+        return { success: true };
+      }
+      
+      // Tentar retornar o resultado como JSON
+      try {
+        const responseData = await res.json();
+        console.log(`API Response data:`, responseData);
+        return responseData;
+      } catch (e) {
+        console.log(`Não foi possível converter resposta para JSON`, e);
+        // Se não conseguir converter para JSON, retorna um objeto com success
+        return { success: true };
+      }
+    } catch (error) {
+      console.error(`API Error:`, error);
+      throw error;
+    }
+  } catch (error) {
+    console.error(`API Request Error (fetch failed):`, error);
+    throw error;
   }
 }
 

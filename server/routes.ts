@@ -106,14 +106,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   apiRouter.post("/deals", async (req: Request, res: Response) => {
     try {
+      console.log("Recebendo dados do negócio:", JSON.stringify(req.body));
       const validatedData = insertDealSchema.parse(req.body);
+      console.log("Dados do negócio validados com sucesso:", JSON.stringify(validatedData));
+      
+      // Verificar se o stageId está definido, caso contrário, usar o estágio padrão
+      if (!validatedData.stageId) {
+        const stages = await storage.getPipelineStages();
+        if (stages && stages.length > 0) {
+          // Usar o primeiro estágio como padrão
+          validatedData.stageId = stages[0].id;
+          console.log(`StageId não fornecido, usando estágio padrão: ${validatedData.stageId}`);
+        } else {
+          return res.status(400).json({ 
+            message: "Não foi possível criar o negócio porque não há estágios definidos. Crie pelo menos um estágio primeiro."
+          });
+        }
+      }
+      
       const deal = await storage.createDeal(validatedData);
+      console.log("Negócio criado com sucesso:", JSON.stringify(deal));
       res.status(201).json(deal);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid data", errors: error.errors });
+        console.error("Erro de validação:", JSON.stringify(error.errors));
+        res.status(400).json({ 
+          message: "Dados inválidos para criação do negócio", 
+          errors: error.errors 
+        });
       } else {
-        res.status(500).json({ message: "Failed to create deal" });
+        console.error("Erro ao criar negócio:", error);
+        res.status(500).json({ 
+          message: "Falha ao criar o negócio", 
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
     }
   });

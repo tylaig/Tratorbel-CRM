@@ -122,7 +122,7 @@ export default function ClientCities({ dealId, isExisting, currentCity, currentS
   const updateCityMutation = useMutation({
     mutationFn: async (data: { city: string, state: string }) => {
       if (!dealId) return null;
-      return await apiRequest('PUT', `/api/deals/${dealId}`, {
+      return await apiRequest(`/api/deals/${dealId}`, 'PUT', {
         city: data.city,
         state: data.state
       });

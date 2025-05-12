@@ -1,0 +1,130 @@
+ Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ Warning: Connect(Droppable): Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.
+    at div
+    at div
+    at div
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:945:20)
+    at App (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:7462:25)
+    at ErrorBoundary2 (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:1959:35)
+    at DragDropContext (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=18b53e64:7582:19)
+    at KanbanBoard (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/components/KanbanBoard.tsx:45:39)
+    at main
+    at div
+    at div
+    at Dashboard (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/pages/Dashboard.tsx?t=1747066976786:35:41)
+    at Route (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18b53e64:323:16)
+    at Switch (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18b53e64:379:17)
+    at App
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TONAP5II.js?v=18b53e64:43:15)
+    at TooltipProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=18b53e64:61:5)
+    at QueryClientProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=18b53e64:2805:3)
+printWarning @ chunk-RPCDYKBN.js:521
+error @ chunk-RPCDYKBN.js:505
+updateMemoComponent @ chunk-RPCDYKBN.js:14382
+beginWork @ chunk-RPCDYKBN.js:15977
+beginWork$1 @ chunk-RPCDYKBN.js:19753
+performUnitOfWork @ chunk-RPCDYKBN.js:19198
+workLoopSync @ chunk-RPCDYKBN.js:19137
+renderRootSync @ chunk-RPCDYKBN.js:19116
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js:18678
+workLoop @ chunk-RPCDYKBN.js:197
+flushWork @ chunk-RPCDYKBN.js:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js:384
+ Lead carregado: Object
+ API Request: PUT /api/leads/1 Object
+ API Response status: 200 OK
+ API Response data: Object
+EditDealModal.tsx:182 Lead atualizado com sucesso: Object
+queryClient.ts:15 API Request: PUT /api/deals/2 Object
+queryClient.ts:26 API Response status: 200 OK
+queryClient.ts:39 API Response data: Object
+AddDealModal.tsx:120 Iniciando criação de negócio para contato: Object
+AddDealModal.tsx:127 Buscando lead existente para chatwootContactId: 7
+queryClient.ts:15 API Request: GET /api/leads/search?q=7 undefined
+queryClient.ts:26 API Response status: 200 OK
+queryClient.ts:39 API Response data: Object
+AddDealModal.tsx:130 Leads encontrados: Array(0)
+AddDealModal.tsx:138 Criando novo lead para o contato
+AddDealModal.tsx:162 Dados do novo lead: Object
+queryClient.ts:15 API Request: POST /api/leads Object
+queryClient.ts:26 API Response status: 201 Created
+queryClient.ts:39 API Response data: Object
+AddDealModal.tsx:164 Lead criado com sucesso: Object
+AddDealModal.tsx:166 ID do novo lead: 2
+AddDealModal.tsx:180 Criando deal com leadId: 2
+AddDealModal.tsx:197 Dados do deal a ser criado: Object
+queryClient.ts:15 API Request: POST /api/deals Object
+queryClient.ts:26 API Response status: 201 Created
+queryClient.ts:39 API Response data: Object
+AddDealModal.tsx:199 Deal criado com sucesso: Object
+EditDealModal.tsx:130 Lead carregado: Object
+queryClient.ts:15 API Request: PUT /api/leads/2 Object
+queryClient.ts:26 API Response status: 200 OK
+queryClient.ts:39 API Response data: Object
+EditDealModal.tsx:182 Lead atualizado com sucesso: Object
+queryClient.ts:15 API Request: PUT /api/deals/3 Object
+queryClient.ts:26 API Response status: 200 OK
+queryClient.ts:39 API Response data: Object
+EditDealModal.tsx:130 Lead carregado: Object
+EditDealModal.tsx:130 Lead carregado: Object
+queryClient.ts:15 API Request: /api/deals/3 PUT Object
+queryClient.ts:51 API Request Error (fetch failed): TypeError: Failed to execute 'fetch' on 'Window': '/api/deals/3' is not a valid HTTP method.
+    at apiRequest (queryClient.ts:18:23)
+    at Object.mutationFn (ClientCities.tsx:125:20)
+    at Object.fn (@tanstack_react-query.js?v=18b53e64:1189:29)
+    at run (@tanstack_react-query.js?v=18b53e64:494:49)
+    at Object.start (@tanstack_react-query.js?v=18b53e64:536:9)
+    at _a6.execute (@tanstack_react-query.js?v=18b53e64:1225:56)
+apiRequest @ queryClient.ts:51
+queryClient.ts:15 API Request: /api/deals/3 PUT Object
+queryClient.ts:51 API Request Error (fetch failed): TypeError: Failed to execute 'fetch' on 'Window': '/api/deals/3' is not a valid HTTP method.
+    at apiRequest (queryClient.ts:18:23)
+    at Object.mutationFn (ClientCities.tsx:125:20)
+    at Object.fn (@tanstack_react-query.js?v=18b53e64:1189:29)
+    at run (@tanstack_react-query.js?v=18b53e64:494:49)
+    at Object.start (@tanstack_react-query.js?v=18b53e64:536:9)
+    at _a6.execute (@tanstack_react-query.js?v=18b53e64:1225:56)
+apiRequest @ queryClient.ts:51
+queryClient.ts:15 API Request: /api/deals/3 PUT Object
+queryClient.ts:51 API Request Error (fetch failed): TypeError: Failed to execute 'fetch' on 'Window': '/api/deals/3' is not a valid HTTP method.
+    at apiRequest (queryClient.ts:18:23)
+    at Object.mutationFn (ClientCities.tsx:125:20)
+    at Object.fn (@tanstack_react-query.js?v=18b53e64:1189:29)
+    at run (@tanstack_react-query.js?v=18b53e64:494:49)
+    at Object.start (@tanstack_react-query.js?v=18b53e64:536:9)
+    at _a6.execute (@tanstack_react-query.js?v=18b53e64:1225:56)
+apiRequest @ queryClient.ts:51
+queryClient.ts:15 API Request: /api/deals/3 PUT {city: 'Cuiabá', state: 'MT'}
+queryClient.ts:51 API Request Error (fetch failed): TypeError: Failed to execute 'fetch' on 'Window': '/api/deals/3' is not a valid HTTP method.
+    at apiRequest (queryClient.ts:18:23)
+    at Object.mutationFn (ClientCities.tsx:125:20)
+    at Object.fn (@tanstack_react-query.js?v=18b53e64:1189:29)
+    at run (@tanstack_react-query.js?v=18b53e64:494:49)
+    at Object.start (@tanstack_react-query.js?v=18b53e64:536:9)
+    at _a6.execute (@tanstack_react-query.js?v=18b53e64:1225:56)
+apiRequest @ queryClient.ts:51
+await in apiRequest
+mutationFn @ ClientCities.tsx:125
+fn @ @tanstack_react-query.js?v=18b53e64:1189
+run @ @tanstack_react-query.js?v=18b53e64:494
+start @ @tanstack_react-query.js?v=18b53e64:536
+execute @ @tanstack_react-query.js?v=18b53e64:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=18b53e64:2630
+(anonymous) @ @tanstack_react-query.js?v=18b53e64:3295
+saveChanges @ ClientCities.tsx:170
+callCallback2 @ chunk-RPCDYKBN.js?v=18b53e64:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=18b53e64:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=18b53e64:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=18b53e64:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=18b53e64:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=18b53e64:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=18b53e64:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=18b53e64:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=18b53e64:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=18b53e64:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=18b53e64:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=18b53e64:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=18b53e64:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=18b53e64:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=18b53e64:5449

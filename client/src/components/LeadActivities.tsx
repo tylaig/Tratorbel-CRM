@@ -1,8 +1,5 @@
-import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Card,
   CardContent,
@@ -11,13 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Calendar, Mail, Phone, FileText, MessageCircle, Clock } from 'lucide-react';
 import { formatTimeAgo } from '@/lib/formatters';
 import { queryClient, apiRequest } from '@/lib/queryClient';
@@ -37,15 +27,7 @@ const activityTypes = [
 ];
 
 export default function LeadActivities({ deal }: LeadActivitiesProps) {
-  const [description, setDescription] = useState('');
-  const [activityType, setActivityType] = useState('');
   const { toast } = useToast();
-
-  // Reset form quando o deal mudar
-  useEffect(() => {
-    setDescription('');
-    setActivityType('');
-  }, [deal?.id]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['/api/lead-activities', deal?.id],
@@ -58,27 +40,6 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
   
   // Garantir que sempre seja um array, mesmo se a API retornar algo inesperado
   const activities = Array.isArray(data) ? data : [];
-
-  const createActivityMutation = useMutation({
-    mutationFn: (newActivity: { dealId: number; activityType: string; description: string; createdBy: string | null }) => 
-      apiRequest('/api/lead-activities', 'POST', newActivity),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/lead-activities', deal?.id] });
-      setDescription('');
-      setActivityType('');
-      toast({
-        title: 'Atividade registrada',
-        description: 'A atividade foi registrada com sucesso.',
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível registrar a atividade.',
-        variant: 'destructive',
-      });
-    },
-  });
 
   const deleteActivityMutation = useMutation({
     mutationFn: (id: number) => 
@@ -99,24 +60,7 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!deal?.id || !activityType || !description.trim()) {
-      toast({
-        title: 'Campos incompletos',
-        description: 'Por favor, preencha todos os campos.',
-        variant: 'destructive',
-      });
-      return;
-    }
 
-    createActivityMutation.mutate({
-      dealId: deal.id,
-      activityType,
-      description: description.trim(),
-      createdBy: 'Usuário', // Idealmente seria o nome do usuário logado
-    });
-  };
 
   const getActivityIcon = (type: string) => {
     const activity = activityTypes.find(a => a.value === type);
@@ -124,7 +68,7 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
     return <Icon className="h-4 w-4 mr-2" />;
   };
 
-  const getActivityLabel = (type: string) => {
+  const getActivityTitle = (type: string) => {
     return activityTypes.find(a => a.value === type)?.label || 'Atividade';
   };
 
@@ -134,44 +78,6 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="md:w-1/3">
-            <Select value={activityType} onValueChange={setActivityType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tipo de atividade" />
-              </SelectTrigger>
-              <SelectContent>
-                {activityTypes.map(type => (
-                  <SelectItem key={type.value} value={type.value}>
-                    <div className="flex items-center">
-                      <type.icon className="h-4 w-4 mr-2" />
-                      <span>{type.label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="md:w-2/3">
-            <Textarea 
-              placeholder="Descrição da atividade" 
-              value={description} 
-              onChange={e => setDescription(e.target.value)}
-              className="h-10 min-h-[40px] resize-none"
-            />
-          </div>
-        </div>
-        <div className="flex justify-end">
-          <Button 
-            type="submit" 
-            disabled={createActivityMutation.isPending || !activityType || !description.trim()}
-          >
-            {createActivityMutation.isPending ? 'Registrando...' : 'Registrar Atividade'}
-          </Button>
-        </div>
-      </form>
-
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Histórico de Atividades</h3>
         {isLoading ? (
@@ -186,7 +92,7 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
                   <div className="flex justify-between">
                     <CardTitle className="text-base flex items-center">
                       {getActivityIcon(activity.activityType)}
-                      {getActivityLabel(activity.activityType)}
+                      {getActivityTitle(activity.activityType)}
                     </CardTitle>
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Clock className="h-3 w-3 mr-1" />

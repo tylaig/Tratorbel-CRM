@@ -63,16 +63,27 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
     queryKey: ['/api/client-machines', dealId],
     queryFn: async () => {
       if (!dealId) return [];
-      const result = await apiRequest('GET', `/api/client-machines/${dealId}`);
-      console.log("Máquinas carregadas:", result);
-      return result;
+      try {
+        const result = await apiRequest('GET', `/api/client-machines/${dealId}`);
+        console.log("Máquinas carregadas:", result);
+        if (Array.isArray(result)) {
+          return result;
+        } else {
+          console.error("Resultado não é um array:", result);
+          return [];
+        }
+      } catch (error) {
+        console.error("Erro ao carregar máquinas:", error);
+        return [];
+      }
     },
     enabled: !!dealId && isExisting,
   });
   
   // Efeito para sincronizar as máquinas do servidor com o estado local
   useEffect(() => {
-    if (isExisting) {
+    console.log("clientMachines recebido:", clientMachines);
+    if (isExisting && Array.isArray(clientMachines)) {
       setLocalMachines(clientMachines);
     }
   }, [clientMachines, isExisting]);
@@ -267,12 +278,18 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
   
   // Getter para máquinas (local para novos negócios, servidor para existentes)
   const getMachines = () => {
+    console.log("getMachines - localMachines:", localMachines);
+    console.log("getMachines - clientMachines:", clientMachines);
+    if (isExisting && Array.isArray(clientMachines) && clientMachines.length > 0 && localMachines.length === 0) {
+      return clientMachines;
+    }
     return localMachines;
   };
   
   // Getter para contar máquinas
   const getMachineCount = () => {
-    return localMachines.length;
+    const machines = getMachines();
+    return machines.length;
   };
   
   return (

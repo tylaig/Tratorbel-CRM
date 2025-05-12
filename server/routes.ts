@@ -124,6 +124,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const validatedData = insertDealSchema.partial().parse(req.body);
+      
+      // Buscar o deal atual para verificar se houve alteração no nome
+      const existingDeal = await storage.getDeal(id);
+      if (!existingDeal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      
+      // Sincronização bidirecional com Chatwoot
+      if (validatedData.name && 
+          validatedData.name !== existingDeal.name && 
+          existingDeal.chatwootContactId) {
+        
+        try {
+          // Obter configurações do Chatwoot
+          const settings = await storage.getSettings();
+          
+          if (settings?.chatwootApiKey && settings?.chatwootUrl && settings?.accountId) {
+            // Atualizar o nome do contato no Chatwoot
+            await axios.put(
+              `${settings.chatwootUrl}/api/v1/accounts/${settings.accountId}/contacts/${existingDeal.chatwootContactId}`,
+              {
+                name: validatedData.name,
+                // Se tivermos outros campos que queremos sincronizar, podemos adicionar aqui
+                email: validatedData.email || existingDeal.email,
+                phone_number: validatedData.phone || existingDeal.phone
+              },
+              {
+                headers: {
+                  'api_access_token': settings.chatwootApiKey
+                }
+              }
+            );
+            
+            console.log(`Contato Chatwoot ID ${existingDeal.chatwootContactId} sincronizado com nome: ${validatedData.name}`);
+          }
+        } catch (chatwootError) {
+          console.error("Erro ao sincronizar com Chatwoot:", chatwootError);
+          // Continuamos com a atualização local mesmo se a sincronização falhar
+        }
+      }
+      
       const updatedDeal = await storage.updateDeal(id, validatedData);
       
       if (!updatedDeal) {

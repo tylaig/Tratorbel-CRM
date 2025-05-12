@@ -14,7 +14,8 @@ import {
   MoreVerticalIcon, 
   Building, 
   PlusIcon,
-  PlusCircleIcon 
+  PlusCircleIcon,
+  UserCircle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -333,9 +334,15 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
                                 </div>
                               </div>
                               <div className="flex items-center justify-between text-xs text-gray-500">
-                                <span>Nesta etapa: {formatTimeAgo(new Date(deal.stageStartedAt || deal.updatedAt))}</span>
+                                <span>Nesta etapa: {formatTimeAgo(new Date(deal.updatedAt))}</span>
                                 <span>Total: {formatTimeAgo(new Date(deal.createdAt))}</span>
                               </div>
+                              {deal.chatwootAgentName && (
+                                <div className="mt-2 flex items-center text-xs text-gray-600">
+                                  <UserCircle className="mr-1 h-3 w-3 text-gray-400" />
+                                  <span>Agente: {deal.chatwootAgentName}</span>
+                                </div>
+                              )}
                             </div>
                           </Card>
                         )}

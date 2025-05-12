@@ -9,6 +9,9 @@ import {
   SettingsIcon,
   RefreshCwIcon,
   Map,
+  CheckCircleIcon,
+  XCircleIcon,
+  HistoryIcon,
 } from "lucide-react";
 
 interface SidebarProps {

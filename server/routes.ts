@@ -369,18 +369,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Criar novo lead
   apiRouter.post("/leads", async (req: Request, res: Response) => {
     try {
+      console.log("Recebendo dados do lead:", JSON.stringify(req.body));
       const validatedData = insertLeadSchema.parse(req.body);
+      console.log("Dados validados com sucesso:", JSON.stringify(validatedData));
+      
+      // Verificar se existe campo 'isCompany' que não está no esquema
+      if ('isCompany' in req.body) {
+        delete req.body.isCompany; // remover campo não mapeado
+      }
+      
       const lead = await storage.createLead(validatedData);
+      console.log("Lead criado com sucesso:", JSON.stringify(lead));
       res.status(201).json(lead);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("Erro de validação:", JSON.stringify(error.errors));
         res.status(400).json({
-          message: "Invalid data",
+          message: "Dados inválidos",
           errors: error.errors
         });
       } else {
-        console.error("Error creating lead:", error);
-        res.status(500).json({ message: "Internal server error" });
+        console.error("Erro ao criar lead:", error);
+        // Enviar mensagem mais detalhada
+        res.status(500).json({ 
+          message: "Erro interno do servidor", 
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
     }
   });

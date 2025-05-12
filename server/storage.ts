@@ -596,11 +596,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createLead(insertLead: InsertLead): Promise<Lead> {
-    const [lead] = await db
-      .insert(leads)
-      .values(insertLead)
-      .returning();
-    return lead;
+    try {
+      console.log("DatabaseStorage.createLead - Inserindo lead:", JSON.stringify(insertLead));
+      
+      // Remover campo isCompany se existir (não está no esquema)
+      if ('isCompany' in insertLead) {
+        const typedLead = insertLead as any;
+        delete typedLead.isCompany;
+      }
+      
+      const [lead] = await db
+        .insert(leads)
+        .values(insertLead)
+        .returning();
+      
+      console.log("DatabaseStorage.createLead - Lead inserido com sucesso:", JSON.stringify(lead));
+      return lead;
+    } catch (error) {
+      console.error("DatabaseStorage.createLead - Erro ao inserir lead:", error);
+      throw error;
+    }
   }
 
   async updateLead(id: number, updateData: Partial<Lead>): Promise<Lead | undefined> {

@@ -193,3 +193,23 @@ export const insertLossReasonSchema = createInsertSchema(lossReasons).pick({
 
 export type InsertLossReason = z.infer<typeof insertLossReasonSchema>;
 export type LossReason = typeof lossReasons.$inferSelect;
+
+// Lead Activities
+export const leadActivities = pgTable("lead_activities", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  activityType: text("activity_type").notNull(), // proposal_created, email_sent, call_made, meeting_scheduled, etc.
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdBy: text("created_by"), // Nome de quem criou a atividade
+});
+
+export const insertLeadActivitySchema = createInsertSchema(leadActivities).pick({
+  dealId: true,
+  activityType: true,
+  description: true,
+  createdBy: true,
+});
+
+export type InsertLeadActivity = z.infer<typeof insertLeadActivitySchema>;
+export type LeadActivity = typeof leadActivities.$inferSelect;

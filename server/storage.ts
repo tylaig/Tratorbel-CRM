@@ -5,7 +5,8 @@ import {
   settings, type Settings, type InsertSettings,
   clientMachines, type ClientMachine, type InsertClientMachine,
   lossReasons, type LossReason, type InsertLossReason,
-  quoteItems, type QuoteItem, type InsertQuoteItem
+  quoteItems, type QuoteItem, type InsertQuoteItem,
+  leadActivities, type LeadActivity, type InsertLeadActivity
 } from "@shared/schema";
 
 // Modify the interface with any CRUD methods you might need

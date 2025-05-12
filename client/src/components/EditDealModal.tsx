@@ -331,7 +331,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-6 w-full">
+          <TabsList className="grid grid-cols-7 w-full">
             <TabsTrigger value="details" className="flex items-center gap-1">
               <FileTextIcon className="h-4 w-4" />
               <span>Detalhes</span>
@@ -339,6 +339,10 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             <TabsTrigger value="client" className="flex items-center gap-1">
               <UserIcon className="h-4 w-4" />
               <span>Cliente</span>
+            </TabsTrigger>
+            <TabsTrigger value="city" className="flex items-center gap-1">
+              <MapPinIcon className="h-4 w-4" />
+              <span>Cidade</span>
             </TabsTrigger>
             <TabsTrigger value="machines" className="flex items-center gap-1">
               <PlusCircleIcon className="h-4 w-4" />

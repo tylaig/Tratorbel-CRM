@@ -10,7 +10,7 @@ import {
   BarChart3,
   TrendingUp,
   Calendar,
-  Map as MapIcon, // Importando como MapIcon
+  MapIcon,
   Home,
   Building2,
   Cpu
@@ -33,7 +33,7 @@ export default function Heatmap() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <Map className="mr-2 h-6 w-6 text-primary" />
+            <MapIcon className="mr-2 h-6 w-6 text-primary" />
             Mapa de Calor
           </h1>
           <p className="text-gray-500 mt-1">
@@ -76,7 +76,7 @@ export default function Heatmap() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="h-[400px] bg-gray-100 rounded-md p-4 flex items-center justify-center">
                       <div className="text-center text-gray-500">
-                        <Map className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                        <MapIcon className="h-12 w-12 mx-auto mb-2 text-gray-400" />
                         <p>Visualização do mapa do Brasil</p>
                         <p className="text-sm">(Implementação visual futura)</p>
                       </div>
@@ -223,7 +223,7 @@ export default function Heatmap() {
 
 // Funções auxiliares para processar os dados
 function processStateData(deals: Deal[]) {
-  // Usando um objeto normal em vez de Map para evitar conflitos
+  // Usando um objeto simples para evitar conflitos com o Map do JavaScript
   const stateData: Record<string, { count: number; value: number }> = {};
   
   deals.forEach(deal => {
@@ -244,36 +244,41 @@ function processStateData(deals: Deal[]) {
 }
 
 function processCityData(deals: Deal[]) {
-  const cityMap = new Map<string, { count: number, value: number, state: string }>();
+  // Usando um objeto simples para evitar conflitos com o Map do JavaScript
+  const cityData: Record<string, { count: number; value: number; state: string }> = {};
   
   deals.forEach(deal => {
     if (deal.city && deal.state) {
-      const cityKey = `${deal.city.toLowerCase()}_${deal.state.toLowerCase()}`;
-      const current = cityMap.get(cityKey) || { 
-        count: 0, 
-        value: 0, 
-        state: deal.state.toUpperCase() 
-      };
+      const city = deal.city.toUpperCase();
+      const state = deal.state.toUpperCase();
+      const key = `${city}, ${state}`;
       
-      cityMap.set(cityKey, {
-        count: current.count + 1,
-        value: current.value + (deal.value || 0),
-        state: current.state
-      });
+      if (!cityData[key]) {
+        cityData[key] = { count: 0, value: 0, state };
+      }
+      
+      cityData[key].count += 1;
+      cityData[key].value += (deal.value || 0);
     }
   });
   
-  return Array.from(cityMap.entries())
-    .map(([key, data]) => ({ 
-      name: key.split('_')[0], 
-      ...data 
-    }))
+  return Object.entries(cityData)
+    .map(([key, data]) => {
+      // Extrair cidade do nome da chave e usar o estado do objeto 
+      return { 
+        name: key.split(',')[0].trim(),
+        count: data.count,
+        value: data.value,
+        state: data.state
+      };
+    })
     .sort((a, b) => b.value - a.value)
     .slice(0, 20);
 }
 
 function processMachineData(deals: Deal[]) {
-  const brandMap = new Map<string, number>();
+  // Usando um objeto simples para evitar conflitos com o Map do JavaScript
+  const brandData: Record<string, number> = {};
   
   deals.forEach(deal => {
     // Este é um exemplo. Você precisaria ajustar para a sua estrutura de dados real.
@@ -282,12 +287,16 @@ function processMachineData(deals: Deal[]) {
       // Aqui seria necessário ter acesso às máquinas do cliente
       // Como exemplo, estamos apenas contando pelo campo machineCount
       const brand = "Marca Exemplo"; // Isso seria obtido dos dados reais
-      const current = brandMap.get(brand) || 0;
-      brandMap.set(brand, current + deal.machineCount);
+      
+      if (!brandData[brand]) {
+        brandData[brand] = 0;
+      }
+      
+      brandData[brand] += deal.machineCount;
     }
   });
   
-  return Array.from(brandMap.entries())
+  return Object.entries(brandData)
     .map(([brand, count]) => ({ brand, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);

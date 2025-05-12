@@ -134,6 +134,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setCity(deal.city || "");
       setState(deal.state || "");
       setZipCode(deal.zipCode || "");
+      
+      // Notas
+      setNotes(deal.notes || "");
     }
   }, [deal]);
   
@@ -223,6 +226,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       clientCode,
       email,
       phone,
+      
+      // Notas
+      notes,
       
       // Dados de endereço
       address,
@@ -613,14 +619,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   id="deal-notes"
                   className="flex h-32 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Adicione notas e observações sobre este negócio..."
-                  value={deal?.notes || ""}
-                  onChange={(e) => {
-                    if (deal) {
-                      updateDealMutation.mutate({
-                        notes: e.target.value
-                      });
-                    }
-                  }}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
             </div>

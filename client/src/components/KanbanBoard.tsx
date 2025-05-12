@@ -49,7 +49,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
     sortOrder: "desc",
     hideClosed: true,
     winReason: null as string | null,
-    lossReason: null as string | null
+    lostReason: null as string | null
   };
   const [boardData, setBoardData] = useState<StageWithDeals[]>([]);
   const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
@@ -116,9 +116,9 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       }
       
       // Filtrar por motivo de perda
-      if (activeFilters.lossReason) {
+      if (activeFilters.lostReason) {
         filteredDeals = filteredDeals.filter(deal => 
-          deal.saleStatus === 'lost' && deal.lostReason === activeFilters.lossReason
+          deal.saleStatus === 'lost' && deal.lostReason === activeFilters.lostReason
         );
       }
       

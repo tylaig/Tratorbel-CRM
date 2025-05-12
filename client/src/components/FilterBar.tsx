@@ -35,7 +35,7 @@ export interface FilterOptions {
   stageId?: number;
   hideClosed?: boolean; // Ocultar negócios vencidos/perdidos do pipeline
   winReason?: string | null; // Filtrar por motivo de ganho (below_quote, according_to_quote, above_quote)
-  lossReason?: string | null; // Filtrar por motivo de perda (um dos motivos cadastrados)
+  lostReason?: string | null; // Filtrar por motivo de perda (um dos motivos cadastrados)
 }
 
 interface FilterBarProps {
@@ -49,7 +49,7 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
   const [activeFilterTab, setActiveFilterTab] = useState<string>("status");
   
   // Buscar motivos de perda
-  const { data: lossReasons = [] } = useQuery({
+  const { data: lostReasons = [] } = useQuery({
     queryKey: ['/api/loss-reasons'],
   });
   
@@ -90,8 +90,8 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
   // Aplicar filtro de desempenho (vendas bem sucedidas)
   const applyWinReasonFilter = (reason: string | null) => {
     // Limpar o filtro de perda se estiver ativo
-    if (filters.lossReason) {
-      updateFilter({ winReason: reason || null, lossReason: null });
+    if (filters.lostReason) {
+      updateFilter({ winReason: reason || null, lostReason: null });
     } else {
       updateFilter({ winReason: reason || null });
     }
@@ -101,9 +101,9 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
   const applyLossReasonFilter = (reason: string | null) => {
     // Limpar o filtro de ganho se estiver ativo
     if (filters.winReason) {
-      updateFilter({ lossReason: reason || null, winReason: null });
+      updateFilter({ lostReason: reason || null, winReason: null });
     } else {
-      updateFilter({ lossReason: reason || null });
+      updateFilter({ lostReason: reason || null });
     }
   };
   
@@ -114,7 +114,7 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
       status: [],
       hideClosed: true,
       winReason: undefined,
-      lossReason: undefined
+      lostReason: undefined
     };
     
     // Atualizar o estado local e propagar para o componente pai
@@ -160,7 +160,7 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
       filters.search || 
       filters.status.length > 0 || 
       filters.winReason || 
-      filters.lossReason || 
+      filters.lostReason || 
       filters.hideClosed === false
     );
   };
@@ -246,19 +246,19 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
           <TabsContent value="loss" className="pt-2">
             <div className="flex gap-1 flex-wrap">
               <Badge 
-                variant={!filters.lossReason ? "default" : "outline"}
-                className={!filters.lossReason ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
+                variant={!filters.lostReason ? "default" : "outline"}
+                className={!filters.lostReason ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
                 onClick={() => applyLossReasonFilter(null)}
                 style={{ cursor: "pointer" }}
               >
                 Todos
               </Badge>
               
-              {Array.isArray(lossReasons) && lossReasons.map((reason: any) => (
+              {Array.isArray(lostReasons) && lostReasons.map((reason: any) => (
                 <Badge 
                   key={reason.id}
-                  variant={filters.lossReason === reason.reason ? "default" : "outline"}
-                  className={filters.lossReason === reason.reason ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
+                  variant={filters.lostReason === reason.reason ? "default" : "outline"}
+                  className={filters.lostReason === reason.reason ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
                   onClick={() => applyLossReasonFilter(reason.reason)}
                   style={{ cursor: "pointer" }}
                 >

@@ -104,11 +104,11 @@ export function usePipeline() {
     }
     
     // Aplicar filtro de motivo de perda (vendas perdidas)
-    if (filters.lossReason) {
+    if (filters.lostReason) {
       // Mostrar apenas negócios com status "lost" (perdidos)
       result = result.filter(deal => 
         deal.saleStatus === 'lost' && 
-        deal.lostReason === filters.lossReason
+        deal.lostReason === filters.lostReason
       );
       
       // Quando filtro de perda estiver ativo, remover a ocultação de negócios fechados
@@ -119,7 +119,7 @@ export function usePipeline() {
     }
     
     // Filtro específico para excluir negócios ganhos ou perdidos do pipeline
-    if (filters.hideClosed && !filters.winReason && !filters.lossReason) {
+    if (filters.hideClosed && !filters.winReason && !filters.lostReason) {
       result = result.filter(deal => 
         deal.saleStatus !== 'won' && 
         deal.saleStatus !== 'lost'

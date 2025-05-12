@@ -8,6 +8,7 @@ import ChatwootContacts from "@/components/ChatwootContacts";
 import FilterBar, { FilterOptions } from "@/components/FilterBar";
 import ApiConfigModal from "@/components/ApiConfigModal";
 import AddDealModal from "@/components/AddDealModal";
+import InitializeDB from "@/components/InitializeDB";
 import { usePipeline } from "@/hooks/usePipeline";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -145,6 +146,26 @@ export default function Dashboard() {
     setViewMode(mode);
   };
   
+  // Estado para controlar a exibição do modal de inicialização do DB
+  const [showDBInitializer, setShowDBInitializer] = useState(false);
+  
+  // Verificar erros 500 nas requisições para exibir o inicializador de DB
+  useEffect(() => {
+    const checkDatabaseStatus = async () => {
+      try {
+        const response = await fetch('/api/pipeline-stages');
+        if (response.status === 500) {
+          setShowDBInitializer(true);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status do banco de dados:', error);
+        setShowDBInitializer(true);
+      }
+    };
+    
+    checkDatabaseStatus();
+  }, []);
+
   return (
     <div className="flex flex-col h-screen">
       <Header 
@@ -160,6 +181,13 @@ export default function Dashboard() {
       
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 bg-gray-50 px-4 pt-6 overflow-y-auto">
+          {/* Mostrar o inicializador de banco de dados quando necessário */}
+          {showDBInitializer && (
+            <div className="mb-6">
+              <InitializeDB />
+            </div>
+          )}
+          
           {viewMode !== "contacts" && viewMode !== "heatmap" && (
             <FilterBar 
               onFilterChange={updateFilters}

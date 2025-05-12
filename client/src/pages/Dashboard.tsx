@@ -148,23 +148,33 @@ export default function Dashboard() {
   
   // Estado para controlar a exibição do modal de inicialização do DB
   const [showDBInitializer, setShowDBInitializer] = useState(false);
+  // Flag para controlar a verificação do banco de dados
+  const [dbCheckPerformed, setDbCheckPerformed] = useState(false);
   
   // Verificar erros 500 nas requisições para exibir o inicializador de DB
+  // Mas apenas uma vez durante o carregamento da página
   useEffect(() => {
+    // Não fazer a verificação se já foi realizada
+    if (dbCheckPerformed) return;
+    
     const checkDatabaseStatus = async () => {
       try {
         const response = await fetch('/api/pipeline-stages');
         if (response.status === 500) {
           setShowDBInitializer(true);
         }
+        // Marcar que a verificação foi realizada
+        setDbCheckPerformed(true);
       } catch (error) {
         console.error('Erro ao verificar status do banco de dados:', error);
         setShowDBInitializer(true);
+        // Marcar que a verificação foi realizada mesmo com erro
+        setDbCheckPerformed(true);
       }
     };
     
     checkDatabaseStatus();
-  }, []);
+  }, [dbCheckPerformed]);
 
   return (
     <div className="flex flex-col h-screen">

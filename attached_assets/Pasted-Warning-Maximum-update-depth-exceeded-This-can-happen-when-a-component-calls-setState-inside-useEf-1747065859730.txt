@@ -1,0 +1,19 @@
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-O6GME3D6.js?v=18b53e64:1927:13
+    at https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-popover.js?v=18b53e64:113:13
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TONAP5II.js?v=18b53e64:43:15)
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TONAP5II.js?v=18b53e64:43:15)
+    at Popper (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-O6GME3D6.js?v=18b53e64:1919:11)
+    at Popover (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-popover.js?v=18b53e64:62:5)
+    at div
+    at FilterBar (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/components/FilterBar.tsx:37:37)
+    at main
+    at div
+    at div
+    at Dashboard (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/src/pages/Dashboard.tsx:35:41)
+    at Route (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18b53e64:323:16)
+    at Switch (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=18b53e64:379:17)
+    at App
+    at Provider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TONAP5II.js?v=18b53e64:43:15)
+    at TooltipProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=18b53e64:61:5)
+    at QueryClientProvider (https://501b392d-24cf-4ac4-9b35-58e2eb138613-00-2e8zf015swbje.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=18b53e64:2805:3)

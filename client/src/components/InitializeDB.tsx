@@ -97,8 +97,14 @@ export default function InitializeDB() {
     }
   };
 
+  // Estado para controlar se a verificação já foi realizada
+  const [checkPerformed, setCheckPerformed] = useState(false);
+  
   // Verificar se o banco já está inicializado
   useEffect(() => {
+    // Evitar múltiplas verificações
+    if (checkPerformed) return;
+    
     const checkInitialization = async () => {
       try {
         const stagesResponse = await fetch('/api/pipeline-stages');
@@ -110,11 +116,14 @@ export default function InitializeDB() {
         }
       } catch (error) {
         console.error('Erro ao verificar inicialização do banco:', error);
+      } finally {
+        // Marcar que a verificação foi realizada
+        setCheckPerformed(true);
       }
     };
 
     checkInitialization();
-  }, []);
+  }, [checkPerformed]);
 
   return (
     <div className="flex flex-col items-center justify-center p-8 bg-white rounded-lg shadow-md">

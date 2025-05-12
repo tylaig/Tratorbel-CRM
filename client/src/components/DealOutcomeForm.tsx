@@ -34,6 +34,7 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
   const [customReason, setCustomReason] = useState("");
   const [notes, setNotes] = useState("");
   const [finalValue, setFinalValue] = useState(deal?.value ? formatCurrency(deal.value) : "");
+  const [salePerformance, setSalePerformance] = useState<"below_quote" | "according_to_quote" | "above_quote" | "">("");
   
   const { toast } = useToast();
   
@@ -51,6 +52,7 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
       setCustomReason("");
       setNotes("");
       setFinalValue(deal.value ? formatCurrency(deal.value) : "");
+      setSalePerformance("");
     }
   }, [deal]);
   
@@ -171,16 +173,35 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
         </div>
         
         {outcome === "won" && (
-          <div className="space-y-2">
-            <Label htmlFor="final-value">Valor Final</Label>
-            <Input
-              id="final-value"
-              value={finalValue}
-              onChange={handleValueChange}
-              placeholder="R$ 0,00"
-            />
-            <p className="text-sm text-gray-500">Informe o valor final do negócio fechado.</p>
-          </div>
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="final-value">Valor Final</Label>
+              <Input
+                id="final-value"
+                value={finalValue}
+                onChange={handleValueChange}
+                placeholder="R$ 0,00"
+              />
+              <p className="text-sm text-gray-500">Informe o valor final do negócio fechado.</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="sale-performance">Desempenho da Venda</Label>
+              <Select value={salePerformance} onValueChange={setSalePerformance}>
+                <SelectTrigger id="sale-performance">
+                  <SelectValue placeholder="Selecione o desempenho" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="below_quote">Abaixo da cotação</SelectItem>
+                  <SelectItem value="according_to_quote">De acordo com a cotação</SelectItem>
+                  <SelectItem value="above_quote">Acima da cotação</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">
+                Indique como o valor final se compara com o valor cotado originalmente.
+              </p>
+            </div>
+          </>
         )}
         
         {outcome === "lost" && (

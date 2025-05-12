@@ -42,7 +42,8 @@ export default function EditStageModal({ isOpen, onClose, stage }: EditStageModa
         name,
         order: stage.order
       };
-      return await apiRequest('PUT', `/api/pipeline-stages/${stage.id}`, payload);
+      // Corrigindo a ordem dos parâmetros para corresponder à função apiRequest
+      return await apiRequest(`/api/pipeline-stages/${stage.id}`, 'PUT', payload);
     },
     onSuccess: () => {
       toast({
@@ -66,7 +67,8 @@ export default function EditStageModal({ isOpen, onClose, stage }: EditStageModa
   const deleteStageMutation = useMutation({
     mutationFn: async () => {
       if (!stage) return null;
-      return await apiRequest('DELETE', `/api/pipeline-stages/${stage.id}`, {});
+      // Corrigindo a ordem dos parâmetros para corresponder à função apiRequest
+      return await apiRequest(`/api/pipeline-stages/${stage.id}`, 'DELETE');
     },
     onSuccess: () => {
       toast({

@@ -118,44 +118,70 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
     mutationFn: async () => {
       const selectedContact = contacts.find(c => c.id.toString() === contactId);
       
+      // Primeiro vamos verificar se já existe um lead para este contato
+      let leadId: number;
+      if (contactId) {
+        try {
+          // Tentar buscar um lead existente pelo chatwootContactId
+          const leadsResponse = await apiRequest('GET', `/api/leads/search?q=${contactId}`);
+          const existingLeads = leadsResponse.data?.results || [];
+          
+          if (existingLeads.length > 0) {
+            // Se encontrar, usar o id do lead existente
+            leadId = existingLeads[0].id;
+          } else {
+            // Se não encontrar, criar um novo lead
+            const leadPayload = {
+              name: selectedContact?.name || name,
+              companyName: companyName || selectedContact?.company_name || "",
+              chatwootContactId: contactId,
+              clientCategory,
+              clientType,
+              isCompany: clientType === "company",
+              cnpj,
+              corporateName,
+              cpf,
+              stateRegistration,
+              clientCode,
+              email: email || selectedContact?.email || "",
+              phone: phone || formatPhoneNumber(selectedContact?.phone_number) || "",
+              address,
+              addressNumber,
+              addressComplement,
+              neighborhood,
+              city,
+              state,
+              zipCode
+            };
+            
+            const leadResponse = await apiRequest('POST', '/api/leads', leadPayload);
+            leadId = leadResponse.data.id;
+          }
+        } catch (error) {
+          console.error("Erro ao obter/criar lead:", error);
+          throw new Error("Falha ao criar ou obter lead necessário para o negócio");
+        }
+      } else {
+        throw new Error("É necessário selecionar um contato para criar um negócio");
+      }
+      
+      // Agora criamos o deal com o leadId
       const payload = {
         // Campos básicos
         name,
-        companyName: companyName || selectedContact?.company_name || "",
-        contactName: selectedContact?.name || "",
-        contactId: contactId,
-        chatwootContactId: contactId,
+        leadId,  // Campo obrigatório - ID do lead
         stageId: parseInt(stageId),
         value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
         status,
-        
-        // Tipo de cliente
-        clientCategory,
-        clientType,
-        isCompany: clientType === "company", // manter compatibilidade
-        
-        // Campos pessoa jurídica
-        cnpj,
-        corporateName,
-        
-        // Campos pessoa física
-        cpf,
-        stateRegistration,
-        
-        // Campos de contato
-        clientCode,
-        email: email || selectedContact?.email || "",
-        phone: phone || formatPhoneNumber(selectedContact?.phone_number) || "",
-        
-        // Campos de endereço
-        address,
-        addressNumber,
-        addressComplement,
-        neighborhood,
-        city,
-        state,
-        zipCode
+        notes: "",
+        chatwootContactId: contactId,
+        chatwootAgentId: null,
+        chatwootAgentName: null,
+        chatwootConversationId: null,
+        saleStatus: null,
+        quoteValue: null
       };
+      
       return await apiRequest('POST', '/api/deals', payload);
     },
     onSuccess: async (data) => {

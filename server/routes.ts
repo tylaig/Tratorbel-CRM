@@ -334,6 +334,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Verificar se é uma busca por ID do Chatwoot
+      if (/^\d+$/.test(query.trim())) {
+        // Se for um número, tenta buscar pelo chatwootContactId
+        const lead = await storage.getLeadByChatwootId(query.trim());
+        if (lead) {
+          return res.json({ results: [lead] });
+        }
+      }
+      
+      // Caso contrário, busca normal por texto
       const results = await storage.searchLeads(query.trim());
       res.json({ results });
     } catch (error) {
@@ -342,6 +352,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Erro ao buscar leads", 
         results: [] 
       });
+    }
+  });
+  
+  // Criar novo lead
+  apiRouter.post("/leads", async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertLeadSchema.parse(req.body);
+      const lead = await storage.createLead(validatedData);
+      res.status(201).json(lead);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Invalid data",
+          errors: error.errors
+        });
+      } else {
+        console.error("Error creating lead:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
     }
   });
   

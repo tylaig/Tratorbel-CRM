@@ -135,8 +135,8 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       
       console.log("Negócios filtrados:", filteredDeals.length);
       
-      // Filtrar estágios que não estão ocultos (isHidden === false)
-      const visibleStages = pipelineStages.filter(stage => !stage.isHidden);
+      // Filtrar estágios que não estão ocultos (isHidden === false ou undefined)
+      const visibleStages = pipelineStages.filter(stage => stage.isHidden !== true);
       console.log("Estágios visíveis:", visibleStages.length, visibleStages.map(s => s.name));
       
       const stagesWithDeals = visibleStages.map(stage => {

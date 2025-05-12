@@ -151,6 +151,19 @@ export default function Dashboard() {
   // Flag para controlar a verificação do banco de dados
   const [dbCheckPerformed, setDbCheckPerformed] = useState(false);
   
+  // Atualizar dados do pipeline periodicamente
+  useEffect(() => {
+    // Atualizar imediatamente ao montar
+    refreshPipelineData();
+    
+    // Configurar atualização a cada 5 segundos
+    const interval = setInterval(() => {
+      refreshPipelineData();
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
   // Verificar erros 500 nas requisições para exibir o inicializador de DB
   // Mas apenas uma vez durante o carregamento da página
   useEffect(() => {

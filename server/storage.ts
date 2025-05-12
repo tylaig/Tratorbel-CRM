@@ -775,26 +775,98 @@ export class DatabaseStorage implements IStorage {
     return !!result;
   }
 
-  async getDealsByStage(stageId: number): Promise<Deal[]> {
+  async getDealsByStage(stageId: number): Promise<(Deal & Partial<Lead>)[]> {
     return await db
-      .select()
+      .select({
+        ...deals,
+        // Campos do Lead com prefixo para evitar conflitos
+        companyName: leads.companyName,
+        clientCategory: leads.clientCategory,
+        clientType: leads.clientType,
+        cnpj: leads.cnpj,
+        corporateName: leads.corporateName,
+        cpf: leads.cpf,
+        stateRegistration: leads.stateRegistration,
+        clientCode: leads.clientCode,
+        email: leads.email,
+        phone: leads.phone,
+        address: leads.address,
+        addressNumber: leads.addressNumber,
+        addressComplement: leads.addressComplement,
+        neighborhood: leads.neighborhood,
+        city: leads.city,
+        state: leads.state,
+        zipCode: leads.zipCode,
+        chatwootContactId: leads.chatwootContactId,
+        chatwootAgentId: leads.chatwootAgentId,
+        chatwootAgentName: leads.chatwootAgentName,
+      })
       .from(deals)
+      .leftJoin(leads, eq(deals.leadId, leads.id))
       .where(eq(deals.stageId, stageId))
       .orderBy(desc(deals.updatedAt));
   }
 
-  async getDealsBySaleStatus(saleStatus: string): Promise<Deal[]> {
+  async getDealsBySaleStatus(saleStatus: string): Promise<(Deal & Partial<Lead>)[]> {
     return await db
-      .select()
+      .select({
+        ...deals,
+        // Campos do Lead com prefixo para evitar conflitos
+        companyName: leads.companyName,
+        clientCategory: leads.clientCategory,
+        clientType: leads.clientType,
+        cnpj: leads.cnpj,
+        corporateName: leads.corporateName,
+        cpf: leads.cpf,
+        stateRegistration: leads.stateRegistration,
+        clientCode: leads.clientCode,
+        email: leads.email,
+        phone: leads.phone,
+        address: leads.address,
+        addressNumber: leads.addressNumber,
+        addressComplement: leads.addressComplement,
+        neighborhood: leads.neighborhood,
+        city: leads.city,
+        state: leads.state,
+        zipCode: leads.zipCode,
+        chatwootContactId: leads.chatwootContactId,
+        chatwootAgentId: leads.chatwootAgentId,
+        chatwootAgentName: leads.chatwootAgentName,
+      })
       .from(deals)
+      .leftJoin(leads, eq(deals.leadId, leads.id))
       .where(eq(deals.saleStatus, saleStatus))
       .orderBy(desc(deals.updatedAt));
   }
 
-  async getDealsByLeadId(leadId: number): Promise<Deal[]> {
+  async getDealsByLeadId(leadId: number): Promise<(Deal & Partial<Lead>)[]> {
     return await db
-      .select()
+      .select({
+        ...deals,
+        // Campos do Lead com prefixo para evitar conflitos
+        companyName: leads.companyName,
+        clientCategory: leads.clientCategory,
+        clientType: leads.clientType,
+        cnpj: leads.cnpj,
+        corporateName: leads.corporateName,
+        cpf: leads.cpf,
+        stateRegistration: leads.stateRegistration,
+        clientCode: leads.clientCode,
+        email: leads.email,
+        phone: leads.phone,
+        address: leads.address,
+        addressNumber: leads.addressNumber,
+        addressComplement: leads.addressComplement,
+        neighborhood: leads.neighborhood,
+        city: leads.city,
+        state: leads.state,
+        zipCode: leads.zipCode,
+        chatwootContactId: leads.chatwootContactId,
+        chatwootAgentId: leads.chatwootAgentId,
+        chatwootAgentName: leads.chatwootAgentName,
+      })
       .from(deals)
+      .leftJoin(leads, eq(deals.leadId, leads.id))
       .where(eq(deals.leadId, leadId))
       .orderBy(desc(deals.updatedAt));
   }

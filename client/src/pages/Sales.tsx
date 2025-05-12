@@ -81,8 +81,6 @@ export default function Sales() {
       />
       
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={isSidebarOpen} />
-        
         <main className="flex-1 bg-gray-50 px-4 pt-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">

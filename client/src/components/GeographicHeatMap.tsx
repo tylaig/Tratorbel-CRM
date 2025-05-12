@@ -52,26 +52,35 @@ export default function GeographicHeatMap() {
   const { toast } = useToast();
 
   // Buscar todos os negócios para análise geográfica
-  const { data: allDeals = [], isLoading: isLoadingDeals } = useQuery({
+  const { data: allDeals = [], isLoading: isLoadingDeals } = useQuery<Deal[]>({
     queryKey: ['/api/deals'],
-    queryFn: () => apiRequest('/api/deals'),
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/deals');
+      return (response as unknown) as Deal[];
+    },
   });
 
   // Buscar negócios com status "won"
-  const { data: wonDeals = [], isLoading: isLoadingWonDeals } = useQuery({
+  const { data: wonDeals = [], isLoading: isLoadingWonDeals } = useQuery<Deal[]>({
     queryKey: ['/api/deals/sale-status/won'],
-    queryFn: () => apiRequest('/api/deals/sale-status/won'),
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/deals/sale-status/won');
+      return (response as unknown) as Deal[];
+    },
   });
   
   // Buscar negócios com status "lost"
-  const { data: lostDeals = [], isLoading: isLoadingLostDeals } = useQuery({
+  const { data: lostDeals = [], isLoading: isLoadingLostDeals } = useQuery<Deal[]>({
     queryKey: ['/api/deals/sale-status/lost'],
-    queryFn: () => apiRequest('/api/deals/sale-status/lost'),
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/deals/sale-status/lost');
+      return (response as unknown) as Deal[];
+    },
   });
 
   // Filtra os negócios com base no tipo de filtro e termo de busca
   const filteredDeals = useMemo(() => {
-    if (!searchTerm.trim()) return allDeals;
+    if (!searchTerm.trim() || !Array.isArray(allDeals)) return allDeals;
     
     return allDeals.filter((deal: Deal) => {
       if (filterType === 'state') {

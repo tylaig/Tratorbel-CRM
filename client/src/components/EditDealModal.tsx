@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, formatPhoneNumber } from "@/lib/formatters";
-import { type PipelineStage, type Deal } from "@shared/schema";
+import { type PipelineStage, type Deal, type Lead } from "@shared/schema";
 
 import {
   Dialog,
@@ -102,47 +102,60 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
 
   const { toast } = useToast();
 
+  // Buscar os dados do lead associado
+  const { data: leadData } = useQuery<Lead>({
+    queryKey: [`/api/leads/${deal?.leadId}`],
+    enabled: !!deal?.leadId,
+  });
+
   // Carregar dados do deal quando o modal abrir
   useEffect(() => {
     if (deal) {
-      // Campos básicos
+      // Campos básicos do deal
       setName(deal.name);
-      setCompanyName(deal.companyName || "");
       setStageId(deal.stageId.toString());
       setValue(formatCurrency(deal.value || 0));
       setStatus(deal.status || "in_progress");
-      
-      // Tipo de cliente
-      setClientCategory(deal.clientCategory || "final_consumer");
-      setClientType(deal.clientType || "person");
-      setIsCompany(deal.isCompany || false); // legado
-      
-      // Campos pessoa jurídica
-      setCnpj(deal.cnpj || "");
-      setCorporateName(deal.corporateName || "");
-      
-      // Campos pessoa física
-      setCpf(deal.cpf || "");
-      setStateRegistration(deal.stateRegistration || "");
-      
-      // Campos de contato
-      setClientCode(deal.clientCode || "");
-      setEmail(deal.email || "");
-      setPhone(formatPhoneNumber(deal.phone) || "");
-      
-      // Campos de endereço
-      setAddress(deal.address || "");
-      setAddressNumber(deal.addressNumber || "");
-      setAddressComplement(deal.addressComplement || "");
-      setNeighborhood(deal.neighborhood || "");
-      setCity(deal.city || "");
-      setState(deal.state || "");
-      setZipCode(deal.zipCode || "");
-      
-      // Notas
       setNotes(deal.notes || "");
     }
   }, [deal]);
+  
+  // Carregar dados do lead quando estiverem disponíveis
+  useEffect(() => {
+    if (leadData) {
+      console.log("Lead carregado:", leadData);
+      
+      // Campos básicos do lead
+      setCompanyName(leadData.companyName || "");
+      
+      // Tipo de cliente
+      setClientCategory(leadData.clientCategory || "final_consumer");
+      setClientType(leadData.clientType || "person");
+      setIsCompany(leadData.clientType === "company"); 
+      
+      // Campos pessoa jurídica
+      setCnpj(leadData.cnpj || "");
+      setCorporateName(leadData.corporateName || "");
+      
+      // Campos pessoa física
+      setCpf(leadData.cpf || "");
+      setStateRegistration(leadData.stateRegistration || "");
+      
+      // Campos de contato
+      setClientCode(leadData.clientCode || "");
+      setEmail(leadData.email || "");
+      setPhone(formatPhoneNumber(leadData.phone) || "");
+      
+      // Campos de endereço
+      setAddress(leadData.address || "");
+      setAddressNumber(leadData.addressNumber || "");
+      setAddressComplement(leadData.addressComplement || "");
+      setNeighborhood(leadData.neighborhood || "");
+      setCity(leadData.city || "");
+      setState(leadData.state || "");
+      setZipCode(leadData.zipCode || "");
+    }
+  }, [leadData]);
   
   // Funções para gerenciar negócios relacionados
   const handleOpenDeal = (dealId: number) => {

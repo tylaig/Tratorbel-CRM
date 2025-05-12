@@ -32,9 +32,80 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
   const [stageMap, setStageMap] = useState<Map<number, string>>(new Map());
   
   // Fetch deals
-  const { data: deals, isLoading } = useQuery<Deal[]>({
+  const { data: allDeals = [], isLoading } = useQuery<Deal[]>({
     queryKey: ['/api/deals'],
+    refetchOnMount: true,        // Recarregar quando o componente for montado
+    refetchOnWindowFocus: true,  // Recarregar quando a janela ganhar foco
+    staleTime: 0,                // Considerar dados obsoletos imediatamente
   });
+  
+  // Filtrar deals baseado nos mesmos critérios do KanbanBoard
+  const [filteredDeals, setFilteredDeals] = useState<Deal[]>([]);
+  
+  // Aplicar filtros sempre que allDeals ou activeFilters mudarem
+  useEffect(() => {
+    let result = [...allDeals];
+    
+    // Aplicar filtro de busca
+    if (activeFilters.search) {
+      const searchLower = activeFilters.search.toLowerCase();
+      result = result.filter(deal => 
+        deal.name.toLowerCase().includes(searchLower) ||
+        (deal.companyName && deal.companyName.toLowerCase().includes(searchLower)) ||
+        (deal.contactName && deal.contactName.toLowerCase().includes(searchLower)) ||
+        (deal.contactId && deal.contactId.toLowerCase().includes(searchLower)) ||
+        (deal.chatwootContactId && deal.chatwootContactId.toLowerCase().includes(searchLower)) ||
+        (deal.email && deal.email.toLowerCase().includes(searchLower)) ||
+        (deal.phone && deal.phone.toLowerCase().includes(searchLower)) ||
+        (deal.address && deal.address.toLowerCase().includes(searchLower)) ||
+        (deal.city && deal.city.toLowerCase().includes(searchLower)) ||
+        (deal.state && deal.state.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    // Aplicar filtro de status
+    if (activeFilters.status && activeFilters.status.length > 0) {
+      result = result.filter(deal => {
+        const matchStatus = deal.status && activeFilters.status.includes(deal.status);
+        const matchSaleStatus = deal.saleStatus && activeFilters.status.includes(deal.saleStatus);
+        return matchStatus || matchSaleStatus;
+      });
+    }
+    
+    // Filtrar negócios concluídos se hideClosed estiver ativo
+    if (activeFilters.hideClosed) {
+      result = result.filter(deal => 
+        deal.saleStatus !== 'won' && 
+        deal.saleStatus !== 'lost'
+      );
+    }
+    
+    // Aplicar filtro de estágio
+    if (activeFilters.stageId !== undefined) {
+      result = result.filter(deal => deal.stageId === activeFilters.stageId);
+    }
+    
+    // Aplicar ordenação
+    result.sort((a, b) => {
+      const sortMultiplier = activeFilters.sortOrder === "asc" ? 1 : -1;
+      
+      switch (activeFilters.sortBy) {
+        case "name":
+          return sortMultiplier * (a.name || "").localeCompare(b.name || "");
+        case "value":
+          return sortMultiplier * ((a.value || 0) - (b.value || 0));
+        case "company":
+          return sortMultiplier * ((a.companyName || "").localeCompare(b.companyName || ""));
+        case "date":
+        default:
+          const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : Date.now();
+          const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : Date.now();
+          return sortMultiplier * (dateA - dateB);
+      }
+    });
+    
+    setFilteredDeals(result);
+  }, [allDeals, activeFilters]);
   
   // Create a map of stage IDs to stage names
   useEffect(() => {
@@ -76,6 +147,13 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
   
   return (
     <div className="h-full overflow-y-auto p-4">
+      {activeFilters.hideClosed && (
+        <div className="mb-4 text-sm text-amber-800 flex items-center gap-2 bg-amber-100 px-3 py-2 rounded-md border border-amber-200">
+          <InfoIcon size={16} />
+          <span>Negócios concluídos estão ocultos</span>
+        </div>
+      )}
+      
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
         <Table>
           <TableHeader>
@@ -90,8 +168,8 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {deals && deals.length > 0 ? (
-              deals.map((deal) => (
+            {filteredDeals && filteredDeals.length > 0 ? (
+              filteredDeals.map((deal) => (
                 <TableRow key={deal.id} className="hover:bg-gray-50">
                   <TableCell className="font-medium">{deal.name}</TableCell>
                   <TableCell>{deal.companyName || "-"}</TableCell>
@@ -117,7 +195,13 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
                   <div className="flex flex-col items-center justify-center text-gray-500">
                     <AlertCircleIcon className="h-8 w-8 mb-2 text-gray-400" />
                     <p className="mb-1">Nenhum negócio encontrado</p>
-                    <p className="text-sm">Adicione um novo negócio ou configure a integração com o Chatwoot</p>
+                    {activeFilters.hideClosed && allDeals.length > filteredDeals.length ? (
+                      <p className="text-sm">Existem {allDeals.length - filteredDeals.length} negócios concluídos que estão ocultos</p>
+                    ) : activeFilters.search || activeFilters.status.length > 0 || activeFilters.stageId ? (
+                      <p className="text-sm">Tente remover alguns filtros para ver mais resultados</p>
+                    ) : (
+                      <p className="text-sm">Adicione um novo negócio ou configure a integração com o Chatwoot</p>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

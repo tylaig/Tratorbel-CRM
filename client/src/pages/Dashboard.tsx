@@ -198,7 +198,7 @@ export default function Dashboard() {
             </div>
           )}
           
-          {viewMode !== "contacts" && viewMode !== "heatmap" && (
+          {viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
             <FilterBar 
               onFilterChange={updateFilters}
               activeFilters={filters}
@@ -219,6 +219,10 @@ export default function Dashboard() {
           
           {viewMode === "heatmap" && (
             <HeatmapView />
+          )}
+          
+          {viewMode === "results" && (
+            <SalesResultStages pipelineStages={pipelineStages} filters={filters} />
           )}
         </main>
       </div>

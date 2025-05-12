@@ -23,8 +23,8 @@ import tbcLogo from "../assets/tbc-logo.png";
 
 interface HeaderProps {
   toggleSidebar: () => void;
-  viewMode: "kanban" | "list" | "contacts" | "heatmap";
-  toggleViewMode: (mode: "kanban" | "list" | "contacts" | "heatmap") => void;
+  viewMode: "kanban" | "list" | "contacts" | "heatmap" | "results";
+  toggleViewMode: (mode: "kanban" | "list" | "contacts" | "heatmap" | "results") => void;
   onOpenApiConfig: () => void;
   onAddDeal: () => void;
   onSync: () => void;
@@ -176,6 +176,15 @@ export default function Header({
                   title="Visão Lista"
                 >
                   <ListIcon className="h-5 w-5" />
+                </Button>
+                <Button 
+                  variant={viewMode === "results" ? "default" : "ghost"} 
+                  size="icon"
+                  onClick={() => toggleViewMode("results")}
+                  className="h-9 w-9 rounded"
+                  title="Resultados de Vendas"
+                >
+                  <GanttChartIcon className="h-5 w-5" />
                 </Button>
                 {hasApiConfig && (
                   <Button 

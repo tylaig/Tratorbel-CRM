@@ -44,10 +44,12 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
   // Use os filtros do componente pai ou crie um padrão
   const activeFilters = filters || {
     search: "",
-    status: [],
+    status: [] as string[],
     sortBy: "date",
     sortOrder: "desc",
-    hideClosed: true
+    hideClosed: true,
+    winReason: null as string | null,
+    lossReason: null as string | null
   };
   const [boardData, setBoardData] = useState<StageWithDeals[]>([]);
   const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
@@ -82,6 +84,51 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
   // Função para organizar dados do quadro
   const organizeBoardData = () => {
     if (pipelineStages.length > 0 && deals) {
+      console.log("Filtros aplicados:", activeFilters);
+      
+      // Filtrar todos os deals com base nos filtros
+      let filteredDeals = [...deals];
+      
+      // Filtrar por termo de busca
+      if (activeFilters.search) {
+        const searchTerm = activeFilters.search.toLowerCase();
+        filteredDeals = filteredDeals.filter(deal => {
+          // Buscar em vários campos
+          return (
+            deal.name?.toLowerCase().includes(searchTerm) ||
+            deal.notes?.toLowerCase().includes(searchTerm)
+          );
+        });
+      }
+      
+      // Filtrar por status
+      if (activeFilters.status && activeFilters.status.length > 0) {
+        filteredDeals = filteredDeals.filter(deal => 
+          activeFilters.status.includes(deal.status || '')
+        );
+      }
+      
+      // Filtrar por motivo de ganho
+      if (activeFilters.winReason) {
+        filteredDeals = filteredDeals.filter(deal => 
+          deal.saleStatus === 'won' && deal.salePerformance === activeFilters.winReason
+        );
+      }
+      
+      // Filtrar por motivo de perda
+      if (activeFilters.lossReason) {
+        filteredDeals = filteredDeals.filter(deal => 
+          deal.saleStatus === 'lost' && deal.lossReason === activeFilters.lossReason
+        );
+      }
+      
+      // Ocultar negócios fechados se a opção estiver ativada
+      if (activeFilters.hideClosed) {
+        // Não aplicamos esse filtro aqui pois a lógica de distribuição por estágios já trata isso
+      }
+      
+      console.log("Negócios filtrados:", filteredDeals.length);
+      
       // Filtrar estágios que não estão ocultos (isHidden === false)
       const visibleStages = pipelineStages.filter(stage => !stage.isHidden);
       
@@ -90,7 +137,7 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
         
         // Para estágios normais, mostrar apenas deals em negociação
         if (stage.stageType === "normal") {
-          stageDeals = deals.filter(deal => 
+          stageDeals = filteredDeals.filter(deal => 
             deal.stageId === stage.id && 
             deal.saleStatus !== 'won' && 
             deal.saleStatus !== 'lost'
@@ -98,11 +145,11 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
         }
         // Para o estágio de vendas realizadas, mostrar deals marcados como ganhos
         else if (stage.stageType === "completed") {
-          stageDeals = deals.filter(deal => deal.saleStatus === 'won');
+          stageDeals = filteredDeals.filter(deal => deal.saleStatus === 'won');
         } 
         // Para o estágio de vendas perdidas, mostrar deals marcados como perdidos
         else if (stage.stageType === "lost") {
-          stageDeals = deals.filter(deal => deal.saleStatus === 'lost');
+          stageDeals = filteredDeals.filter(deal => deal.saleStatus === 'lost');
         }
         
         // Calcular o total baseado no valor do deal
@@ -119,10 +166,10 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
     }
   };
   
-  // Organize deals by stage quando os dados mudam
+  // Organize deals by stage quando os dados ou filtros mudam
   useEffect(() => {
     organizeBoardData();
-  }, [pipelineStages, deals]);
+  }, [pipelineStages, deals, activeFilters]);
   
   // Handle drag and drop
   const onDragEnd = async (result: DropResult) => {

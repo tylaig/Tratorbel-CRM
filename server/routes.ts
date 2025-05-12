@@ -1120,7 +1120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/sale-performance-reasons", async (req: Request, res: Response) => {
     try {
       // Buscar motivos de desempenho de vendas
-      const results = await storage.db.select().from(salePerformanceReasons).orderBy(salePerformanceReasons.reason);
+      const results = await storage.getSalePerformanceReasons();
       res.json(results);
     } catch (error) {
       res.status(500).json({ error: `Erro ao buscar motivos de desempenho: ${error}` });
@@ -1133,13 +1133,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertSalePerformanceReasonSchema.parse(req.body);
       
       // Criar motivo de desempenho
-      const [newReason] = await storage.db.insert(salePerformanceReasons).values({
+      const newData = {
         reason: validatedData.reason,
         value: validatedData.value,
         description: validatedData.description || null,
         active: validatedData.active || true,
         isSystem: validatedData.isSystem || false,
-      }).returning();
+      };
+      
+      const newReason = await storage.createSalePerformanceReason(newData);
       
       res.status(201).json(newReason);
     } catch (error) {
@@ -1153,15 +1155,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.put("/sale-performance-reasons/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID inválido" });
+      }
       
       // Validar dados
       const validatedData = insertSalePerformanceReasonSchema.partial().parse(req.body);
       
       // Atualizar motivo de desempenho
-      const [updatedReason] = await storage.db.update(salePerformanceReasons)
-        .set(validatedData)
-        .where(eq(salePerformanceReasons.id, id))
-        .returning();
+      const updatedReason = await storage.updateSalePerformanceReason(id, validatedData);
       
       if (!updatedReason) {
         return res.status(404).json({ error: "Motivo de desempenho não encontrado" });
@@ -1179,6 +1181,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.delete("/sale-performance-reasons/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID inválido" });
+      }
       
       // Verificar se é um motivo do sistema
       const [reason] = await storage.db.select().from(salePerformanceReasons)
@@ -1193,7 +1198,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Excluir motivo de desempenho
-      await storage.db.delete(salePerformanceReasons).where(eq(salePerformanceReasons.id, id));
+      const success = await storage.deleteSalePerformanceReason(id);
+      
+      if (!success) {
+        return res.status(500).json({ error: "Erro ao excluir motivo de desempenho" });
+      }
       
       res.status(204).send();
     } catch (error) {

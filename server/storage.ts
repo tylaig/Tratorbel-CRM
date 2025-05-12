@@ -569,6 +569,36 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Referência do DB para resolver erros de tipo
+  public db = db;
+  
+  // Sale Performance Reasons
+  async getSalePerformanceReasons(): Promise<SalePerformanceReason[]> {
+    return await db.select().from(salePerformanceReasons).orderBy(asc(salePerformanceReasons.reason));
+  }
+  
+  async createSalePerformanceReason(reason: InsertSalePerformanceReason): Promise<SalePerformanceReason> {
+    const [newReason] = await db.insert(salePerformanceReasons).values(reason).returning();
+    return newReason;
+  }
+  
+  async updateSalePerformanceReason(id: number, data: Partial<SalePerformanceReason>): Promise<SalePerformanceReason | undefined> {
+    const [updatedReason] = await db.update(salePerformanceReasons)
+      .set(data)
+      .where(eq(salePerformanceReasons.id, id))
+      .returning();
+    return updatedReason;
+  }
+  
+  async deleteSalePerformanceReason(id: number): Promise<boolean> {
+    try {
+      await db.delete(salePerformanceReasons).where(eq(salePerformanceReasons.id, id));
+      return true;
+    } catch (error) {
+      console.error("Erro ao excluir motivo de desempenho:", error);
+      return false;
+    }
+  }
   // Users
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

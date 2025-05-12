@@ -47,14 +47,17 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
     setActivityType('');
   }, [deal?.id]);
 
-  const { data: activities = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['/api/lead-activities', deal?.id],
     queryFn: async () => {
       const response = await apiRequest('GET', `/api/lead-activities/${deal?.id}`);
-      return response as LeadActivity[];
+      return (response as unknown) as LeadActivity[];
     },
     enabled: !!deal?.id,
   });
+  
+  // Garantir que sempre seja um array, mesmo se a API retornar algo inesperado
+  const activities = Array.isArray(data) ? data : [];
 
   const createActivityMutation = useMutation({
     mutationFn: (newActivity: { dealId: number; activityType: string; description: string; createdBy: string | null }) => 

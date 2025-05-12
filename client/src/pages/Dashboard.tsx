@@ -83,35 +83,23 @@ export default function Dashboard() {
     mutationFn: async () => {
       return await apiRequest('POST', '/api/chatwoot/sync', {});
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidar todas as consultas relevantes
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
       
-      // Atualizar os dados sem recarregar a página
-      const updateData = async () => {
-        try {
-          // Refetch das consultas em vez de recarregar a página
-          await queryClient.refetchQueries({ queryKey: ['/api/deals'] });
-          await queryClient.refetchQueries({ queryKey: ['/api/chatwoot/contacts'] });
-          await queryClient.refetchQueries({ queryKey: ['/api/pipeline-stages'] });
-          
-          // Forçar atualização dos dados do pipeline
-          refreshPipelineData();
-          
-          toast({
-            title: "Sincronização concluída",
-            description: "Os contatos foram sincronizados e os dados atualizados com sucesso.",
-            variant: "default",
-          });
-        } catch (error) {
-          console.error("Erro ao atualizar dados após sincronização:", error);
-        }
-      };
-      
-      // Executar a atualização
-      updateData();
+      try {
+        // Refetch das consultas em vez de recarregar a página
+        await queryClient.refetchQueries({ queryKey: ['/api/deals'] });
+        await queryClient.refetchQueries({ queryKey: ['/api/chatwoot/contacts'] });
+        await queryClient.refetchQueries({ queryKey: ['/api/pipeline-stages'] });
+        
+        // Forçar atualização dos dados do pipeline
+        refreshPipelineData();
+      } catch (error) {
+        console.error("Erro ao atualizar dados após sincronização:", error);
+      }
     },
     onError: (error) => {
       toast({
@@ -123,8 +111,30 @@ export default function Dashboard() {
     }
   });
   
-  const handleSync = () => {
-    syncMutation.mutate();
+  const handleSync = async () => {
+    try {
+      const result = await syncMutation.mutateAsync();
+      
+      // Exibir informações detalhadas sobre a sincronização
+      if (result && result.synced !== undefined) {
+        let description = "Os contatos foram sincronizados com sucesso.";
+        
+        // Se houver novos negócios, mostrar quantos
+        if (result.newDeals && result.newDeals.length > 0) {
+          description = `${result.synced} contatos sincronizados. ${result.newDeals.length} novo(s) negócio(s) criado(s).`;
+        } else {
+          description = `${result.synced} contatos sincronizados. Nenhum novo negócio criado.`;
+        }
+        
+        toast({
+          title: "Sincronização concluída",
+          description: description,
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar:", error);
+    }
   };
   
   const toggleSidebar = () => {

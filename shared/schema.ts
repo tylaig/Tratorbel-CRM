@@ -71,6 +71,7 @@ export const deals = pgTable("deals", {
   saleStatus: text("sale_status").default("negotiation"), // negotiation, won, lost
   lostReason: text("lost_reason"), // motivo principal da perda
   lostNotes: text("lost_notes"), // observações sobre a perda
+  notes: text("notes"), // anotações gerais do negócio
   machineCount: integer("machine_count").default(0), // contador de máquinas do cliente
   // Campos do Chatwoot 
   chatwootAgentId: text("chatwoot_agent_id"), // ID do agente do Chatwoot responsável pelo contato
@@ -113,6 +114,7 @@ export const insertDealSchema = createInsertSchema(deals).pick({
   saleStatus: true,
   lostReason: true,
   lostNotes: true,
+  notes: true,
   machineCount: true,
   // Campos do Chatwoot
   chatwootAgentId: true,

@@ -90,6 +90,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const [address, setAddress] = useState("");
   const [addressNumber, setAddressNumber] = useState("");
   const [addressComplement, setAddressComplement] = useState("");
+  
+  // Campo de notas
+  const [notes, setNotes] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -596,7 +599,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
           {/* Tab Atividades */}
           <TabsContent value="activities" className="p-1">
             {deal && (
-              <LeadActivities dealId={deal.id} />
+              <LeadActivities deal={deal} />
             )}
           </TabsContent>
 
@@ -693,20 +696,24 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
           <TabsContent value="outcome" className="p-1">
             {deal && (
               <DealOutcomeForm
-                dealId={deal.id} 
-                currentStatus={deal.status || "in_progress"}
-                onStatusChange={(newStatus) => {
-                  // Marcando negócio como ganho ou perdido, ele sai do pipeline
-                  let updateData: Partial<Deal> = {
-                    status: newStatus,
-                  };
-                  
-                  // Se estiver marcando como vencido ou perdido, remover do pipeline
-                  if (newStatus === "won" || newStatus === "lost") {
-                    updateData.stageId = null; // Remove do pipeline
+                deal={deal}
+                onSuccess={() => {
+                  // Após marcar como ganho ou perdido, removemos do pipeline atualizando o stageId
+                  if (deal.status === "won" || deal.status === "lost") {
+                    // Removemos do pipeline marcando com um estágio especial
+                    // Obtemos o primeiro estágio oculto ou o primeiro da lista
+                    const hiddenStage = pipelineStages.find(s => s.isHidden) || pipelineStages[0];
+                    
+                    if (hiddenStage) {
+                      updateDealMutation.mutate({
+                        stageId: hiddenStage.id // Move para estágio oculto
+                      });
+                    }
                   }
                   
-                  updateDealMutation.mutate(updateData);
+                  // Atualizar query para refletir mudanças
+                  queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+                  onClose();
                 }}
               />
             )}

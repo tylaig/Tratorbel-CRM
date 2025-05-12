@@ -75,7 +75,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para salvar configurações
   const saveChatwootMutation = useMutation({
     mutationFn: async (data: { chatwootApiKey: string, chatwootUrl: string, accountId: string }) => {
-      return await apiRequest('POST', '/api/settings', data);
+      return await apiRequest('/api/settings', 'POST', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
@@ -96,7 +96,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para criar estágio
   const createStageMutation = useMutation({
     mutationFn: async (data: { name: string }) => {
-      return await apiRequest('POST', '/api/pipeline-stages', {
+      return await apiRequest('/api/pipeline-stages', 'POST', {
         name: data.name,
         order: pipelineStages.length + 1
       });
@@ -121,7 +121,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para atualizar estágio
   const updateStageMutation = useMutation({
     mutationFn: async (data: { id: number, name: string }) => {
-      return await apiRequest('PUT', `/api/pipeline-stages/${data.id}`, {
+      return await apiRequest(`/api/pipeline-stages/${data.id}`, 'PUT', {
         name: data.name
       });
     },
@@ -145,7 +145,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para excluir estágio
   const deleteStageMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest('DELETE', `/api/pipeline-stages/${id}`);
+      return await apiRequest(`/api/pipeline-stages/${id}`, 'DELETE');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
@@ -166,7 +166,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para criar motivo de perda
   const createLossReasonMutation = useMutation({
     mutationFn: async (data: { reason: string }) => {
-      return await apiRequest('POST', '/api/loss-reasons', {
+      return await apiRequest('/api/loss-reasons', 'POST', {
         reason: data.reason,
         active: true
       });
@@ -191,7 +191,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para atualizar motivo de perda
   const updateLossReasonMutation = useMutation({
     mutationFn: async (data: { id: number, reason: string }) => {
-      return await apiRequest('PUT', `/api/loss-reasons/${data.id}`, {
+      return await apiRequest(`/api/loss-reasons/${data.id}`, 'PUT', {
         reason: data.reason
       });
     },
@@ -215,7 +215,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para excluir motivo de perda
   const deleteLossReasonMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest('DELETE', `/api/loss-reasons/${id}`);
+      return await apiRequest(`/api/loss-reasons/${id}`, 'DELETE');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/loss-reasons'] });

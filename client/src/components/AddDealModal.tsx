@@ -48,7 +48,9 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
   const [status, setStatus] = useState("in_progress");
   
   // Campos de tipo de cliente
-  const [isCompany, setIsCompany] = useState(false);
+  const [clientCategory, setClientCategory] = useState("final_consumer"); // "final_consumer" (Consumidor Final) ou "reseller" (Revenda)
+  const [clientType, setClientType] = useState("person"); // "person" (Pessoa Física) ou "company" (Pessoa Jurídica)
+  const [isCompany, setIsCompany] = useState(false); // campo legado
   
   // Campos pessoa jurídica
   const [cnpj, setCnpj] = useState("");
@@ -89,10 +91,16 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
       setCompanyName(selectedContact.company_name || "");
       setContactId(selectedContact.id.toString());
       
-      // Se tiver nome de empresa, assume que é pessoa jurídica
+      // Se tiver nome de empresa, assume que é pessoa jurídica consumidor final
       if (selectedContact.company_name) {
+        setClientCategory("final_consumer");
+        setClientType("company");
         setIsCompany(true);
         setCorporateName(selectedContact.company_name);
+      } else {
+        // Se não tiver empresa, assume que é pessoa física consumidor final
+        setClientCategory("final_consumer");
+        setClientType("person");
       }
       
       // Preencher dados de contato
@@ -117,7 +125,9 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
         status,
         
         // Tipo de cliente
-        isCompany,
+        clientCategory,
+        clientType,
+        isCompany: clientType === "company", // manter compatibilidade
         
         // Campos pessoa jurídica
         cnpj,
@@ -186,6 +196,8 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages, selected
     setStatus("in_progress");
     
     // Tipo de cliente
+    setClientCategory("final_consumer");
+    setClientType("person");
     setIsCompany(false);
     
     // Campos pessoa jurídica

@@ -157,24 +157,9 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
   const currentSortValue = `${filters.sortBy}-${filters.sortOrder}`;
   
   return (
-    <div className="space-y-3 mb-4">
-      {/* Barra principal */}
+    <div className="mb-4">
+      {/* Barra de filtros simplificada */}
       <div className="flex items-center space-x-2">
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="flex items-center gap-2"
-          onClick={() => setExpanded(!expanded)}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          <span>Filtros</span>
-          {getActiveFilterCount() > 0 && (
-            <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
-              {getActiveFilterCount()}
-            </Badge>
-          )}
-        </Button>
-        
         {/* Campo de busca sempre visível */}
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -202,66 +187,14 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
             ))}
           </SelectContent>
         </Select>
+        
+        {/* Botão limpar filtros */}
+        {filters.search && (
+          <Button variant="ghost" size="icon" onClick={resetFilters} title="Limpar filtros">
+            <XCircle className="h-4 w-4" />
+          </Button>
+        )}
       </div>
-      
-      {/* Painel expandido de filtros */}
-      {expanded && (
-        <Card className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Filtros Avançados</h3>
-            <Button variant="ghost" size="sm" onClick={resetFilters}>
-              <XCircle className="h-4 w-4 mr-2" />
-              Limpar filtros
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Status */}
-            <div>
-              <Label className="block mb-2">Status</Label>
-              <div className="flex flex-wrap gap-2">
-                {statusOptions.map(status => (
-                  <Badge
-                    key={status.value}
-                    variant="outline"
-                    className={`cursor-pointer px-3 py-1 ${
-                      filters.status.includes(status.value) 
-                        ? status.color + " border font-semibold" 
-                        : "bg-transparent text-gray-700 border-gray-300"
-                    }`}
-                    onClick={() => toggleStatus(status.value)}
-                  >
-                    {status.label}
-                    {filters.status.includes(status.value) && (
-                      <span className="ml-1 text-xs">✓</span>
-                    )}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            
-            {/* Mostrar/ocultar negócios fechados */}
-            <div>
-              <Label className="block mb-2">Visibilidade</Label>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="show-closed-deals"
-                  checked={!filters.hideClosed}
-                  onCheckedChange={(checked) => {
-                    updateFilter({ hideClosed: !checked });
-                  }}
-                />
-                <Label
-                  htmlFor="show-closed-deals"
-                  className="text-sm font-medium cursor-pointer"
-                >
-                  Mostrar negócios concluídos (ganhos/perdidos)
-                </Label>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }

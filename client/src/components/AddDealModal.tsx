@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -24,6 +24,7 @@ interface AddDealModalProps {
   isOpen: boolean;
   onClose: () => void;
   pipelineStages: PipelineStage[];
+  selectedContact?: ChatwootContact | null;
 }
 
 interface ChatwootContact {
@@ -34,7 +35,7 @@ interface ChatwootContact {
   company_name?: string;
 }
 
-export default function AddDealModal({ isOpen, onClose, pipelineStages }: AddDealModalProps) {
+export default function AddDealModal({ isOpen, onClose, pipelineStages, selectedContact }: AddDealModalProps) {
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [contactId, setContactId] = useState("");
@@ -130,6 +131,33 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages }: AddDea
       setCompanyName(selectedContact.company_name);
     }
   };
+  
+  // Preencher dados quando houver um contato pré-selecionado
+  useEffect(() => {
+    if (isOpen && selectedContact) {
+      // Defina o contactId
+      setContactId(selectedContact.id.toString());
+      
+      // Defina o nome do negócio como o nome do contato, caso não esteja já definido
+      if (!name) {
+        setName(selectedContact.name || "Novo negócio");
+      }
+      
+      // Defina a empresa se disponível
+      if (selectedContact.company_name) {
+        setCompanyName(selectedContact.company_name);
+      }
+      
+      // Encontre o estágio padrão e defina-o como o estágio inicial
+      const defaultStage = pipelineStages.find(stage => stage.isDefault);
+      if (defaultStage) {
+        setStageId(defaultStage.id.toString());
+      } else if (pipelineStages.length > 0) {
+        // Se não houver estágio padrão, use o primeiro estágio
+        setStageId(pipelineStages[0].id.toString());
+      }
+    }
+  }, [isOpen, selectedContact, pipelineStages]);
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

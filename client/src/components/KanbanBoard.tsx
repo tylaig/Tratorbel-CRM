@@ -72,7 +72,10 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
         queryClient.setQueryData(['/api/deals'], updatedDeals);
         
         // Reorganizar o board com os dados atualizados
-        const stagesWithDeals = pipelineStages.map(stage => {
+        // Filtrar estágios que não estão ocultos
+        const visibleStages = pipelineStages.filter(stage => !stage.isHidden);
+        
+        const stagesWithDeals = visibleStages.map(stage => {
           const stageDeals = updatedDeals.filter(deal => deal.stageId === stage.id);
           const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
           
@@ -113,7 +116,10 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
   // Função para organizar dados do quadro
   const organizeBoardData = () => {
     if (pipelineStages.length > 0 && deals) {
-      const stagesWithDeals = pipelineStages.map(stage => {
+      // Filtrar estágios que não estão ocultos (isHidden === false)
+      const visibleStages = pipelineStages.filter(stage => !stage.isHidden);
+      
+      const stagesWithDeals = visibleStages.map(stage => {
         const stageDeals = deals.filter(deal => deal.stageId === stage.id);
         const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
         

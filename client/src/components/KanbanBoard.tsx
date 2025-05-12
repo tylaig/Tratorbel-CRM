@@ -4,7 +4,16 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Deal, PipelineStage } from "@shared/schema";
+import { Deal as BaseDeal, PipelineStage } from "@shared/schema";
+
+interface Deal extends BaseDeal {
+  leadData?: {
+    name: string;
+    companyName: string | null;
+    phone: string | null;
+    email: string | null;
+  } | null;
+}
 import { formatCurrency, formatTimeAgo } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,7 +25,8 @@ import {
   PlusIcon,
   UserCircle,
   InfoIcon,
-  Plus
+  Plus,
+  Phone
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -587,13 +597,17 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
                                 <div className="col-span-2">
                                   <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                     <Building className="w-3.5 h-3.5 mr-1.5" />
-                                    <span className="truncate">{"Empresa não definida"}</span>
+                                    <span className="truncate">
+                                      {deal.leadData?.companyName || "Empresa não definida"}
+                                    </span>
                                   </div>
                                 </div>
                                 
                                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                  <UserCircle className="w-3.5 h-3.5 mr-1.5" />
-                                  <span className="truncate">{"Não atribuído"}</span>
+                                  <Phone className="w-3.5 h-3.5 mr-1.5" />
+                                  <span className="truncate">
+                                    {deal.leadData?.phone || "Telefone não definido"}
+                                  </span>
                                 </div>
                                 
                                 <div className="text-sm font-medium text-right text-gray-900 dark:text-white">

@@ -102,8 +102,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         deals = await storage.getDeals();
       }
       
-      res.json(deals);
+      // Enriquecer os deals com informações do lead
+      const enrichedDeals = await Promise.all(
+        deals.map(async (deal) => {
+          const lead = await storage.getLead(deal.leadId);
+          return {
+            ...deal,
+            leadData: lead ? {
+              name: lead.name,
+              companyName: lead.companyName,
+              phone: lead.phone,
+              email: lead.email
+            } : null
+          };
+        })
+      );
+      
+      res.json(enrichedDeals);
     } catch (error) {
+      console.error("Erro ao buscar deals:", error);
       res.status(500).json({ message: "Failed to fetch deals" });
     }
   });

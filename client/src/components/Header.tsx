@@ -153,15 +153,7 @@ export default function Header({
                   </Button>
                 </Link>
 
-                <Button 
-                  variant={viewMode === "heatmap" ? "default" : "ghost"} 
-                  size="sm"
-                  className="flex items-center gap-2 ml-1"
-                  onClick={() => toggleViewMode("heatmap")}
-                >
-                  <MapIcon className="h-4 w-4" />
-                  <span>Mapa de Calor</span>
-                </Button>
+
               </div>
             </div>
             

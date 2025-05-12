@@ -342,31 +342,13 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     }
   };
 
-  const [quoteItems, setQuoteItems] = useState<{description: string, quantity: number, unitPrice: number}[]>([
-    { description: "", quantity: 1, unitPrice: 0 }
-  ]);
+  // Estado para controlar o valor da cotação selecionada
+  const [selectedQuoteValue, setSelectedQuoteValue] = useState<number | null>(null);
 
-  // Adicionar novo item na cotação
-  const addQuoteItem = () => {
-    setQuoteItems([...quoteItems, { description: "", quantity: 1, unitPrice: 0 }]);
-  };
-
-  // Atualizar item de cotação
-  const updateQuoteItem = (index: number, field: 'description' | 'quantity' | 'unitPrice', value: string | number) => {
-    const newItems = [...quoteItems];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setQuoteItems(newItems);
-  };
-
-  // Calcular total da cotação
-  const calculateQuoteTotal = () => {
-    return quoteItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  };
-
-  const removeQuoteItem = (index: number) => {
-    const newItems = [...quoteItems];
-    newItems.splice(index, 1);
-    setQuoteItems(newItems);
+  // Callback para quando uma cotação é selecionada
+  const handleQuoteSelected = (quoteTotal: number) => {
+    setSelectedQuoteValue(quoteTotal);
+    setValue(formatCurrency(quoteTotal));
   };
 
   return (

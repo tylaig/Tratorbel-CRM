@@ -201,28 +201,42 @@ export default function KanbanBoard({ pipelineStages }: KanbanBoardProps) {
         ...(updateData.stageId !== undefined ? { stageId: updateData.stageId } : {}),
         ...(updateData.order !== undefined ? { order: updateData.order } : {})
       }, {
-        onSuccess: () => {
-          // Recarregar dados após confirmação do servidor
-          queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-          
+        onSuccess: async () => {
           // Criar uma entrada no histórico de atividades para essa movimentação
           const activityText = updateData.stageId 
             ? `Negócio movido para a etapa "${boardData.find(s => s.id === targetStageId)?.name || 'Nova etapa'}"`
             : `Negócio reordenado dentro da etapa "${boardData.find(s => s.id === sourceStageId)?.name || 'Atual'}"`;
             
-          // Adicionar atividade de movimentação ao histórico
-          apiRequest('POST', '/api/lead-activities', {
-            dealId: dealId,
-            description: activityText,
-            activityType: 'move'
-          });
-          
-          toast({
-            title: "Negócio movido",
-            description: "Posição atualizada com sucesso.",
-            variant: "default",
-            duration: 1500,
-          });
+          try {
+            // Adicionar atividade de movimentação ao histórico
+            await apiRequest('POST', '/api/lead-activities', {
+              dealId: dealId,
+              description: activityText,
+              activityType: 'move'
+            });
+            
+            // Forçar atualização completa dos dados
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['/api/deals'] }),
+              queryClient.invalidateQueries({ queryKey: ['/api/lead-activities'] })
+            ]);
+            
+            // Recarregar explicitamente os dados para garantir atualização na UI
+            await Promise.all([
+              queryClient.refetchQueries({ queryKey: ['/api/deals'] })
+            ]);
+            
+            toast({
+              title: "Negócio movido",
+              description: "Posição atualizada com sucesso.",
+              variant: "default",
+              duration: 1500,
+            });
+          } catch (error) {
+            console.error("Erro ao registrar atividade de movimentação:", error);
+            // Ainda assim, invalidar o cache de deals para garantir que os dados estejam atualizados
+            queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+          }
         }
       });
     } catch (error) {

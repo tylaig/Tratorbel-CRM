@@ -14,7 +14,9 @@ import {
   MoreVerticalIcon, 
   Building, 
   PlusIcon,
-  UserCircle
+  UserCircle,
+  InfoIcon,
+  Plus
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,9 +27,11 @@ import {
 import EditDealModal from "@/components/EditDealModal";
 import EditStageModal from "@/components/EditStageModal";
 import AddStageModal from "@/components/AddStageModal";
+import { FilterOptions } from "@/components/FilterBar";
 
 interface KanbanBoardProps {
   pipelineStages: PipelineStage[];
+  filters?: FilterOptions;
 }
 
 interface StageWithDeals extends PipelineStage {

@@ -114,7 +114,12 @@ export function usePipeline() {
   
   // Update filters
   const updateFilters = (newFilters: FilterOptions) => {
-    setFilters(newFilters);
+    // Garantir que sempre temos um valor para hideClosed (true por padrão)
+    const updatedFilters = {
+      ...newFilters,
+      hideClosed: newFilters.hideClosed !== undefined ? newFilters.hideClosed : true
+    };
+    setFilters(updatedFilters);
   };
   
   // Calculate total pipeline value

@@ -203,40 +203,52 @@ export default function Dashboard() {
       />
       
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 bg-gray-50 px-4 pt-6 overflow-y-auto">
+        <main className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
           {/* Mostrar o inicializador de banco de dados quando necessário */}
           {showDBInitializer && (
-            <div className="mb-6">
+            <div className="px-4 pt-6 pb-4">
               <InitializeDB />
             </div>
           )}
           
           {viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
-            <FilterBar 
-              onFilterChange={updateFilters}
-              activeFilters={filters}
-            />
+            <div className="px-4 py-4">
+              <FilterBar 
+                onFilterChange={updateFilters}
+                activeFilters={filters}
+              />
+            </div>
           )}
           
-          {viewMode === "kanban" && (
-            <KanbanBoard pipelineStages={pipelineStages} filters={filters} />
-          )}
-          
-          {viewMode === "list" && (
-            <ListView pipelineStages={pipelineStages} filters={filters} />
-          )}
-          
-          {viewMode === "contacts" && (
-            <ChatwootContacts pipelineStages={pipelineStages} settings={settings} />
-          )}
-          
-          {viewMode === "heatmap" && (
-            <HeatmapView />
-          )}
-          
-          {viewMode === "results" && (
-            <SalesResultStages pipelineStages={pipelineStages} filters={filters} />
-          )}
+          <div className="flex-1 overflow-hidden">
+            {viewMode === "kanban" && (
+              <KanbanBoard pipelineStages={pipelineStages} filters={filters} />
+            )}
+            
+            {viewMode === "list" && (
+              <div className="px-4 overflow-y-auto h-full">
+                <ListView pipelineStages={pipelineStages} filters={filters} />
+              </div>
+            )}
+            
+            {viewMode === "contacts" && (
+              <div className="px-4 overflow-y-auto h-full">
+                <ChatwootContacts pipelineStages={pipelineStages} settings={settings} />
+              </div>
+            )}
+            
+            {viewMode === "heatmap" && (
+              <div className="px-4 overflow-y-auto h-full">
+                <HeatmapView />
+              </div>
+            )}
+            
+            {viewMode === "results" && (
+              <div className="px-4 overflow-y-auto h-full">
+                <SalesResultStages pipelineStages={pipelineStages} filters={filters} />
+              </div>
+            )}
+          </div>
         </main>
       </div>
       

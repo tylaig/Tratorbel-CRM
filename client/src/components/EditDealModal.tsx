@@ -5,6 +5,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, formatPhoneNumber } from "@/lib/formatters";
 import { type PipelineStage, type Deal, type Lead } from "@shared/schema";
+import QuoteManager from "./QuoteManager";
 
 import {
   Dialog,
@@ -713,68 +714,12 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
 
           {/* Tab Cotação */}
           <TabsContent value="quote" className="p-1">
-            <div className="grid gap-4 py-2">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Itens da Cotação</h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={addQuoteItem}
-                >
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Adicionar Item
-                </Button>
-              </div>
-              
-              <div className="space-y-4 mt-2">
-                {quoteItems.map((item, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-2 items-center border p-2 rounded-md">
-                    <div className="col-span-5">
-                      <Input
-                        placeholder="Descrição"
-                        value={item.description}
-                        onChange={(e) => updateQuoteItem(index, 'description', e.target.value)}
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Input
-                        type="number"
-                        placeholder="Qtd"
-                        value={item.quantity.toString()}
-                        onChange={(e) => updateQuoteItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      <Input
-                        type="number"
-                        placeholder="Preço"
-                        value={item.unitPrice.toString()}
-                        onChange={(e) => updateQuoteItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="col-span-1 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeQuoteItem(index)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="col-span-12 text-right text-sm font-medium text-muted-foreground">
-                      Subtotal: {formatCurrency(item.quantity * item.unitPrice)}
-                    </div>
-                  </div>
-                ))}
-                
-                <div className="flex justify-end pt-2">
-                  <div className="px-4 py-2 bg-muted rounded-md">
-                    <span className="font-semibold">Total: {formatCurrency(calculateQuoteTotal())}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {deal && (
+              <QuoteManager
+                dealId={deal.id}
+                onSelectQuote={handleQuoteSelected}
+              />
+            )}
           </TabsContent>
 
           {/* Tab Resultado */}

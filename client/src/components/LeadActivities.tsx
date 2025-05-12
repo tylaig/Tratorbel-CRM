@@ -43,7 +43,7 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
 
   const deleteActivityMutation = useMutation({
     mutationFn: (id: number) => 
-      apiRequest('DELETE', `/api/lead-activities/${id}`),
+      apiRequest(`/api/lead-activities/${id}`, 'DELETE'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/lead-activities', deal?.id] });
       toast({

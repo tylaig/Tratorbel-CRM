@@ -41,7 +41,7 @@ export default function Dashboard() {
       const saveSettings = async () => {
         try {
           // Save settings and get response
-          await apiRequest('POST', '/api/settings', {
+          await apiRequest('/api/settings', 'POST', {
             chatwootApiKey: urlApiKey,
             chatwootUrl: urlChatwootUrl,
             accountId: urlAccountId
@@ -49,14 +49,13 @@ export default function Dashboard() {
           
           // Clean URL and refresh page
           window.history.replaceState({}, '', '/');
-          window.location.reload();
           
           // Refresh settings first and wait for it
           await queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
           await queryClient.refetchQueries({ queryKey: ['/api/settings'] });
           
           // Wait for sync to complete
-          const syncResponse = await apiRequest('POST', '/api/chatwoot/sync', {});
+          const syncResponse = await apiRequest('/api/chatwoot/sync', 'POST', {});
           
           // Only after sync completes, refresh the deals and wait for the refetch
           if (syncResponse.success) {
@@ -82,7 +81,7 @@ export default function Dashboard() {
   // Sync with Chatwoot
   const syncMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('POST', '/api/chatwoot/sync', {});
+      return await apiRequest('/api/chatwoot/sync', 'POST', {});
     },
     onSuccess: async () => {
       // Invalidar todas as consultas relevantes

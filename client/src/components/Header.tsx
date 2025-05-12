@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
   ListIcon,
@@ -9,6 +9,10 @@ import {
   PlusIcon,
   KeyIcon,
   RefreshCwIcon,
+  BarChart3Icon,
+  GanttChartIcon,
+  CheckCircle2Icon,
+  XCircleIcon
 } from "lucide-react";
 
 interface HeaderProps {
@@ -19,6 +23,7 @@ interface HeaderProps {
   onAddDeal: () => void;
   onSync: () => void;
   syncLoading: boolean;
+  hasApiConfig?: boolean; // Indica se a API já foi configurada
 }
 
 export default function Header({
@@ -28,8 +33,10 @@ export default function Header({
   onOpenApiConfig,
   onAddDeal,
   onSync,
-  syncLoading
+  syncLoading,
+  hasApiConfig = false
 }: HeaderProps) {
+  const [location] = useLocation();
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="container mx-auto px-4">
@@ -44,26 +51,30 @@ export default function Header({
           </div>
           
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost"
-              size="sm"
-              className="relative group"
-              onClick={onSync}
-              disabled={syncLoading}
-            >
-              <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-gray-600 group-hover:text-primary transition-colors'}`} />
-              <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Sincronizar</span>
-            </Button>
+            {hasApiConfig && (
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="relative group"
+                onClick={onSync}
+                disabled={syncLoading}
+              >
+                <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-gray-600 group-hover:text-primary transition-colors'}`} />
+                <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Sincronizar</span>
+              </Button>
+            )}
             
-            <Button 
-              variant="ghost"
-              size="sm"
-              className="group"
-              onClick={onOpenApiConfig}
-            >
-              <KeyIcon className="h-4 w-4 text-gray-600 group-hover:text-primary transition-colors" />
-              <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Configurar API</span>
-            </Button>
+            {!hasApiConfig && (
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="group"
+                onClick={onOpenApiConfig}
+              >
+                <KeyIcon className="h-4 w-4 text-gray-600 group-hover:text-primary transition-colors" />
+                <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">Configurar API</span>
+              </Button>
+            )}
             
             <Button 
               variant="default"
@@ -79,27 +90,74 @@ export default function Header({
       
         <div className="border-t border-gray-200">
           <div className="flex items-center justify-between py-4">
-            <div className="flex space-x-1">
+            <div className="flex space-x-2">
+              <Link href="/">
+                <Button 
+                  variant={location === "/" ? "default" : "ghost"} 
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <GanttChartIcon className="h-4 w-4" />
+                  <span>Pipeline</span>
+                </Button>
+              </Link>
+              
+              <Link href="/historical">
+                <Button 
+                  variant={location === "/historical" ? "default" : "ghost"} 
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <BarChart3Icon className="h-4 w-4" />
+                  <span>Histórico</span>
+                </Button>
+              </Link>
+              
+              <div className="flex items-center pl-4 border-l">
+                <Link href="/sales">
+                  <Button 
+                    variant={location === "/sales" ? "default" : "ghost"} 
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <CheckCircle2Icon className="h-4 w-4" />
+                    <span>Vendas</span>
+                  </Button>
+                </Link>
+                
+                <Link href="/losses">
+                  <Button 
+                    variant={location === "/losses" ? "default" : "ghost"} 
+                    size="sm"
+                    className="flex items-center gap-2 ml-1"
+                  >
+                    <XCircleIcon className="h-4 w-4" />
+                    <span>Perdas</span>
+                  </Button>
+                </Link>
+              </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant={viewMode === "kanban" ? "default" : "ghost"} 
-                size="icon"
-                onClick={() => toggleViewMode("kanban")}
-                className="h-9 w-9 rounded"
-              >
-                <LayoutIcon className="h-5 w-5" />
-              </Button>
-              <Button 
-                variant={viewMode === "list" ? "default" : "ghost"} 
-                size="icon"
-                onClick={() => toggleViewMode("list")}
-                className="h-9 w-9 rounded"
-              >
-                <ListIcon className="h-5 w-5" />
-              </Button>
-            </div>
+            {location === "/" && (
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant={viewMode === "kanban" ? "default" : "ghost"} 
+                  size="icon"
+                  onClick={() => toggleViewMode("kanban")}
+                  className="h-9 w-9 rounded"
+                >
+                  <LayoutIcon className="h-5 w-5" />
+                </Button>
+                <Button 
+                  variant={viewMode === "list" ? "default" : "ghost"} 
+                  size="icon"
+                  onClick={() => toggleViewMode("list")}
+                  className="h-9 w-9 rounded"
+                >
+                  <ListIcon className="h-5 w-5" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -611,16 +611,15 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       </div>
       
       {/* Modal de adição de negócio */}
-      {selectedStageForNewDeal && (
-        <AddDealModal
-          isOpen={isAddDealModalOpen}
-          onClose={() => {
-            setIsAddDealModalOpen(false);
-            setSelectedStageForNewDeal(null);
-          }}
-          initialStageId={selectedStageForNewDeal.id}
-        />
-      )}
+      <AddDealModal
+        isOpen={isAddDealModalOpen}
+        onClose={() => {
+          setIsAddDealModalOpen(false);
+          setSelectedStageForNewDeal(null);
+        }}
+        initialStageId={selectedStageForNewDeal?.id}
+        pipelineStages={pipelineStages}
+      />
     </DragDropContext>
   );
 }

@@ -39,11 +39,24 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
   // Encontre o estágio padrão para contatos do Chatwoot
   const defaultStage = pipelineStages.find(stage => stage.isDefault);
   
+  // Interfaces para resposta da API Chatwoot
+  interface ChatwootResponse {
+    payload: ChatwootContact[];
+    meta: {
+      count: number;
+      current_page: number;
+      total_pages: number;
+    };
+  }
+  
   // Buscar contatos do Chatwoot quando há uma configuração válida
-  const { data: chatwootContacts, isLoading } = useQuery<ChatwootContact[]>({
+  const { data: chatwootResponse, isLoading } = useQuery<ChatwootResponse>({
     queryKey: ['/api/chatwoot/contacts'],
     enabled: !!settings?.chatwootApiKey
   });
+  
+  // Extrair o array de contatos da resposta
+  const chatwootContacts = chatwootResponse?.payload || [];
   
   // Busca negócios existentes no estágio padrão
   const { data: defaultStageDeals, isLoading: isLoadingDeals } = useQuery<Deal[]>({
@@ -53,7 +66,7 @@ export default function ChatwootContacts({ pipelineStages, settings }: ChatwootC
   });
   
   // Filtra contatos com base no termo de busca
-  const filteredContacts = chatwootContacts?.filter(contact => {
+  const filteredContacts = chatwootContacts.filter(contact => {
     const searchLower = searchTerm.toLowerCase();
     return (
       contact.name?.toLowerCase().includes(searchLower) ||

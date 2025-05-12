@@ -13,14 +13,20 @@ export function usePipeline() {
     sortOrder: "desc"
   });
   
-  // Fetch deals
+  // Fetch deals com configurações para garantir atualização imediata
   const { data: allDeals = [], isLoading: isDealsLoading } = useQuery<Deal[]>({
     queryKey: ['/api/deals'],
+    staleTime: 0,                // Considerar dados obsoletos imediatamente (sempre buscar dados frescos)
+    refetchOnMount: true,        // Recarregar quando o componente for montado
+    refetchOnWindowFocus: true,  // Recarregar quando a janela ganhar foco
   });
   
-  // Fetch pipeline stages
+  // Fetch pipeline stages com configurações para garantir atualização imediata
   const { data: pipelineStages = [], isLoading: isStagesLoading } = useQuery<PipelineStage[]>({
     queryKey: ['/api/pipeline-stages'],
+    staleTime: 0,                // Considerar dados obsoletos imediatamente (sempre buscar dados frescos)
+    refetchOnMount: true,        // Recarregar quando o componente for montado
+    refetchOnWindowFocus: true,  // Recarregar quando a janela ganhar foco
   });
   
   // Apply filters and sorting to deals
@@ -102,11 +108,23 @@ export function usePipeline() {
     return filteredDeals.filter(deal => deal.stageId === stageId);
   };
   
-  // Refresh pipeline data manually
-  const refreshPipelineData = () => {
-    // This will trigger a refetch of the deals data
-    queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+  // Refresh pipeline data manually com recarregamento forçado
+  const refreshPipelineData = async () => {
+    try {
+      // Invalidar o cache para forçar uma nova requisição
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/deals'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] })
+      ]);
+      
+      // Forçar recarregamento imediato dos dados
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['/api/deals'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/pipeline-stages'] })
+      ]);
+    } catch (error) {
+      console.error("Erro ao atualizar dados do pipeline:", error);
+    }
   };
 
   return {

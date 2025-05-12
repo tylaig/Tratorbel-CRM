@@ -37,18 +37,30 @@ export function usePipeline() {
     // Apply search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      result = result.filter(deal => 
-        deal.name.toLowerCase().includes(searchLower) ||
-        (deal.companyName && deal.companyName.toLowerCase().includes(searchLower)) ||
-        (deal.contactName && deal.contactName.toLowerCase().includes(searchLower)) ||
-        (deal.contactId && deal.contactId.toLowerCase().includes(searchLower)) ||
-        (deal.chatwootContactId && deal.chatwootContactId.toLowerCase().includes(searchLower)) ||
-        (deal.email && deal.email.toLowerCase().includes(searchLower)) ||
-        (deal.phone && deal.phone.toLowerCase().includes(searchLower)) ||
-        (deal.address && deal.address.toLowerCase().includes(searchLower)) ||
-        (deal.city && deal.city.toLowerCase().includes(searchLower)) ||
-        (deal.state && deal.state.toLowerCase().includes(searchLower))
-      );
+      result = result.filter(deal => {
+        // Nome do negócio é garantido que existe
+        if (deal.name.toLowerCase().includes(searchLower)) {
+          return true;
+        }
+        
+        // Outros campos podem não existir, então verificamos antes
+        // A maioria dos campos estão em leadData (já que usamos joins no backend)
+        const leadData = (deal as any).leadData || {};
+        
+        return (
+          // Campos do Deal diretamente
+          (deal.notes && deal.notes.toLowerCase().includes(searchLower)) ||
+          
+          // Campos do Lead (podem existir em leadData)
+          (leadData.companyName && leadData.companyName.toLowerCase().includes(searchLower)) ||
+          (leadData.name && leadData.name.toLowerCase().includes(searchLower)) ||
+          (leadData.phone && leadData.phone.toLowerCase().includes(searchLower)) ||
+          (leadData.email && leadData.email.toLowerCase().includes(searchLower)) ||
+          (leadData.city && leadData.city.toLowerCase().includes(searchLower)) ||
+          (leadData.state && leadData.state.toLowerCase().includes(searchLower)) ||
+          (leadData.address && leadData.address.toLowerCase().includes(searchLower))
+        );
+      });
     }
     
     // Apply status filters (status e saleStatus)
@@ -58,11 +70,10 @@ export function usePipeline() {
         // O status se refere ao estado do negócio (em andamento, concluído, etc.)
         // O saleStatus se refere ao resultado da venda (ganho, perdido, aberto)
         
-        // Verificar se algum dos filtros aplicados corresponde ao status ou saleStatus do negócio
+        // Verificar se algum dos filtros aplicados corresponde ao status do negócio
         const matchStatus = deal.status && filters.status.includes(deal.status);
-        const matchSaleStatus = deal.saleStatus && filters.status.includes(deal.saleStatus);
         
-        return matchStatus || matchSaleStatus;
+        return matchStatus;
       });
     }
     
@@ -82,6 +93,8 @@ export function usePipeline() {
     // Apply sorting
     result.sort((a, b) => {
       const sortMultiplier = filters.sortOrder === "asc" ? 1 : -1;
+      const leadDataA = (a as any).leadData || {};
+      const leadDataB = (b as any).leadData || {};
       
       switch (filters.sortBy) {
         case "name":
@@ -89,7 +102,10 @@ export function usePipeline() {
         case "value":
           return sortMultiplier * ((a.value || 0) - (b.value || 0));
         case "company":
-          return sortMultiplier * ((a.companyName || "").localeCompare(b.companyName || ""));
+          // Use companyName do leadData se disponível
+          const companyA = leadDataA.companyName || "";
+          const companyB = leadDataB.companyName || "";
+          return sortMultiplier * companyA.localeCompare(companyB);
         case "date":
         default:
           // Se a data for inválida, use a data atual como fallback
@@ -119,6 +135,8 @@ export function usePipeline() {
       ...newFilters,
       hideClosed: newFilters.hideClosed !== undefined ? newFilters.hideClosed : true
     };
+    
+    console.log("Aplicando filtros:", updatedFilters);
     setFilters(updatedFilters);
   };
   

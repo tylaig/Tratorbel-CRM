@@ -139,7 +139,16 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
       const visibleStages = pipelineStages.filter(stage => stage.isHidden !== true);
       console.log("Estágios visíveis:", visibleStages.length, visibleStages.map(s => s.name));
       
-      const stagesWithDeals = visibleStages.map(stage => {
+      // Separar os estágios especiais (completed e lost) dos normais
+      const normalStages = visibleStages.filter(stage => stage.stageType !== "completed" && stage.stageType !== "lost");
+      const completedStages = visibleStages.filter(stage => stage.stageType === "completed");
+      const lostStages = visibleStages.filter(stage => stage.stageType === "lost");
+      
+      // Reordenar os estágios para que os especiais fiquem no final
+      const orderedStages = [...normalStages, ...completedStages, ...lostStages];
+      console.log("Estágios ordenados:", orderedStages.map(s => s.name + (s.stageType ? ` (${s.stageType})` : "")));
+      
+      const stagesWithDeals = orderedStages.map(stage => {
         let stageDeals: Deal[] = [];
         
         // Para estágios normais, mostrar apenas deals em negociação

@@ -71,7 +71,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const [status, setStatus] = useState("in_progress");
   
   // Tipo de cliente
-  const [clientType, setClientType] = useState("person"); // "person", "company", "consumer"
+  const [clientCategory, setClientCategory] = useState("final_consumer"); // "final_consumer" (Consumidor Final) ou "reseller" (Revenda)
+  const [clientType, setClientType] = useState("person"); // "person" (Pessoa Física) ou "company" (Pessoa Jurídica)
   const [isCompany, setIsCompany] = useState(false); // campo legado
   
   // Campos pessoa jurídica
@@ -112,6 +113,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setStatus(deal.status || "in_progress");
       
       // Tipo de cliente
+      setClientCategory(deal.clientCategory || "final_consumer");
       setClientType(deal.clientType || "person");
       setIsCompany(deal.isCompany || false); // legado
       
@@ -216,6 +218,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       status,
       
       // Atualizar tipo de cliente
+      clientCategory,
       clientType,
       isCompany: clientType === "company", // manter compatibilidade
       
@@ -254,21 +257,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     }
   };
   
-  // Alternar tipo de cliente
-  const toggleClientType = () => {
-    setIsCompany(!isCompany);
-    
-    // Limpar campos dependendo do tipo selecionado
-    if (isCompany) {
-      // Mudando para pessoa física, limpar campos PJ
-      setCnpj("");
-      setCorporateName("");
-    } else {
-      // Mudando para pessoa jurídica, limpar campos PF
-      setCpf("");
-      setStateRegistration("");
-    }
-  };
+  // A função toggleClientType foi removida pois o tipo de cliente agora é
+  // gerenciado pelo componente Select na interface
   
   // Limpar endereço
   const clearAddress = () => {
@@ -431,38 +421,59 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
               <TabsContent value="client" className="pt-2">
                 <div className="grid gap-4 py-2">
                   <div className="grid gap-2">
-                    <Label htmlFor="client-type">Tipo de Cliente</Label>
+                    <Label htmlFor="client-category">Categoria do Cliente</Label>
                     <Select 
-                      value={clientType} 
+                      value={clientCategory} 
                       onValueChange={(value) => {
-                        setClientType(value);
-                        setIsCompany(value === "company"); // manter compatibilidade
-                        
-                        // Resetar campos não relevantes quando muda o tipo
-                        if (value === "person") {
-                          setCnpj("");
-                          setCorporateName("");
-                        } else if (value === "company") {
-                          setCpf("");
-                          setStateRegistration("");
-                        } else if (value === "consumer") {
-                          setCnpj("");
-                          setCorporateName("");
+                        setClientCategory(value);
+                        // Se for Revenda, forçar para Pessoa Jurídica
+                        if (value === "reseller") {
+                          setClientType("company");
+                          setIsCompany(true);
                           setCpf("");
                           setStateRegistration("");
                         }
                       }}
                     >
-                      <SelectTrigger id="client-type">
-                        <SelectValue placeholder="Selecione o tipo de cliente" />
+                      <SelectTrigger id="client-category">
+                        <SelectValue placeholder="Selecione a categoria do cliente" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="person">Pessoa Física</SelectItem>
-                        <SelectItem value="company">Pessoa Jurídica</SelectItem>
-                        <SelectItem value="consumer">Consumidor Final</SelectItem>
+                        <SelectItem value="final_consumer">Consumidor Final</SelectItem>
+                        <SelectItem value="reseller">Revenda</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  {clientCategory === "final_consumer" && (
+                    <div className="grid gap-2">
+                      <Label htmlFor="client-type">Tipo de Cliente</Label>
+                      <Select 
+                        value={clientType} 
+                        onValueChange={(value) => {
+                          setClientType(value);
+                          setIsCompany(value === "company"); // manter compatibilidade
+                          
+                          // Resetar campos não relevantes quando muda o tipo
+                          if (value === "person") {
+                            setCnpj("");
+                            setCorporateName("");
+                          } else if (value === "company") {
+                            setCpf("");
+                            setStateRegistration("");
+                          }
+                        }}
+                      >
+                        <SelectTrigger id="client-type">
+                          <SelectValue placeholder="Selecione o tipo de cliente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="person">Pessoa Física</SelectItem>
+                          <SelectItem value="company">Pessoa Jurídica</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   
                   {clientType === "company" ? (
                     // Campos pessoa jurídica

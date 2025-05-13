@@ -247,29 +247,43 @@ export default function Dashboard() {
           )}
           
           <div className="flex-1 overflow-hidden">
-            {viewMode === "kanban" && (
+            {!activePipelineId && (
+              <div className="h-full flex items-center justify-center flex-col p-8">
+                <div className="bg-blue-950/50 border border-blue-800 rounded-lg p-8 max-w-md text-center">
+                  <h3 className="text-xl font-bold text-white mb-2">Nenhum Pipeline Selecionado</h3>
+                  <p className="text-gray-300 mb-4">
+                    Selecione um pipeline no menu superior para visualizar e gerenciar seus negócios.
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Se não houver nenhum pipeline disponível, entre em contato com o administrador para configurar os pipelines.
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {activePipelineId && viewMode === "kanban" && (
               <KanbanBoard pipelineStages={pipelineStages} filters={filters} />
             )}
             
-            {viewMode === "list" && (
+            {activePipelineId && viewMode === "list" && (
               <div className="px-4 overflow-y-auto h-full">
                 <ListView pipelineStages={pipelineStages} filters={filters} />
               </div>
             )}
             
-            {viewMode === "contacts" && (
+            {activePipelineId && viewMode === "contacts" && (
               <div className="px-4 overflow-y-auto h-full">
                 <ChatwootContacts pipelineStages={pipelineStages} settings={settings} />
               </div>
             )}
             
-            {viewMode === "heatmap" && (
+            {activePipelineId && viewMode === "heatmap" && (
               <div className="px-4 overflow-y-auto h-full">
                 <HeatmapView />
               </div>
             )}
             
-            {viewMode === "results" && (
+            {activePipelineId && viewMode === "results" && (
               <div className="px-4 overflow-y-auto h-full">
                 <SalesResultStages pipelineStages={pipelineStages} filters={filters} />
               </div>

@@ -59,7 +59,36 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Se o queryKey for um array com múltiplos valores, use os valores adicionais como query params
+    let url = queryKey[0] as string;
+    
+    // Se houver parâmetros adicionais (como pipelineId), adicioná-los como query params
+    if (queryKey.length > 1 && queryKey[1] !== undefined && queryKey[1] !== null) {
+      const queryParams = new URLSearchParams();
+      
+      // Se o segundo item for um número, assumimos que é pipelineId para compatibilidade
+      if (typeof queryKey[1] === 'number') {
+        queryParams.append('pipelineId', queryKey[1].toString());
+      } 
+      // Se for um objeto, iterar sobre as propriedades e adicionar como query params
+      else if (typeof queryKey[1] === 'object' && queryKey[1] !== null) {
+        Object.entries(queryKey[1]).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            queryParams.append(key, value.toString());
+          }
+        });
+      }
+      
+      // Se houver params, adicionar à URL
+      const paramsStr = queryParams.toString();
+      if (paramsStr) {
+        url += url.includes('?') ? `&${paramsStr}` : `?${paramsStr}`;
+      }
+    }
+    
+    console.log(`Fetching URL with params: ${url}`);
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 

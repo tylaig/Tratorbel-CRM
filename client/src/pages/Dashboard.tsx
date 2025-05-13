@@ -246,9 +246,9 @@ export default function Dashboard() {
             </div>
           )}
           
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto" style={{height: 'calc(100vh - 140px)'}}>
             {!activePipelineId && (
-              <div className="h-full flex items-center justify-center flex-col p-8">
+              <div className="flex items-center justify-center flex-col p-8">
                 <div className="bg-blue-950 border-2 border-yellow-500 rounded-lg p-8 max-w-md text-center shadow-lg">
                   <h3 className="text-xl font-bold text-yellow-400 mb-3">Nenhum Pipeline Selecionado</h3>
                   <p className="text-white mb-4">

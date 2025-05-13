@@ -102,6 +102,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
   const organizeBoardData = () => {
     if (pipelineStages.length > 0 && deals) {
       console.log("Filtros aplicados:", activeFilters);
+      console.log("Pipeline ativo:", activePipelineId);
       
       // Filtrar todos os deals com base nos filtros
       let filteredDeals = [...deals];
@@ -162,13 +163,21 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
       const stagesWithDeals = orderedStages.map(stage => {
         let stageDeals: Deal[] = [];
         
-        // Para estágios normais, mostrar apenas deals em negociação
+        // Para estágios normais, mostrar os deals corretamente com base no pipeline
         if (stage.stageType === "normal") {
-          stageDeals = filteredDeals.filter(deal => 
-            deal.stageId === stage.id && 
-            deal.saleStatus !== 'won' && 
-            deal.saleStatus !== 'lost'
-          );
+          if (activePipelineId === 1) {
+            // No pipeline Comercial, ocultar negócios concluídos (ganhos/perdidos) nos estágios normais
+            stageDeals = filteredDeals.filter(deal => 
+              deal.stageId === stage.id && 
+              deal.saleStatus !== 'won' && 
+              deal.saleStatus !== 'lost'
+            );
+          } else {
+            // Para outros pipelines (ex: Compras/Logística), mostrar todos os negócios, incluindo concluídos
+            stageDeals = filteredDeals.filter(deal => 
+              deal.stageId === stage.id
+            );
+          }
         }
         // Para o estágio de vendas realizadas, mostrar deals marcados como ganhos
         else if (stage.stageType === "completed") {
@@ -462,10 +471,10 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
       
       <div className="flex flex-col h-full">
         <div className="flex justify-between items-center px-4 py-2 mb-1">
-          {activeFilters.hideClosed && (
+          {activeFilters.hideClosed && activePipelineId === 1 && (
             <div className="text-sm text-amber-800 flex items-center gap-2 bg-amber-100 px-3 py-1 rounded-md border border-amber-200">
               <InfoIcon size={16} />
-              <span>Negócios concluídos estão ocultos</span>
+              <span>Negócios concluídos estão ocultos no funil Comercial</span>
             </div>
           )}
           <div className="flex-grow"></div>

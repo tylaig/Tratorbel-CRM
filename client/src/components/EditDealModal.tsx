@@ -677,15 +677,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                           placeholder="000.000.000-00"
                         />
                       </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="state-registration">Inscrição Estadual</Label>
-                        <Input
-                          id="state-registration"
-                          value={stateRegistration}
-                          onChange={(e) => setStateRegistration(e.target.value)}
-                          placeholder="Inscrição Estadual"
-                        />
-                      </div>
+                      {/* Campo de Inscrição Estadual removido para Pessoa Física */}
                     </>
                   ) : (
                     // Consumidor final não tem campos específicos

@@ -22,7 +22,7 @@ import {
   FileLineChart
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings as SettingsType, PipelineStage, LossReason, MachineBrand, SalePerformanceReason, Pipeline } from "@shared/schema";
+import { Settings as SettingsType, PipelineStage, LossReason, MachineBrand, SalePerformanceReason, Pipeline, MachineModel } from "@shared/schema";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -71,7 +71,26 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Consulta para carregar marcas de máquinas
   const { data: machineBrands = [] } = useQuery<MachineBrand[]>({
     queryKey: ['/api/machine-brands'],
-    enabled: activeTab === "machine-brands",
+    enabled: activeTab === "machine-brands" || activeTab === "models",
+  });
+  
+  // Estado para controlar a marca selecionada para filtrar modelos
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+  
+  // Consulta para carregar modelos de máquinas
+  const { data: machineModels = [] } = useQuery<MachineModel[]>({
+    queryKey: ['/api/machine-models', selectedBrandId],
+    queryFn: async () => {
+      const url = selectedBrandId 
+        ? `/api/machine-models?brandId=${selectedBrandId}` 
+        : '/api/machine-models';
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Falha ao carregar modelos de máquinas');
+      }
+      return response.json();
+    },
+    enabled: activeTab === "models" && !!selectedBrandId,
   });
   
   // Consulta para carregar motivos de desempenho de vendas
@@ -106,6 +125,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [newBrandName, setNewBrandName] = useState("");
   const [newBrandDescription, setNewBrandDescription] = useState("");
   const [editingBrand, setEditingBrand] = useState<{ id: number, name: string, description: string | null } | null>(null);
+  
+  // Estados para edição de modelos de máquinas
+  const [newModelName, setNewModelName] = useState("");
+  const [editingModel, setEditingModel] = useState<{ id: number, name: string, brandId: number } | null>(null);
   
   // Estados para edição de motivos de desempenho de vendas
   const [newPerformanceReason, setNewPerformanceReason] = useState("");
@@ -576,6 +599,52 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       id: editingBrand.id,
       name: editingBrand.name,
       description: editingBrand.description || ""
+    });
+  };
+  
+  // Função para criar modelo
+  const createModel = () => {
+    if (!selectedBrandId) {
+      toast({
+        title: "Marca obrigatória",
+        description: "Selecione uma marca para adicionar o modelo.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!newModelName.trim()) {
+      toast({
+        title: "Campo obrigatório",
+        description: "O nome do modelo é obrigatório.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    createModelMutation.mutate({ 
+      name: newModelName,
+      brandId: selectedBrandId
+    });
+  };
+
+  // Função para atualizar modelo
+  const updateModel = () => {
+    if (!editingModel) return;
+    
+    if (!editingModel.name.trim()) {
+      toast({
+        title: "Campo obrigatório",
+        description: "O nome do modelo é obrigatório.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    updateModelMutation.mutate({
+      id: editingModel.id,
+      name: editingModel.name,
+      brandId: editingModel.brandId
     });
   };
 

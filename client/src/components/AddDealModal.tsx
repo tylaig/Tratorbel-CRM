@@ -86,7 +86,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
   const { toast } = useToast();
   
   // Get Chatwoot contacts
-  const { data: contactsData } = useQuery<{ payload: ChatwootContact[] }>({
+  const { data: contactsData, refetch: refetchContacts } = useQuery<{ payload: ChatwootContact[] }>({
     queryKey: ['/api/chatwoot/contacts'],
     enabled: isOpen,
   });
@@ -339,6 +339,42 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
     }
   };
   
+  // Handle contact created from AddContactModal
+  const handleContactCreated = async (contactId: string, contactName: string, contact?: any) => {
+    console.log(`Contato criado: ${contactName} (ID: ${contactId})`, contact);
+    
+    // Recarregar a lista de contatos para incluir o novo contato
+    await refetchContacts();
+    
+    // Definir o contato recém-criado como selecionado
+    setContactId(contactId);
+    setName(contactName);
+    
+    // Preencher informações adicionais do contato se estiverem disponíveis
+    if (contact) {
+      if (contact.email) {
+        setEmail(contact.email);
+      }
+      
+      if (contact.phone_number) {
+        setPhone(formatPhoneNumber(contact.phone_number));
+      }
+      
+      if (contact.company_name) {
+        setCompanyName(contact.company_name);
+        setClientType("company");
+        setIsCompany(true);
+      }
+    }
+
+    // Exibir mensagem de sucesso
+    toast({
+      title: "Contato criado com sucesso",
+      description: `O contato ${contactName} foi criado e selecionado automaticamente.`,
+      variant: "default",
+    });
+  };
+  
   // Preencher dados quando houver um contato pré-selecionado
   useEffect(() => {
     if (isOpen && selectedContact) {
@@ -385,22 +421,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
     }
   };
   
-  // Função para lidar com a seleção de um contato recém-criado
-  const handleContactCreated = (contactId: string, contactName: string) => {
-    // Recarregar os contatos do Chatwoot para incluir o novo contato
-    queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
-    
-    // Selecionar o contato recém-criado
-    setContactId(contactId);
-    if (!name) setName(contactName || "Novo negócio");
-    
-    // Notificar o usuário
-    toast({
-      title: "Contato adicionado",
-      description: "O novo contato foi selecionado para este negócio.",
-      variant: "default",
-    });
-  };
+  // Esta função foi movida para acima (linha 342)
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

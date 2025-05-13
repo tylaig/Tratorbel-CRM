@@ -24,10 +24,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
   const apiRouter = express.Router();
   
+  // Pipelines routes
+  apiRouter.get("/pipelines", async (req: Request, res: Response) => {
+    try {
+      const pipelines = await storage.getPipelines();
+      res.json(pipelines);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch pipelines" });
+    }
+  });
+
+  apiRouter.get("/pipelines/default", async (req: Request, res: Response) => {
+    try {
+      const pipeline = await storage.getDefaultPipeline();
+      res.json(pipeline);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch default pipeline" });
+    }
+  });
+
+  apiRouter.get("/pipelines/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
+      
+      const pipeline = await storage.getPipeline(id);
+      if (!pipeline) {
+        return res.status(404).json({ message: "Pipeline not found" });
+      }
+      
+      res.json(pipeline);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch pipeline" });
+    }
+  });
+
   // Pipeline Stages routes
   apiRouter.get("/pipeline-stages", async (req: Request, res: Response) => {
     try {
-      const stages = await storage.getPipelineStages();
+      const pipelineId = req.query.pipelineId ? parseInt(req.query.pipelineId as string) : undefined;
+      const stages = await storage.getPipelineStages(pipelineId);
       res.json(stages);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch pipeline stages" });
@@ -94,12 +132,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/deals", async (req: Request, res: Response) => {
     try {
       const stageId = req.query.stageId ? parseInt(req.query.stageId as string) : undefined;
+      const pipelineId = req.query.pipelineId ? parseInt(req.query.pipelineId as string) : undefined;
       let deals;
       
       if (stageId && !isNaN(stageId)) {
         deals = await storage.getDealsByStage(stageId);
       } else {
-        deals = await storage.getDeals();
+        deals = await storage.getDeals(pipelineId);
       }
       
       // Enriquecer os deals com informações do lead

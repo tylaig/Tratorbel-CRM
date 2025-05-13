@@ -15,12 +15,15 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, Pipeline } from "@shared/schema";
 import HeatmapView from "@/pages/Heatmap";
+import { ChevronUpIcon, ChevronDownIcon, FilterIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"kanban" | "list" | "contacts" | "heatmap" | "results">("kanban");
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   
   const { toast } = useToast();
   
@@ -242,13 +245,38 @@ export default function Dashboard() {
           
           {/* Barra de filtros - tamanho fixo - somente quando um pipeline estiver selecionado */}
           {activePipelineId && viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
-            <div className="px-4 py-3 bg-gray-50 border-b flex-none">
-              <FilterBar 
-                onFilterChange={updateFilters}
-                activeFilters={filters}
-                activePipelineId={activePipelineId}
-                isDefaultPipeline={defaultPipeline?.id === activePipelineId}
-              />
+            <div className="border-b flex-none">
+              {/* Barra com botão de toggle */}
+              <div className="flex justify-between items-center px-4 py-2 bg-gray-100 dark:bg-gray-800">
+                <div className="flex items-center gap-2">
+                  <FilterIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filtros</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  {showFilters ? (
+                    <ChevronUpIcon className="h-5 w-5" />
+                  ) : (
+                    <ChevronDownIcon className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
+              
+              {/* Conteúdo dos filtros - exibido/oculto com base em showFilters */}
+              {showFilters && (
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900">
+                  <FilterBar 
+                    onFilterChange={updateFilters}
+                    activeFilters={filters}
+                    activePipelineId={activePipelineId}
+                    isDefaultPipeline={defaultPipeline?.id === activePipelineId}
+                  />
+                </div>
+              )}
             </div>
           )}
           

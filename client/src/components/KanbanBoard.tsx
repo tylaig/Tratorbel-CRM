@@ -547,7 +547,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                     <div
                       className={`deal-list p-2 rounded-b-lg ${
                         snapshot.isDraggingOver
-                          ? "bg-yellow-50 dark:bg-yellow-900/20"
+                          ? "droppable-hover bg-yellow-50 dark:bg-yellow-900/20"
                           : stage.stageType === "completed" ? "bg-green-50 dark:bg-green-900/30" 
                           : stage.stageType === "lost" ? "bg-red-50 dark:bg-red-900/30"
                           : "bg-gray-50 dark:bg-gray-900/20"
@@ -566,9 +566,19 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
+                              style={{
+                                ...provided.draggableProps.style,
+                                // Efeitos visuais durante o arraste
+                                opacity: snapshot.isDragging ? 0.9 : 1,
+                                boxShadow: snapshot.isDragging ? '0 8px 15px rgba(0, 0, 0, 0.15)' : '',
+                                transform: snapshot.isDragging && provided.draggableProps.style?.transform 
+                                  ? `${provided.draggableProps.style.transform} rotate(1deg)` 
+                                  : provided.draggableProps.style?.transform,
+                                zIndex: snapshot.isDragging ? 9999 : undefined,
+                              }}
                               className={`mb-2 p-3 group border-l-4 ${
                                 snapshot.isDragging
-                                  ? "shadow-lg dark:bg-gray-700 opacity-80"
+                                  ? "shadow-lg dark:bg-gray-700 ring-2 ring-yellow-400 ring-opacity-50 deal-card-dragging"
                                   : "shadow-sm hover:shadow-md bg-gray-50 dark:bg-gray-800"
                               } ${
                                 deal.status === "completed" 

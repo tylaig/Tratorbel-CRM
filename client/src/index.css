@@ -201,7 +201,24 @@
 }
 
 .dragging {
-  @apply opacity-50 shadow-lg;
+  @apply opacity-70 shadow-lg transform rotate-1 scale-105 z-50;
+}
+
+/* Efeito de animação para operações de drag and drop */
+.deal-card-dragging {
+  animation: pulse 1.5s infinite;
+  transition: all 0.2s ease;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(240, 197, 4, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(240, 197, 4, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(240, 197, 4, 0); }
+}
+
+/* Área de destino ao arrastar */
+.droppable-hover {
+  @apply border-2 border-dashed border-yellow-400 transition-all duration-300;
 }
 
 /* Novas classes para os itens da sidebar estão definidas diretamente no Sidebar.tsx */

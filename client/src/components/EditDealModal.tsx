@@ -539,9 +539,13 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="deal-stage">Etapa</Label>
-                      <Select value={stageId} onValueChange={setStageId}>
+                      <Select 
+                        value={stageId} 
+                        onValueChange={setStageId}
+                        disabled={!pipelineId}
+                      >
                         <SelectTrigger id="deal-stage">
-                          <SelectValue placeholder="Selecione uma etapa" />
+                          <SelectValue placeholder={!pipelineId ? "Selecione um pipeline primeiro" : "Selecione uma etapa"} />
                         </SelectTrigger>
                         <SelectContent>
                           {filteredStages.map((stage) => (

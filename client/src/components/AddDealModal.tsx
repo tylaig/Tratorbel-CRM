@@ -7,6 +7,7 @@ import { formatCurrency, formatPhoneNumber } from "@/lib/formatters";
 import { type PipelineStage, type Deal } from "@shared/schema";
 import ClientCities from "@/components/ClientCities";
 import AdvancedSearchModal from "@/components/AdvancedSearchModal";
+import AddContactModal from "@/components/AddContactModal";
 import {
   Dialog,
   DialogContent,
@@ -42,8 +43,9 @@ interface ChatwootContact {
 }
 
 export default function AddDealModal({ isOpen, onClose, pipelineStages = [], selectedContact, initialStageId }: AddDealModalProps) {
-  // Estado para o modal de busca avançada
+  // Estado para os modais
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
+  const [isAddContactOpen, setIsAddContactOpen] = useState(false);
   
   // Campos básicos
   const [name, setName] = useState("");
@@ -382,6 +384,23 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
       if (!name) setName(contactName || "Novo negócio");
     }
   };
+  
+  // Função para lidar com a seleção de um contato recém-criado
+  const handleContactCreated = (contactId: string, contactName: string) => {
+    // Recarregar os contatos do Chatwoot para incluir o novo contato
+    queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
+    
+    // Selecionar o contato recém-criado
+    setContactId(contactId);
+    if (!name) setName(contactName || "Novo negócio");
+    
+    // Notificar o usuário
+    toast({
+      title: "Contato adicionado",
+      description: "O novo contato foi selecionado para este negócio.",
+      variant: "default",
+    });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -420,14 +439,24 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
               <div className="grid gap-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="deal-contact">Contato do Chatwoot</Label>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="h-6 px-0 text-primary"
-                    onClick={() => setIsAdvancedSearchOpen(true)}
-                  >
-                    Busca avançada
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-6 px-0 text-primary"
+                      onClick={() => setIsAdvancedSearchOpen(true)}
+                    >
+                      Busca avançada
+                    </Button>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-6 px-0 text-yellow-500 font-medium"
+                      onClick={() => setIsAddContactOpen(true)}
+                    >
+                      Criar contato
+                    </Button>
+                  </div>
                 </div>
                 <Select value={contactId} onValueChange={handleContactChange}>
                   <SelectTrigger id="deal-contact">

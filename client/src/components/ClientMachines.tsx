@@ -63,6 +63,15 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
     year: ""
   });
   
+  // Estado para diálogos
+  const [showAddBrandDialog, setShowAddBrandDialog] = useState(false);
+  const [showAddModelDialog, setShowAddModelDialog] = useState(false);
+  const [newBrandName, setNewBrandName] = useState("");
+  const [newBrandDescription, setNewBrandDescription] = useState("");
+  const [newModelName, setNewModelName] = useState("");
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+  const [selectedBrandForModel, setSelectedBrandForModel] = useState<number | null>(null);
+  
   // Estado para formulário de edição
   const [editingMachine, setEditingMachine] = useState<{
     id: number;
@@ -75,6 +84,20 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
   // Consultar marcas de máquinas
   const { data: machineBrands = [] } = useQuery<MachineBrand[]>({
     queryKey: ['/api/machine-brands'],
+  });
+  
+  // Consultar modelos de máquinas com base na marca selecionada
+  const { data: machineModels = [] } = useQuery<MachineModel[]>({
+    queryKey: ['/api/machine-models', selectedBrandId],
+    queryFn: async () => {
+      if (!selectedBrandId) return [];
+      const response = await fetch(`/api/machine-models?brandId=${selectedBrandId}`);
+      if (!response.ok) {
+        throw new Error('Falha ao buscar modelos');
+      }
+      return response.json();
+    },
+    enabled: !!selectedBrandId,
   });
   
   // Consultar máquinas do cliente (se o dealId for válido)
@@ -110,6 +133,95 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
       setLocalMachines(clientMachines);
     }
   }, [clientMachines, isExisting]);
+  
+  // Mutation para criar marca
+  const createBrandMutation = useMutation({
+    mutationFn: async (brand: { name: string, description?: string }) => {
+      const response = await fetch('/api/machine-brands', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(brand),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao adicionar marca: ${response.status}`);
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/machine-brands'] });
+      
+      toast({
+        title: "Marca adicionada",
+        description: "Nova marca adicionada com sucesso.",
+      });
+      
+      // Limpar e fechar diálogo
+      setNewBrandName("");
+      setNewBrandDescription("");
+      setShowAddBrandDialog(false);
+      
+      // Se estamos adicionando marca para um modelo, seleciona-la automaticamente
+      if (showAddModelDialog) {
+        setSelectedBrandForModel(data.id);
+      } else {
+        // Selecionar a marca recém-criada no formulário principal
+        setNewMachine({...newMachine, brand: data.name});
+        setSelectedBrandId(data.id);
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao adicionar marca",
+        description: `Ocorreu um erro: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Mutation para criar modelo
+  const createModelMutation = useMutation({
+    mutationFn: async (model: { name: string, brandId: number }) => {
+      const response = await fetch('/api/machine-models', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(model),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao adicionar modelo: ${response.status}`);
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/machine-models', selectedBrandId] });
+      
+      toast({
+        title: "Modelo adicionado",
+        description: "Novo modelo adicionado com sucesso.",
+      });
+      
+      // Limpar e fechar diálogo
+      setNewModelName("");
+      setShowAddModelDialog(false);
+      
+      // Selecionar o modelo recém-criado
+      setNewMachine({...newMachine, model: data.name});
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao adicionar modelo",
+        description: `Ocorreu um erro: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
   
   // Mutation para criar uma máquina
   const createMachineMutation = useMutation({
@@ -150,6 +262,7 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
         model: "",
         year: ""
       });
+      setSelectedBrandId(null);
     },
     onError: (error) => {
       toast({
@@ -370,6 +483,54 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
     return machines.length;
   };
   
+  // Função para iniciar a edição de uma máquina
+  const startEditingMachine = (machine: ClientMachine) => {
+    setEditingMachine({
+      id: machine.id,
+      name: machine.name,
+      brand: machine.brand,
+      model: machine.model,
+      year: machine.year
+    });
+    
+    // Encontrar o ID da marca para inicializar seleção de modelos
+    const brand = machineBrands.find(b => b.name === machine.brand);
+    setSelectedBrandId(brand?.id || null);
+  };
+  
+  // Funções para lidar com a criação de novas marcas e modelos
+  const handleAddBrand = () => {
+    if (!newBrandName.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "O nome da marca é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createBrandMutation.mutate({
+      name: newBrandName.trim(),
+      description: newBrandDescription.trim() || undefined
+    });
+  };
+  
+  const handleAddModel = () => {
+    if (!newModelName.trim() || !selectedBrandForModel) {
+      toast({
+        title: "Dados incompletos",
+        description: "O nome do modelo e marca são obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createModelMutation.mutate({
+      name: newModelName.trim(),
+      brandId: selectedBrandForModel
+    });
+  };
+  
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -378,6 +539,93 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
           Adicione as máquinas que o cliente possui ou está interessado
         </p>
       </div>
+      
+      {/* Diálogo para adicionar nova marca */}
+      <Dialog open={showAddBrandDialog} onOpenChange={setShowAddBrandDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Nova Marca</DialogTitle>
+            <DialogDescription>
+              Crie uma nova marca de maquinário para utilizar no sistema.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="brand-name">Nome da Marca</Label>
+              <Input
+                id="brand-name"
+                placeholder="Ex: John Deere"
+                value={newBrandName}
+                onChange={(e) => setNewBrandName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="brand-description">Descrição (opcional)</Label>
+              <Input
+                id="brand-description"
+                placeholder="Descrição adicional"
+                value={newBrandDescription}
+                onChange={(e) => setNewBrandDescription(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddBrandDialog(false)}>Cancelar</Button>
+            <Button onClick={handleAddBrand} disabled={createBrandMutation.isPending}>
+              {createBrandMutation.isPending && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+              Adicionar Marca
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Diálogo para adicionar novo modelo */}
+      <Dialog open={showAddModelDialog} onOpenChange={setShowAddModelDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Novo Modelo</DialogTitle>
+            <DialogDescription>
+              Crie um novo modelo para a marca selecionada.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="model-brand">Marca</Label>
+              <Select 
+                value={selectedBrandForModel?.toString()}
+                onValueChange={(value) => setSelectedBrandForModel(Number(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a marca" />
+                </SelectTrigger>
+                <SelectContent>
+                  {machineBrands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.id.toString()}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="model-name">Nome do Modelo</Label>
+              <Input
+                id="model-name"
+                placeholder="Ex: Trator 5000"
+                value={newModelName}
+                onChange={(e) => setNewModelName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddModelDialog(false)}>Cancelar</Button>
+            <Button onClick={handleAddModel} disabled={createModelMutation.isPending}>
+              {createModelMutation.isPending && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+              Adicionar Modelo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* Formulário para adicionar nova máquina */}
       <Card>
@@ -396,31 +644,79 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
             </div>
             <div className="space-y-1">
               <label className="text-sm font-medium">Marca</label>
-              <Select 
-                value={newMachine.brand}
-                onValueChange={(value) => setNewMachine({...newMachine, brand: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a marca" />
-                </SelectTrigger>
-                <SelectContent>
-                  {machineBrands.map((brand) => (
-                    <SelectItem key={brand.id} value={brand.name}>
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-1">
+                <Select 
+                  value={newMachine.brand}
+                  onValueChange={(value) => {
+                    setNewMachine({...newMachine, brand: value, model: ""});
+                    // Encontrar o ID da marca selecionada para filtrar modelos
+                    const brand = machineBrands.find(b => b.name === value);
+                    setSelectedBrandId(brand?.id || null);
+                  }}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Selecione a marca" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {machineBrands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.name}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setShowAddBrandDialog(true)}
+                  className="h-10 w-10"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-sm font-medium">Modelo</label>
-              <Input 
-                placeholder="Ex: XR350"
-                value={newMachine.model}
-                onChange={(e) => setNewMachine({...newMachine, model: e.target.value})}
-              />
+              <div className="flex gap-1">
+                {selectedBrandId ? (
+                  <>
+                    <Select 
+                      value={newMachine.model}
+                      onValueChange={(value) => setNewMachine({...newMachine, model: value})}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione o modelo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {machineModels.map((model) => (
+                          <SelectItem key={model.id} value={model.name}>
+                            {model.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => {
+                        setSelectedBrandForModel(selectedBrandId);
+                        setShowAddModelDialog(true);
+                      }}
+                      className="h-10 w-10"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <Input 
+                    placeholder="Selecione uma marca primeiro"
+                    disabled
+                    className="flex-1"
+                  />
+                )}
+              </div>
             </div>
             <div className="space-y-1">
               <label className="text-sm font-medium">Ano (opcional)</label>
@@ -459,28 +755,77 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
                         value={editingMachine.name}
                         onChange={(e) => setEditingMachine({...editingMachine, name: e.target.value})}
                       />
-                      <Select 
-                        value={editingMachine.brand}
-                        onValueChange={(value) => setEditingMachine({...editingMachine, brand: value})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Marca" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {machineBrands.map((brand) => (
-                            <SelectItem key={brand.id} value={brand.name}>
-                              {brand.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-1">
+                        <Select 
+                          value={editingMachine.brand}
+                          onValueChange={(value) => {
+                            setEditingMachine({...editingMachine, brand: value, model: ""});
+                            // Encontrar o ID da marca para filtrar modelos
+                            const brand = machineBrands.find(b => b.name === value);
+                            setSelectedBrandId(brand?.id || null);
+                          }}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Marca" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {machineBrands.map((brand) => (
+                              <SelectItem key={brand.id} value={brand.name}>
+                                {brand.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => setShowAddBrandDialog(true)}
+                          className="h-10 w-10 flex-shrink-0"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        placeholder="Modelo"
-                        value={editingMachine.model}
-                        onChange={(e) => setEditingMachine({...editingMachine, model: e.target.value})}
-                      />
+                      <div className="flex gap-1">
+                        {selectedBrandId ? (
+                          <>
+                            <Select 
+                              value={editingMachine.model}
+                              onValueChange={(value) => setEditingMachine({...editingMachine, model: value})}
+                            >
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Modelo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {machineModels.map((model) => (
+                                  <SelectItem key={model.id} value={model.name}>
+                                    {model.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button 
+                              variant="outline" 
+                              size="icon" 
+                              onClick={() => {
+                                setSelectedBrandForModel(selectedBrandId);
+                                setShowAddModelDialog(true);
+                              }}
+                              className="h-10 w-10 flex-shrink-0"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <Input
+                            placeholder="Selecione uma marca"
+                            value={editingMachine.model}
+                            onChange={(e) => setEditingMachine({...editingMachine, model: e.target.value})}
+                            className="flex-1"
+                          />
+                        )}
+                      </div>
                       <Input
                         placeholder="Ano (opcional)"
                         value={editingMachine.year || ""}
@@ -495,7 +840,10 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => setEditingMachine(null)}
+                        onClick={() => {
+                          setEditingMachine(null);
+                          setSelectedBrandId(null);
+                        }}
                       >
                         <X className="h-4 w-4 mr-1" />
                         Cancelar
@@ -516,13 +864,7 @@ export default function ClientMachines({ dealId, isExisting }: ClientMachinesPro
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => setEditingMachine({
-                          id: machine.id,
-                          name: machine.name,
-                          brand: machine.brand,
-                          model: machine.model,
-                          year: machine.year
-                        })}
+                        onClick={() => startEditingMachine(machine)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

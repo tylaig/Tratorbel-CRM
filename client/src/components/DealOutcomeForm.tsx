@@ -123,7 +123,7 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
       console.log("Enviando payload:", payload);
       return await apiRequest(`/api/deals/${deal.id}`, 'PUT', payload);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: outcome === "won" ? "Negócio Fechado!" : "Negócio Marcado como Perdido",
         description: outcome === "won" 
@@ -131,6 +131,15 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
           : "O negócio foi movido para a lista de oportunidades perdidas.",
         variant: "default",
       });
+      
+      // Sincronizar os estágios dos negócios (para garantir consistência)
+      try {
+        const syncResponse = await apiRequest('/api/deals/sync-stages', 'POST', {});
+        console.log("Estágios dos negócios sincronizados com sucesso", syncResponse);
+      } catch (syncError) {
+        console.error("Erro ao sincronizar estágios:", syncError);
+        // Continuamos mesmo se a sincronização falhar
+      }
       
       // Invalidar cache para forçar atualização dos dados
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });

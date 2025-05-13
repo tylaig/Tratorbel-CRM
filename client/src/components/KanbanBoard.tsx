@@ -143,17 +143,21 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
             let stageDeals: Deal[] = [];
             
             if (stage.stageType === "completed") {
-              // Para estágio "Vendas Realizadas", mostrar apenas negócios com status "won"
+              // Para estágio "Vendas Realizadas", mostrar TODOS os negócios com status "won",
+              // mesmo que estejam em outro estágio (será corrigido automaticamente)
               stageDeals = deals.filter(deal => 
-                deal.stageId === stage.id && deal.saleStatus === "won"
+                (deal.stageId === stage.id || deal.saleStatus === "won") &&
+                deal.pipelineId === stage.pipelineId
               );
             } else if (stage.stageType === "lost") {
-              // Para estágio "Vendas Perdidas", mostrar apenas negócios com status "lost"
+              // Para estágio "Vendas Perdidas", mostrar TODOS os negócios com status "lost",
+              // mesmo que estejam em outro estágio (será corrigido automaticamente)
               stageDeals = deals.filter(deal => 
-                deal.stageId === stage.id && deal.saleStatus === "lost"
+                (deal.stageId === stage.id || deal.saleStatus === "lost") &&
+                deal.pipelineId === stage.pipelineId
               );
             } else {
-              // Para estágios normais, só mostrar negócios que NÃO estão completos/perdidos
+              // Para estágios normais, só mostrar negócios deste estágio que NÃO estão completos/perdidos
               stageDeals = deals.filter(deal => 
                 deal.stageId === stage.id && 
                 deal.saleStatus !== "won" && 

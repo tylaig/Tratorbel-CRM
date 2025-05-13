@@ -709,6 +709,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sync contacts from Chatwoot
+  // Endpoint para sincronizar os estágios dos negócios de acordo com o status
+  apiRouter.post("/deals/sync-stages", async (req: Request, res: Response) => {
+    try {
+      // Buscar todos os estágios
+      const allStages = await storage.getPipelineStages();
+      
+      // Obter estágios "completed" e "lost" para cada pipeline
+      const completedStages = allStages.filter(stage => stage.stageType === "completed");
+      const lostStages = allStages.filter(stage => stage.stageType === "lost");
+      
+      // Mapear pipelines para seus estágios "completed" e "lost"
+      const pipelineCompletedStages: { [key: number]: number } = {};
+      const pipelineLostStages: { [key: number]: number } = {};
+      
+      completedStages.forEach(stage => {
+        pipelineCompletedStages[stage.pipelineId] = stage.id;
+      });
+      
+      lostStages.forEach(stage => {
+        pipelineLostStages[stage.pipelineId] = stage.id;
+      });
+      
+      // Buscar todos os negócios
+      const allDeals = await storage.getDeals();
+      
+      // Filtrar negócios com status "won" ou "lost" que estão no estágio errado
+      const dealsToUpdate: { id: number, stageId: number }[] = [];
+      
+      allDeals.forEach(deal => {
+        // Para negócios "won", mover para o estágio "completed"
+        if (deal.saleStatus === "won") {
+          const correctStageId = pipelineCompletedStages[deal.pipelineId];
+          if (correctStageId && deal.stageId !== correctStageId) {
+            dealsToUpdate.push({ id: deal.id, stageId: correctStageId });
+          }
+        }
+        
+        // Para negócios "lost", mover para o estágio "lost"
+        if (deal.saleStatus === "lost") {
+          const correctStageId = pipelineLostStages[deal.pipelineId];
+          if (correctStageId && deal.stageId !== correctStageId) {
+            dealsToUpdate.push({ id: deal.id, stageId: correctStageId });
+          }
+        }
+      });
+      
+      // Atualizar os negócios
+      console.log(`Sincronizando ${dealsToUpdate.length} negócios para os estágios corretos`);
+      
+      const updatePromises = dealsToUpdate.map(update => 
+        storage.updateDeal(update.id, { stageId: update.stageId })
+      );
+      
+      await Promise.all(updatePromises);
+      
+      res.json({ 
+        success: true, 
+        message: `${dealsToUpdate.length} negócios sincronizados`, 
+        updatedDeals: dealsToUpdate 
+      });
+    } catch (error) {
+      console.error("Erro ao sincronizar estágios:", error);
+      res.status(500).json({ success: false, message: "Erro ao sincronizar estágios" });
+    }
+  });
+  
   apiRouter.post("/chatwoot/sync", async (req: Request, res: Response) => {
     try {
       const settings = await storage.getSettings();

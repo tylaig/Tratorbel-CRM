@@ -433,21 +433,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                   <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">{formatCurrency(stage.totalValue)}</span>
                 </div>
                 
-                {/* Botão de adicionar negócio na coluna */}
-                {!stage.isSystem && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:bg-yellow-400 hover:text-blue-950 dark:text-gray-400 dark:hover:bg-yellow-400 dark:hover:text-blue-950"
-                    onClick={() => {
-                      setSelectedStageForNewDeal(stage);
-                      setIsAddDealModalOpen(true);
-                    }}
-                  >
-                    <PlusIcon className="h-3 w-3" />
-                    <span>Adicionar Negócio</span>
-                  </Button>
-                )}
+                {/* Botão de adicionar negócio removido da coluna */}
               </div>
               
               {/* Área de cards/droppable - altura ajustada para rolagem */}

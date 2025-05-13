@@ -314,6 +314,14 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex flex-col h-full">
+        {/* Botão oculto para ser clicado pelo Header para adicionar estágio */}
+        <button
+          id="add-stage-button"
+          className="hidden"
+          onClick={() => setIsAddStageModalOpen(true)}
+          aria-hidden="true"
+        />
+        
         {/* Modais */}
         {selectedDeal && (
           <EditDealModal
@@ -356,45 +364,17 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
           />
         )}
         
-        {/* Botões "Novo Negócio" e "Adicionar Estágio" - área fixa no topo */}
+        {/* Área fixa superior sem os botões (apenas para padding/espaçamento) */}
         <div className="sticky top-0 z-30 bg-white dark:bg-gray-900 shadow-sm">
-          <div className="flex justify-between items-center px-4 py-2 flex-none border-b border-gray-200 dark:border-gray-800">
-            <div className="flex-grow">
-              <Button
-                variant="default"
-                size="sm"
-                className="bg-yellow-400 hover:bg-yellow-500 text-blue-950 shadow-sm border-none flex items-center gap-1"
-                onClick={() => {
-                  if (onAddDeal) {
-                    onAddDeal();
-                  } else {
-                    if (pipelineStages.length === 0) {
-                      toast({
-                        title: "Não é possível adicionar um negócio",
-                        description: "Crie pelo menos um estágio primeiro.",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    
-                    const defaultStage = pipelineStages.find(s => s.stageType === "normal" || s.stageType === null);
-                    setSelectedStageForNewDeal(defaultStage || pipelineStages[0]);
-                    setIsAddDealModalOpen(true);
-                  }
-                }}
-              >
-                <PlusIcon className="h-4 w-4" />
-                <span className="font-medium">Novo Negócio</span>
-              </Button>
+          <div className="px-4 py-2 flex-none border-b border-gray-200 dark:border-gray-800">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                {activePipelineId ? 'Pipeline de Negócios' : 'Selecione um pipeline'}
+              </h3>
+              
+              {/* Espaço onde antes estavam os botões - mantido para consistência de layout */}
+              <div></div>
             </div>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 hover:bg-yellow-400 hover:text-blue-950"
-              onClick={() => setIsAddStageModalOpen(true)}
-            >
-              <PlusIcon className="h-4 w-4" />
-              <span>Adicionar Estágio</span>
-            </Button>
           </div>
         </div>
         

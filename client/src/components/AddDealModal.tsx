@@ -120,49 +120,52 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
   const handleContactCreated = (contactId: string, contactName: string, contact?: any) => {
     console.log(`Contato criado: ${contactName} (ID: ${contactId})`, contact);
     
+    // Definir o contato recém-criado como selecionado imediatamente
+    setContactId(contactId);
+    setName(contactName);
+    
+    // Preencher informações adicionais do contato se estiverem disponíveis
+    if (contact) {
+      if (contact.email) {
+        setEmail(contact.email);
+      }
+      
+      if (contact.phone_number) {
+        setPhone(formatPhoneNumber(contact.phone_number));
+      }
+      
+      // Verificar se company_name está em custom_attributes (formato Chatwoot) ou direto no objeto
+      const companyNameValue = contact.custom_attributes?.company_name || contact.company_name;
+      if (companyNameValue) {
+        setCompanyName(companyNameValue);
+        setCorporateName(companyNameValue);
+        setClientType("company");
+        setIsCompany(true);
+      } else {
+        setClientType("person");
+        setIsCompany(false);
+      }
+    }
+    
+    // Exibir mensagem de sucesso
+    toast({
+      title: "Contato criado com sucesso",
+      description: `O contato ${contactName} foi criado e selecionado automaticamente.`,
+      variant: "default",
+    });
+    
     // Recarregar a lista de contatos para incluir o novo contato
-    refetchContacts()
-      .then(() => {
-        // Definir o contato recém-criado como selecionado
-        setContactId(contactId);
-        setName(contactName);
-        
-        // Preencher informações adicionais do contato se estiverem disponíveis
-        if (contact) {
-          if (contact.email) {
-            setEmail(contact.email);
-          }
-          
-          if (contact.phone_number) {
-            setPhone(formatPhoneNumber(contact.phone_number));
-          }
-          
-          if (contact.company_name) {
-            setCompanyName(contact.company_name);
-            setCorporateName(contact.company_name);
-            setClientType("company");
-            setIsCompany(true);
-          } else {
-            setClientType("person");
-            setIsCompany(false);
-          }
-        }
-        
-        // Exibir mensagem de sucesso
-        toast({
-          title: "Contato criado com sucesso",
-          description: `O contato ${contactName} foi criado e selecionado automaticamente.`,
-          variant: "default",
+    // Usar setTimeout para dar tempo para a API processar antes de recarregar
+    setTimeout(() => {
+      console.log("Recarregando lista de contatos...");
+      refetchContacts()
+        .then(() => {
+          console.log("Lista de contatos atualizada com sucesso após criação de novo contato");
+        })
+        .catch(error => {
+          console.error("Erro ao atualizar lista de contatos:", error);
         });
-      })
-      .catch(error => {
-        console.error("Erro ao atualizar lista de contatos:", error);
-        toast({
-          title: "Erro ao atualizar contatos",
-          description: "Não foi possível atualizar a lista de contatos. Tente novamente.",
-          variant: "destructive",
-        });
-      });
+    }, 1000);
   };
   
   // Vamos obter os contatos do Chatwoot da estrutura de resposta adequada

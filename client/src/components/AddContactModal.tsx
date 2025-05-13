@@ -87,14 +87,17 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
         // Invalidar cache de contatos para atualizar a lista
         await queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
         
-        // Depois de 500ms para dar tempo de atualizar o cache, chamar o callback
+        // Log para debug da resposta completa
+        console.log("Resposta completa da API de criação de contato:", data);
+        
+        // Depois de 1000ms para dar tempo de atualizar o cache, chamar o callback
         setTimeout(() => {
           onContactCreated(
             data.payload.contact.id.toString(),
             data.payload.contact.name,
             data.payload.contact
           );
-        }, 500);
+        }, 1000);
       }
       
       resetForm();

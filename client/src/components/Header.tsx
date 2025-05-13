@@ -69,62 +69,6 @@ export default function Header({
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Botões para Novo Negócio e Adicionar Estágio (movidos do KanbanBoard) */}
-            {hasApiConfig && viewMode === "kanban" && (
-              <div className="flex items-center gap-2 mr-4">
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="bg-yellow-400 hover:bg-yellow-500 text-blue-950 shadow-sm border-none flex items-center gap-1"
-                  onClick={() => {
-                    if (onAddDeal) {
-                      onAddDeal();
-                    } else {
-                      if (pipelineStages.length === 0) {
-                        toast({
-                          title: "Não é possível adicionar um negócio",
-                          description: "Crie pelo menos um estágio primeiro.",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-                    }
-                  }}
-                  disabled={!activePipelineId}
-                >
-                  <PlusIcon className="h-4 w-4" />
-                  <span className="font-medium">Novo Negócio</span>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1 hover:bg-yellow-400 hover:text-blue-950 border-yellow-400 text-yellow-400"
-                  onClick={() => {
-                    // Ação para adicionar estágio - essa funcionalidade permanece no KanbanBoard
-                    // mas o botão foi movido para o Header
-                    if (!activePipelineId) {
-                      toast({
-                        title: "Selecione um pipeline",
-                        description: "É necessário selecionar um pipeline para adicionar estágios.",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    
-                    // Essa ação deve chamar a função no KanbanBoard
-                    const kanbanBoardElement = document.getElementById('add-stage-button');
-                    if (kanbanBoardElement) {
-                      kanbanBoardElement.click();
-                    }
-                  }}
-                  disabled={!activePipelineId}
-                >
-                  <PlusIcon className="h-4 w-4" />
-                  <span>Adicionar Estágio</span>
-                </Button>
-              </div>
-            )}
             
             {hasApiConfig && (
               <>

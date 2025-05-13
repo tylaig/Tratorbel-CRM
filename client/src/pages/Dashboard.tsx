@@ -15,7 +15,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, Pipeline } from "@shared/schema";
 import HeatmapView from "@/pages/Heatmap";
-import { ChevronUpIcon, ChevronDownIcon, FilterIcon } from "lucide-react";
+import { ChevronUpIcon, ChevronDownIcon, FilterIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
@@ -247,23 +247,71 @@ export default function Dashboard() {
           {activePipelineId && viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
             <div className="border-b flex-none">
               {/* Barra com botão de toggle */}
-              <div className="flex justify-between items-center px-4 py-2 bg-blue-950 dark:bg-blue-950">
+              <div className="flex items-center justify-between px-4 py-2 bg-blue-950 dark:bg-blue-950">
+                {/* Filtros */}
                 <div className="flex items-center gap-2">
                   <FilterIcon className="h-4 w-4 text-yellow-400 dark:text-yellow-400" />
                   <span className="text-sm font-medium text-yellow-400 dark:text-yellow-400">Filtros</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-yellow-400 hover:text-blue-950 hover:bg-yellow-400 dark:text-yellow-400 dark:hover:text-blue-950 dark:hover:bg-yellow-400 transition-colors"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  {showFilters ? (
-                    <ChevronUpIcon className="h-5 w-5" />
-                  ) : (
-                    <ChevronDownIcon className="h-5 w-5" />
+                
+                <div className="flex items-center space-x-4">
+                  {/* Ações do Pipeline - botões anteriormente no header */}
+                  {viewMode === "kanban" && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-yellow-400 hover:bg-yellow-500 text-blue-950 shadow-sm border-none flex items-center gap-1"
+                        onClick={() => setIsAddDealModalOpen(true)}
+                        disabled={!activePipelineId}
+                      >
+                        <PlusIcon className="h-4 w-4" />
+                        <span className="font-medium">Novo Negócio</span>
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1 hover:bg-yellow-400 hover:text-blue-950 border-yellow-400 text-yellow-400"
+                        onClick={() => {
+                          // Ação para adicionar estágio
+                          if (!activePipelineId) {
+                            toast({
+                              title: "Selecione um pipeline",
+                              description: "É necessário selecionar um pipeline para adicionar estágios.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          // Essa ação deve chamar a função no KanbanBoard
+                          const kanbanBoardElement = document.getElementById('add-stage-button');
+                          if (kanbanBoardElement) {
+                            kanbanBoardElement.click();
+                          }
+                        }}
+                        disabled={!activePipelineId}
+                      >
+                        <PlusIcon className="h-4 w-4" />
+                        <span>Adicionar Estágio</span>
+                      </Button>
+                    </div>
                   )}
-                </Button>
+                  
+                  {/* Botão de toggle para filtros */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-yellow-400 hover:text-blue-950 hover:bg-yellow-400 dark:text-yellow-400 dark:hover:text-blue-950 dark:hover:bg-yellow-400 transition-colors"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    {showFilters ? (
+                      <ChevronUpIcon className="h-5 w-5" />
+                    ) : (
+                      <ChevronDownIcon className="h-5 w-5" />
+                    )}
+                  </Button>
+                </div>
               </div>
               
               {/* Conteúdo dos filtros - exibido/oculto com base em showFilters */}

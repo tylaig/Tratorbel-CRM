@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, formatPhoneNumber } from "@/lib/formatters";
-import { type PipelineStage, type Deal, type Lead } from "@shared/schema";
+import { type PipelineStage, type Deal, type Lead, type Pipeline } from "@shared/schema";
 import QuoteManager from "./QuoteManager";
 
 import {
@@ -64,9 +64,15 @@ interface EditDealModalProps {
 export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }: EditDealModalProps) {
   const [activeTab, setActiveTab] = useState("lead");
   
+  // Buscar a lista de pipelines disponíveis
+  const { data: pipelines = [] } = useQuery<Pipeline[]>({
+    queryKey: ['/api/pipelines'],
+  });
+  
   // Campos base do formulário
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [pipelineId, setPipelineId] = useState("");
   const [stageId, setStageId] = useState("");
   const [value, setValue] = useState("");
   const [status, setStatus] = useState("in_progress");
@@ -137,6 +143,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     if (deal) {
       // Campos básicos do deal
       setName(deal.name);
+      setPipelineId(deal.pipelineId.toString());
       setStageId(deal.stageId.toString());
       setValue(formatCurrency(deal.value || 0));
       setStatus(deal.status || "in_progress");

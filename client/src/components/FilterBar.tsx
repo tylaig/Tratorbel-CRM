@@ -41,9 +41,16 @@ export interface FilterOptions {
 interface FilterBarProps {
   onFilterChange: (filters: FilterOptions) => void;
   activeFilters: FilterOptions;
+  activePipelineId: number | null;
+  isDefaultPipeline?: boolean;
 }
 
-export default function FilterBar({ onFilterChange, activeFilters }: FilterBarProps) {
+export default function FilterBar({ 
+  onFilterChange, 
+  activeFilters, 
+  activePipelineId,
+  isDefaultPipeline = true 
+}: FilterBarProps) {
   const [filters, setFilters] = useState<FilterOptions>(activeFilters);
   const { toast } = useToast();
   const [activeFilterTab, setActiveFilterTab] = useState<string>("status");
@@ -98,7 +105,7 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
   };
   
   // Aplicar filtro de motivo de perda
-  const applyLossReasonFilter = (reason: string | null) => {
+  const applyLostReasonFilter = (reason: string | null) => {
     // Limpar o filtro de ganho se estiver ativo
     if (filters.winReason) {
       updateFilter({ lostReason: reason || null, winReason: null });
@@ -190,85 +197,92 @@ export default function FilterBar({ onFilterChange, activeFilters }: FilterBarPr
           )}
         </div>
         
-        {/* Segunda linha: Tabs para diferentes tipos de filtro */}
-        <Tabs value={activeFilterTab} onValueChange={setActiveFilterTab} className="w-full">
-          <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="status">Status do Negócio</TabsTrigger>
-            <TabsTrigger value="win">Motivos de Ganho</TabsTrigger>
-            <TabsTrigger value="loss">Motivos de Perda</TabsTrigger>
-          </TabsList>
-          
-          {/* Conteúdo da tab status */}
-          <TabsContent value="status" className="pt-2">
-            <div className="flex gap-1 flex-wrap">
-              {statusOptions.map(option => (
+        {/* Segunda linha: Tabs para diferentes tipos de filtro - Apenas para pipeline padrão */}
+        {isDefaultPipeline ? (
+          <Tabs value={activeFilterTab} onValueChange={setActiveFilterTab} className="w-full">
+            <TabsList className="grid grid-cols-3">
+              <TabsTrigger value="status">Status do Negócio</TabsTrigger>
+              <TabsTrigger value="win">Motivos de Ganho</TabsTrigger>
+              <TabsTrigger value="loss">Motivos de Perda</TabsTrigger>
+            </TabsList>
+            
+            {/* Conteúdo da tab status */}
+            <TabsContent value="status" className="pt-2">
+              <div className="flex gap-1 flex-wrap">
+                {statusOptions.map(option => (
+                  <Badge 
+                    key={option.value}
+                    variant={filters.status.includes(option.value) ? "default" : "outline"}
+                    className={filters.status.includes(option.value) ? option.color : ""}
+                    onClick={() => toggleStatus(option.value)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {option.label}
+                  </Badge>
+                ))}
+              </div>
+            </TabsContent>
+            
+            {/* Conteúdo da tab motivos de ganho */}
+            <TabsContent value="win" className="pt-2">
+              <div className="flex gap-1 flex-wrap">
                 <Badge 
-                  key={option.value}
-                  variant={filters.status.includes(option.value) ? "default" : "outline"}
-                  className={filters.status.includes(option.value) ? option.color : ""}
-                  onClick={() => toggleStatus(option.value)}
+                  variant={!filters.winReason ? "default" : "outline"}
+                  className={!filters.winReason ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
+                  onClick={() => applyWinReasonFilter(null)}
                   style={{ cursor: "pointer" }}
                 >
-                  {option.label}
+                  Todos
                 </Badge>
-              ))}
-            </div>
-          </TabsContent>
-          
-          {/* Conteúdo da tab motivos de ganho */}
-          <TabsContent value="win" className="pt-2">
-            <div className="flex gap-1 flex-wrap">
-              <Badge 
-                variant={!filters.winReason ? "default" : "outline"}
-                className={!filters.winReason ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
-                onClick={() => applyWinReasonFilter(null)}
-                style={{ cursor: "pointer" }}
-              >
-                Todos
-              </Badge>
-              
-              {winReasonOptions.map(option => (
+                
+                {winReasonOptions.map(option => (
+                  <Badge 
+                    key={option.value}
+                    variant={filters.winReason === option.value ? "default" : "outline"}
+                    className={filters.winReason === option.value ? option.color : ""}
+                    onClick={() => applyWinReasonFilter(option.value)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <CheckCircleIcon className="h-3 w-3 mr-1" />
+                    {option.label}
+                  </Badge>
+                ))}
+              </div>
+            </TabsContent>
+            
+            {/* Conteúdo da tab motivos de perda */}
+            <TabsContent value="loss" className="pt-2">
+              <div className="flex gap-1 flex-wrap">
                 <Badge 
-                  key={option.value}
-                  variant={filters.winReason === option.value ? "default" : "outline"}
-                  className={filters.winReason === option.value ? option.color : ""}
-                  onClick={() => applyWinReasonFilter(option.value)}
+                  variant={!filters.lostReason ? "default" : "outline"}
+                  className={!filters.lostReason ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
+                  onClick={() => applyLostReasonFilter(null)}
                   style={{ cursor: "pointer" }}
                 >
-                  <CheckCircleIcon className="h-3 w-3 mr-1" />
-                  {option.label}
+                  Todos
                 </Badge>
-              ))}
-            </div>
-          </TabsContent>
-          
-          {/* Conteúdo da tab motivos de perda */}
-          <TabsContent value="loss" className="pt-2">
-            <div className="flex gap-1 flex-wrap">
-              <Badge 
-                variant={!filters.lostReason ? "default" : "outline"}
-                className={!filters.lostReason ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
-                onClick={() => applyLossReasonFilter(null)}
-                style={{ cursor: "pointer" }}
-              >
-                Todos
-              </Badge>
-              
-              {Array.isArray(lostReasons) && lostReasons.map((reason: any) => (
-                <Badge 
-                  key={reason.id}
-                  variant={filters.lostReason === reason.reason ? "default" : "outline"}
-                  className={filters.lostReason === reason.reason ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
-                  onClick={() => applyLossReasonFilter(reason.reason)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <XCircleIcon className="h-3 w-3 mr-1" />
-                  {reason.reason}
-                </Badge>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+                
+                {Array.isArray(lostReasons) && lostReasons.map((reason: any) => (
+                  <Badge 
+                    key={reason.id}
+                    variant={filters.lostReason === reason.reason ? "default" : "outline"}
+                    className={filters.lostReason === reason.reason ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
+                    onClick={() => applyLossReasonFilter(reason.reason)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <XCircleIcon className="h-3 w-3 mr-1" />
+                    {reason.reason}
+                  </Badge>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          // Para pipelines secundários, mostrar apenas filtros básicos
+          <div className="py-2 text-sm text-gray-500">
+            Filtros avançados disponíveis apenas no pipeline principal.
+          </div>
+        )}
       </div>
     </div>
   );

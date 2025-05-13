@@ -104,9 +104,10 @@
 
 /* Custom styles for the Kanban board */
 .kanban-column {
+  height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
-  height: 100%;
+  max-height: calc(100vh - 160px);
 }
 
 /* Sticky header for Kanban columns */
@@ -140,13 +141,6 @@
   opacity: 1;
 }
 
-/* Configurações para altura das colunas do Kanban */
-.kanban-column {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
 /* Estilos para os estágios específicos */
 .board-container .deal-list {
   background-color: rgba(249, 250, 251, 0.5);
@@ -154,7 +148,7 @@
   border-radius: 0 0 0.5rem 0.5rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.7) rgba(229, 231, 235, 0.5);
-  height: 100%;
+  height: calc(100vh - 220px);
   max-height: calc(100vh - 220px);
   overflow-y: auto;
 }
@@ -220,51 +214,6 @@
 .board-container {
   height: calc(100vh - 170px);
   padding-bottom: 20px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.7) rgba(229, 231, 235, 0.5);
-}
-
-.board-container::-webkit-scrollbar {
-  height: 6px;
-}
-
-.board-container::-webkit-scrollbar-track {
-  background: rgba(229, 231, 235, 0.5);
-  border-radius: 3px;
-}
-
-.board-container::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.7);
-  border-radius: 3px;
-}
-
-.board-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.8);
-}
-
-.dark .board-container {
-  scrollbar-color: rgba(75, 85, 99, 0.7) rgba(31, 41, 55, 0.5);
-}
-
-.dark .board-container::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.5);
-}
-
-.dark .board-container::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.7);
-}
-
-.dark .board-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.8);
-}
-
-.board-container .flex-row-container {
-  display: flex;
-  flex-direction: row;
-  min-width: max-content;
-  padding: 0 8px;
-  height: 100%;
 }
 
 .deal-card {

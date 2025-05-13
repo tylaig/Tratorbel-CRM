@@ -504,13 +504,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Erro ao criar contato no Chatwoot:", error);
       
       if (axios.isAxiosError(error)) {
-        res.status(error.response?.status || 500).json({
-          message: "Erro ao criar contato no Chatwoot",
-          details: error.response?.data ? JSON.stringify(error.response.data) : error.message
+        const statusCode = error.response?.status || 500;
+        const errorData = error.response?.data || {};
+        
+        // Detecção de erros específicos do Chatwoot
+        let errorMessage = "Erro ao criar contato no Chatwoot";
+        
+        if (errorData.message) {
+          if (errorData.message.includes("Phone number has already been taken")) {
+            errorMessage = "Este número de telefone já está cadastrado para outro contato.";
+          } else if (errorData.message.includes("Email has already been taken")) {
+            errorMessage = "O email informado já está sendo usado por outro contato.";
+          } else if (errorData.message.includes("Phone number should be in e164 format")) {
+            errorMessage = "O número de telefone precisa estar no formato internacional (+5531999999999).";
+          } else {
+            errorMessage = `Erro ao criar contato: ${errorData.message}`;
+          }
+        }
+        
+        res.status(statusCode).json({
+          message: errorMessage,
+          details: errorData
         });
       } else {
         res.status(500).json({ 
-          message: "Erro interno ao criar contato no WooCommerce",
+          message: "Erro interno ao criar contato no Chatwoot",
           details: error instanceof Error ? error.message : "Erro desconhecido"
         });
       }

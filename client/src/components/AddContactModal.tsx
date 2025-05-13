@@ -57,9 +57,12 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
         // Extrair mensagens de erro da API
         const errorData = error?.data || {};
         const errorMessage = errorData.message || "Erro desconhecido";
+        console.log("Erro detalhado do servidor:", errorData);
         
         if (errorMessage.includes("Email has already been taken")) {
           throw new Error("O email informado já está sendo usado por outro contato.");
+        } else if (errorMessage.includes("Phone number has already been taken")) {
+          throw new Error("Este número de telefone já está cadastrado para outro contato.");
         } else if (errorMessage.includes("Phone number should be in e164 format")) {
           throw new Error("O número de telefone precisa estar no formato internacional (+5531999999999).");
         } else {
@@ -202,8 +205,9 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
               placeholder="(11) 99999-9999"
               disabled={addContactMutation.isPending}
             />
-            <p className="text-xs text-muted-foreground">
-              Formato: (31) 99871-0945 - Use o código de área.
+            <p className="text-xs text-amber-600">
+              <span className="font-medium">Importante:</span> Use o formato (31) 99871-0945 com código de área. 
+              O sistema converterá automaticamente para o formato internacional.
             </p>
           </div>
           

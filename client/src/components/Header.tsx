@@ -264,21 +264,7 @@ export default function Header({
                   </div>
                 </div>
                 
-                <div className="relative group">
-                  <Button 
-                    variant={viewMode === "results" ? "default" : "ghost"} 
-                    size="icon"
-                    onClick={() => toggleViewMode("results")}
-                    className={viewMode === "results" 
-                      ? "h-9 w-9 rounded bg-primary text-black hover:bg-primary/90 hover:text-black" 
-                      : "h-9 w-9 rounded text-white hover:text-primary hover:bg-white/10"}
-                  >
-                    <GanttChartIcon className="h-5 w-5" />
-                  </Button>
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                    Resultados de Vendas
-                  </div>
-                </div>
+
                 
                 {hasApiConfig && (
                   <div className="relative group">

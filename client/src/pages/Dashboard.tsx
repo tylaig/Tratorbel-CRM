@@ -222,9 +222,11 @@ export default function Dashboard() {
           viewMode={viewMode} 
           toggleViewMode={toggleViewMode}
           onOpenApiConfig={() => setIsApiModalOpen(true)}
+          onAddDeal={() => setIsAddDealModalOpen(true)}
           hasApiConfig={!!settings?.chatwootApiKey}
           activePipelineId={activePipelineId}
           onPipelineChange={(pipelineId) => setActivePipelineId(pipelineId)}
+          pipelineStages={pipelineStages}
         />
       </div>
       

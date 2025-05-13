@@ -499,8 +499,14 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
             
             return (
               <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col max-h-full">
-                <div className={`flex flex-col bg-white dark:bg-gray-900 rounded-t-lg border shadow-sm hover:shadow-md transition-shadow ${stageClass}`}>
-                  <div className="p-3 border-b border-gray-200 dark:border-gray-700 sticky top-0">
+                <div className={`flex flex-col rounded-t-lg border shadow-sm hover:shadow-md transition-shadow ${
+                  stage.stageType === "completed" 
+                    ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
+                    : stage.stageType === "lost" 
+                      ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
+                      : "bg-gradient-to-b from-blue-100 to-blue-50 border-blue-300 dark:from-blue-900/40 dark:to-blue-900/20 dark:border-blue-700"
+                }`}>
+                  <div className="p-3 border-b border-gray-200 dark:border-gray-700 sticky top-0 backdrop-blur-sm z-10">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {stage.stageType === "completed" && (
@@ -567,13 +573,15 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
                 <Droppable droppableId={stage.id.toString()}>
                   {(provided, snapshot) => (
                     <div
-                      className={`deal-list p-2 rounded-b-lg overflow-y-auto ${
+                      className={`deal-list p-2 rounded-b-lg ${
                         snapshot.isDraggingOver
                           ? "bg-yellow-50 dark:bg-yellow-900/20"
-                          : "bg-gray-50 dark:bg-gray-800"
+                          : stage.stageType === "completed" ? "bg-green-50 dark:bg-green-900/30" 
+                          : stage.stageType === "lost" ? "bg-red-50 dark:bg-red-900/30"
+                          : "bg-blue-50 dark:bg-blue-900/20"
                       }`}
                       ref={provided.innerRef}
-                      style={{ height: "calc(100vh - 250px)" }}
+                      style={{ height: "calc(100vh - 250px)", overflowY: "auto" }}
                       {...provided.droppableProps}
                     >
                       {stage.deals.map((deal, index) => (
@@ -587,50 +595,63 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`mb-2 p-3 group ${
+                              className={`mb-2 p-3 group border-l-4 ${
                                 snapshot.isDragging
                                   ? "shadow-lg dark:bg-gray-700"
                                   : "shadow-sm hover:shadow-md bg-white dark:bg-gray-800"
-                              } cursor-pointer`}
+                              } ${
+                                deal.status === "completed" 
+                                  ? "border-l-green-500" 
+                                  : deal.status === "canceled" 
+                                    ? "border-l-red-500"
+                                    : "border-l-yellow-500"
+                              } cursor-pointer rounded-md`}
                               onClick={() => {
                                 setSelectedDeal(deal);
                                 setIsEditDealModalOpen(true);
                               }}
                             >
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center justify-between">
                                 <div className="flex-1">
-                                  <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">{deal.name}</div>
+                                  <div className="font-medium text-gray-900 dark:text-gray-100 mb-1 truncate max-w-[180px]">
+                                    {deal.name}
+                                  </div>
                                 </div>
                                 <div>
                                   {getStatusBadge(deal.status)}
                                 </div>
                               </div>
                               
-                              <div className="grid grid-cols-2 gap-2 mt-2">
-                                <div className="col-span-2">
-                                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                    <Building className="w-3.5 h-3.5 mr-1.5" />
-                                    <span className="truncate">
-                                      {deal.leadData?.companyName || "Empresa não definida"}
-                                    </span>
-                                  </div>
+                              <div className="rounded-md bg-gray-50 dark:bg-gray-700/50 p-2 mt-2 space-y-1">
+                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                  <User2Icon className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
+                                  <span className="truncate">
+                                    {deal.leadData?.name || "Contato não definido"}
+                                  </span>
                                 </div>
                                 
                                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                  <Phone className="w-3.5 h-3.5 mr-1.5" />
+                                  <Building className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
+                                  <span className="truncate">
+                                    {deal.leadData?.companyName || "Empresa não definida"}
+                                  </span>
+                                </div>
+                                
+                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                  <Phone className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
                                   <span className="truncate">
                                     {deal.leadData?.phone || "Telefone não definido"}
                                   </span>
                                 </div>
-                                
-                                <div className="text-sm font-medium text-right text-gray-900 dark:text-white">
-                                  {formatCurrency(deal.value || 0)}
-                                </div>
                               </div>
                               
                               <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  Atualizado {formatTimeAgo(deal.updatedAt)}
+                                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                  <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                                  {formatTimeAgo(deal.updatedAt)}
+                                </span>
+                                <span className="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
+                                  {formatCurrency(deal.value || 0)}
                                 </span>
                               </div>
                             </Card>

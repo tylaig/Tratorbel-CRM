@@ -247,15 +247,15 @@ export default function Dashboard() {
           {activePipelineId && viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
             <div className="border-b flex-none">
               {/* Barra com botão de toggle */}
-              <div className="flex justify-between items-center px-4 py-2 bg-gray-100 dark:bg-gray-800">
+              <div className="flex justify-between items-center px-4 py-2 bg-blue-950 dark:bg-blue-950">
                 <div className="flex items-center gap-2">
-                  <FilterIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filtros</span>
+                  <FilterIcon className="h-4 w-4 text-yellow-400 dark:text-yellow-400" />
+                  <span className="text-sm font-medium text-yellow-400 dark:text-yellow-400">Filtros</span>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="h-8 w-8 p-0 text-yellow-400 hover:text-blue-950 hover:bg-yellow-400 dark:text-yellow-400 dark:hover:text-blue-950 dark:hover:bg-yellow-400 transition-colors"
                   onClick={() => setShowFilters(!showFilters)}
                 >
                   {showFilters ? (

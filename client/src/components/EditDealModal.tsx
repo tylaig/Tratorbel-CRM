@@ -127,6 +127,17 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     enabled: !!deal?.id
   });
   
+  // Buscar os estágios do pipeline selecionado
+  const { data: filteredPipelineStages = [] } = useQuery<PipelineStage[]>({
+    queryKey: ['/api/pipeline-stages', pipelineId],
+    queryFn: async () => {
+      if (!pipelineId) return [];
+      const response = await apiRequest(`/api/pipeline-stages?pipelineId=${pipelineId}`, 'GET');
+      return (response as unknown) as PipelineStage[];
+    },
+    enabled: !!pipelineId,
+  });
+  
   // Calcular o valor total da cotação quando os itens estiverem disponíveis
   useEffect(() => {
     if (quoteItems && quoteItems.length > 0) {
@@ -213,6 +224,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       if (leadUpdateDataRef.current) {
         const dealUpdateData: Partial<Deal> = {
           name,
+          pipelineId: parseInt(pipelineId),
           stageId: parseInt(stageId),
           // Se temos um valor de cotação selecionado, use-o; caso contrário, use o valor do campo
           value: selectedQuoteValue !== null 

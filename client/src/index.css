@@ -110,6 +110,20 @@
   max-height: calc(100vh - 160px);
 }
 
+/* Sticky header for Kanban columns */
+.kanban-column-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-clip: padding-box;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Adicionar sombra ao cabeçalho da coluna quando houver rolagem */
+.deal-list:not(:first-child) .kanban-column-header {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 /* Estilos para os estágios específicos */
 .board-container .deal-list {
   background-color: rgba(249, 250, 251, 0.5);
@@ -117,6 +131,7 @@
   border-radius: 0 0 0.5rem 0.5rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.7) rgba(229, 231, 235, 0.5);
+  height: calc(100vh - 220px);
   max-height: calc(100vh - 220px);
   overflow-y: auto;
 }

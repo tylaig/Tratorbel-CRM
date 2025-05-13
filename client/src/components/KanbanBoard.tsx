@@ -381,7 +381,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
               className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col"
             >
               {/* Cabeçalho da coluna - sticky */}
-              <div className={`p-3 rounded-t-lg border shadow-sm sticky top-0 z-10 ${
+              <div className={`p-3 rounded-t-lg border shadow-sm kanban-column-header ${
                 stage.stageType === "completed" 
                   ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
                   : stage.stageType === "lost" 
@@ -462,7 +462,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                           : stage.stageType === "lost" 
                             ? "bg-red-50 dark:bg-red-900/30 border-red-300"
                             : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
-                    } flex-1 h-[calc(100vh-200px)] overflow-y-auto`}
+                    } flex-1 overflow-y-auto`}
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >
@@ -503,9 +503,9 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                               setIsEditDealModalOpen(true);
                             }}
                           >
-                            <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center justify-between mb-0.5">
                               <div className="flex-1">
-                                <div className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[180px] text-xs">
+                                <div className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[150px] text-[10px]">
                                   {deal.name}
                                 </div>
                               </div>
@@ -514,28 +514,28 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-1">
-                              <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
-                                <User2Icon className="w-3 h-3 mr-1 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                            <div className="grid grid-cols-2 gap-0.5">
+                              <div className="flex items-center text-[9px] text-gray-600 dark:text-gray-400">
+                                <User2Icon className="w-2.5 h-2.5 mr-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                 <span className="truncate">
                                   {deal.leadData?.name || "N/D"}
                                 </span>
                               </div>
                               
-                              <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
-                                <Building className="w-3 h-3 mr-1 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                              <div className="flex items-center text-[9px] text-gray-600 dark:text-gray-400">
+                                <Building className="w-2.5 h-2.5 mr-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                 <span className="truncate">
                                   {deal.leadData?.companyName || "N/D"}
                                 </span>
                               </div>
                             </div>
                             
-                            <div className="flex items-center justify-between mt-1 pt-1 border-t border-gray-100 dark:border-gray-700">
-                              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <CalendarIcon className="w-3 h-3 mr-1" />
+                            <div className="flex items-center justify-between mt-0.5 pt-0.5 border-t border-gray-100 dark:border-gray-700">
+                              <span className="text-[9px] text-gray-500 dark:text-gray-400 flex items-center">
+                                <CalendarIcon className="w-2.5 h-2.5 mr-0.5" />
                                 {formatTimeAgo(deal.updatedAt)}
                               </span>
-                              <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
+                              <span className="px-1 py-0.5 text-[9px] font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
                                 {formatCurrency(deal.value || 0)}
                               </span>
                             </div>

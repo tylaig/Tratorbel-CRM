@@ -220,6 +220,14 @@
 .board-container {
   height: calc(100vh - 170px);
   padding-bottom: 20px;
+  overflow-x: auto;
+}
+
+.board-container .flex-row-container {
+  display: flex;
+  flex-direction: row;
+  min-width: max-content;
+  padding: 0 8px;
 }
 
 .deal-card {

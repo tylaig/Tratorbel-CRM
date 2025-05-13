@@ -374,10 +374,10 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         </div>
         
         {/* Área principal com os estágios */}
-        <div className="flex px-2 board-container flex-1 mt-2 overflow-x-auto pb-4">
-          {boardData.map((stage) => (
-            <div 
-              key={stage.id} 
+        <div className="flex px-2 board-container flex-1 mt-2 overflow-x-auto pb-4" style={{ overscrollBehavior: 'contain' }}>
+            {boardData.map((stage) => (
+              <div 
+                key={stage.id} 
               className="kanban-column flex-shrink-0 w-72 mx-1.5 flex flex-col h-full"
             >
               {/* Cabeçalho da coluna - sticky */}

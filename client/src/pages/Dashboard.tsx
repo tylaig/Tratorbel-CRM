@@ -216,7 +216,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col h-screen">
       {/* Cabeçalho fixo */}
-      <div className="fixed top-0 left-0 right-0 z-10">
+      <div className="fixed top-0 left-0 right-0 z-20">
         <Header 
           toggleSidebar={toggleSidebar}
           viewMode={viewMode} 
@@ -230,10 +230,10 @@ export default function Dashboard() {
       </div>
       
       {/* Espaçador para compensar o cabeçalho fixo */}
-      <div className="h-20"></div>
+      <div className="h-16"></div>
       
       {/* Conteúdo principal com rolagem */}
-      <div className="flex flex-1 overflow-y-auto">
+      <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 bg-gray-50 flex flex-col">
           {/* Mostrar o inicializador de banco de dados quando necessário */}
           {showDBInitializer && (
@@ -243,7 +243,7 @@ export default function Dashboard() {
           )}
           
           {viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
-            <div className="px-4 py-4 sticky top-0 z-10 bg-gray-50">
+            <div className="px-4 py-3 sticky top-0 z-10 bg-gray-50 shadow-sm">
               <FilterBar 
                 onFilterChange={updateFilters}
                 activeFilters={filters}

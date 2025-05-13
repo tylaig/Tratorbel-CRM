@@ -491,7 +491,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
             <span>Adicionar Estágio</span>
           </Button>
         </div>
-        <div className="flex overflow-x-auto px-2 board-container h-full pb-12">
+        <div className="flex overflow-x-auto px-2 board-container pb-6" style={{ height: 'calc(100vh - 150px)' }}>
           {boardData.map((stage) => {
             // Definir classes e estilos específicos com base no tipo de estágio
             let stageClass = "";
@@ -502,7 +502,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
             }
             
             return (
-              <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col max-h-full">
+              <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full">
                 <div className={`flex flex-col rounded-t-lg border shadow-sm hover:shadow-md transition-shadow ${
                   stage.stageType === "completed" 
                     ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
@@ -585,7 +585,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
                           : "bg-blue-50 dark:bg-blue-900/20"
                       }`}
                       ref={provided.innerRef}
-                      style={{ height: "calc(100vh - 250px)", overflowY: "auto" }}
+                      style={{ height: "calc(100vh - 230px)", overflowY: "auto" }}
                       {...provided.droppableProps}
                     >
                       {stage.deals.map((deal, index) => (

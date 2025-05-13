@@ -23,10 +23,26 @@ export default function Dashboard() {
   const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
   
   const { toast } = useToast();
-  const { pipelineStages, refreshPipelineData, filters, updateFilters } = usePipeline();
   
   // Estado para controlar o pipeline ativo
   const [activePipelineId, setActivePipelineId] = useState<number | null>(null);
+  
+  // Fetch a lista de pipelines disponíveis
+  const { data: pipelines = [] } = useQuery<Pipeline[]>({
+    queryKey: ['/api/pipelines'],
+  });
+
+  // Fetch o pipeline padrão
+  const { data: defaultPipeline } = useQuery<Pipeline>({
+    queryKey: ['/api/pipelines/default'],
+    onSuccess: (data) => {
+      if (data?.id && !activePipelineId) {
+        setActivePipelineId(data.id);
+      }
+    }
+  });
+  
+  const { pipelineStages, refreshPipelineData, filters, updateFilters } = usePipeline(activePipelineId);
   
   // Get settings
   const { data: settings, isLoading: isLoadingSettings } = useQuery<Settings | undefined>({
@@ -208,6 +224,8 @@ export default function Dashboard() {
         onSync={handleSync}
         syncLoading={syncMutation.isPending}
         hasApiConfig={!!settings?.chatwootApiKey}
+        activePipelineId={activePipelineId}
+        onPipelineChange={(pipelineId) => setActivePipelineId(pipelineId)}
       />
       
       <div className="flex flex-1 overflow-hidden">

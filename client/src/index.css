@@ -141,6 +141,14 @@
   opacity: 1;
 }
 
+/* Configurações para altura das colunas do Kanban */
+.kanban-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 300px;
+}
+
 /* Estilos para os estágios específicos */
 .board-container .deal-list {
   background-color: rgba(249, 250, 251, 0.5);

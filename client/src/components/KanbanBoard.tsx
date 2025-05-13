@@ -313,7 +313,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-[calc(100vh-240px)]">
         {/* Botão oculto para ser clicado pelo Header para adicionar estágio */}
         <button
           id="add-stage-button"
@@ -374,7 +374,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         </div>
         
         {/* Área principal de rolagem horizontal com os estágios */}
-        <div className="flex overflow-x-auto px-2 board-container flex-1 mt-2">
+        <div className="flex overflow-x-auto px-2 board-container flex-1 mt-2 h-full">
           {boardData.map((stage) => (
             <div 
               key={stage.id} 
@@ -462,7 +462,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                           : stage.stageType === "lost" 
                             ? "bg-red-50 dark:bg-red-900/30 border-red-300"
                             : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
-                    } flex-1 overflow-y-auto`}
+                    } flex-1 overflow-y-auto min-h-[300px] h-full`}
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >

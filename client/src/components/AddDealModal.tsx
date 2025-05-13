@@ -499,15 +499,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
                 </Select>
               </div>
               
-              <div className="grid gap-2">
-                <Label htmlFor="deal-value">Valor (R$)</Label>
-                <Input
-                  id="deal-value"
-                  value={value}
-                  onChange={handleValueChange}
-                  placeholder="0,00"
-                />
-              </div>
+              {/* Campo de valor removido, será definido pela cotação posteriormente */}
               
               <div className="grid gap-2">
                 <Label htmlFor="deal-status">Status</Label>

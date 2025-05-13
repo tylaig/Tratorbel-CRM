@@ -441,3 +441,39 @@ export const insertMachineBrandSchema = createInsertSchema(machineBrands).pick({
 
 export type InsertMachineBrand = z.infer<typeof insertMachineBrandSchema>;
 export type MachineBrand = typeof machineBrands.$inferSelect;
+
+export const machineBrandsRelations = relations(machineBrands, ({ many }) => ({
+  models: many(machineModels)
+}));
+
+// Modelos de máquinas
+export const machineModels = pgTable("machine_models", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  brandId: integer("brand_id").notNull(),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => {
+  return {
+    brandIdForeignKey: foreignKey({
+      columns: [table.brandId],
+      foreignColumns: [machineBrands.id],
+    }),
+  }
+});
+
+export const insertMachineModelSchema = createInsertSchema(machineModels).pick({
+  name: true,
+  brandId: true,
+  active: true,
+});
+
+export type InsertMachineModel = z.infer<typeof insertMachineModelSchema>;
+export type MachineModel = typeof machineModels.$inferSelect;
+
+export const machineModelsRelations = relations(machineModels, ({ one }) => ({
+  brand: one(machineBrands, {
+    fields: [machineModels.brandId],
+    references: [machineBrands.id],
+  }),
+}));

@@ -602,9 +602,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <FileLineChart className="h-4 w-4" />
               Pipelines
             </TabsTrigger>
-            <TabsTrigger value="pipeline" className="flex items-center gap-1">
-              <Layers className="h-4 w-4" />
-              Estágios
+            <TabsTrigger value="machine-brands" className="flex items-center gap-1">
+              <Car className="h-4 w-4" />
+              Marcas & Modelos
             </TabsTrigger>
             <TabsTrigger value="loss-reasons" className="flex items-center gap-1">
               <XCircle className="h-4 w-4" />
@@ -697,34 +697,59 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="defaultPipeline">Pipeline Padrão</Label>
-                  <div className="grid gap-4">
-                    <select
-                      id="defaultPipeline"
-                      className="w-full p-2 rounded-md border"
-                      value={defaultPipelineId || ""}
-                      onChange={(e) => setDefaultPipelineId(e.target.value ? Number(e.target.value) : null)}
-                    >
-                      <option value="">Selecione um pipeline</option>
-                      {pipelines.map((pipeline) => (
-                        <option key={pipeline.id} value={pipeline.id}>
-                          {pipeline.name}
-                        </option>
-                      ))}
-                    </select>
-                    
-                    <p className="text-sm text-gray-500">
-                      O pipeline selecionado será carregado automaticamente quando o usuário abrir o sistema.
-                    </p>
-                    
-                    <Button 
-                      onClick={saveDefaultPipeline} 
-                      className="w-full md:w-auto"
-                      disabled={saveDefaultPipelineMutation.isPending}
-                    >
-                      {saveDefaultPipelineMutation.isPending ? "Salvando..." : "Salvar Pipeline Padrão"}
-                    </Button>
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="defaultPipeline">Pipeline Padrão</Label>
+                    <div className="grid gap-4">
+                      <select
+                        id="defaultPipeline"
+                        className="w-full p-2 rounded-md border"
+                        value={defaultPipelineId || ""}
+                        onChange={(e) => setDefaultPipelineId(e.target.value ? Number(e.target.value) : null)}
+                      >
+                        <option value="">Selecione um pipeline</option>
+                        {pipelines.map((pipeline) => (
+                          <option key={pipeline.id} value={pipeline.id}>
+                            {pipeline.name}
+                          </option>
+                        ))}
+                      </select>
+                      
+                      <p className="text-sm text-gray-500">
+                        O pipeline selecionado será carregado automaticamente quando o usuário abrir o sistema.
+                      </p>
+                      
+                      <Button 
+                        onClick={saveDefaultPipeline} 
+                        className="w-full md:w-auto"
+                        disabled={saveDefaultPipelineMutation.isPending}
+                      >
+                        {saveDefaultPipelineMutation.isPending ? "Salvando..." : "Salvar Pipeline Padrão"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="text-lg font-medium mb-2">Gerenciar Estágios dos Pipelines</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="selectedPipeline">Selecione o Pipeline para Editar Estágios</Label>
+                      <select
+                        id="selectedPipeline"
+                        className="w-full p-2 rounded-md border"
+                        value={selectedPipelineId || ""}
+                        onChange={(e) => setSelectedPipelineId(e.target.value ? Number(e.target.value) : null)}
+                      >
+                        <option value="">Selecione um pipeline</option>
+                        {pipelines.map((pipeline) => (
+                          <option key={pipeline.id} value={pipeline.id}>
+                            {pipeline.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-sm text-gray-500">
+                        Selecione um pipeline para gerenciar seus estágios abaixo.
+                      </p>
+                    </div>
                   </div>
                 </div>
                 

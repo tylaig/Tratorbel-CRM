@@ -234,7 +234,7 @@ export default function Dashboard() {
       </div>
       
       {/* Conteúdo principal - tudo abaixo do cabeçalho */}
-      <div className="flex-grow flex flex-col overflow-hidden">
+      <div className="flex-grow flex flex-col overflow-hidden h-[calc(100vh-64px)]">
         <main className="flex-grow flex flex-col overflow-hidden bg-gray-50">
           {/* Mostrar o inicializador de banco de dados quando necessário */}
           {showDBInitializer && (
@@ -345,7 +345,7 @@ export default function Dashboard() {
             )}
             
             {activePipelineId && viewMode === "kanban" && (
-              <div className="h-full overflow-auto">
+              <div className="flex-1 overflow-auto h-[calc(100vh-240px)]">
                 <KanbanBoard 
                   pipelineStages={pipelineStages} 
                   filters={filters} 

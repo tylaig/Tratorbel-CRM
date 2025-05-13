@@ -313,7 +313,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex flex-col h-[calc(100vh-240px)]">
+      <div className="flex flex-col h-full">
         {/* Botão oculto para ser clicado pelo Header para adicionar estágio */}
         <button
           id="add-stage-button"

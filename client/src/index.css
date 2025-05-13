@@ -104,10 +104,9 @@
 
 /* Custom styles for the Kanban board */
 .kanban-column {
-  height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 160px);
+  height: 100%;
 }
 
 /* Sticky header for Kanban columns */
@@ -146,7 +145,6 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 300px;
 }
 
 /* Estilos para os estágios específicos */
@@ -156,7 +154,7 @@
   border-radius: 0 0 0.5rem 0.5rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.7) rgba(229, 231, 235, 0.5);
-  height: calc(100vh - 220px);
+  height: 100%;
   max-height: calc(100vh - 220px);
   overflow-y: auto;
 }

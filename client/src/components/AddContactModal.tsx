@@ -62,9 +62,11 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
         if (errorMessage.includes("Email has already been taken")) {
           throw new Error("O email informado já está sendo usado por outro contato.");
         } else if (errorMessage.includes("Phone number has already been taken")) {
-          throw new Error("Este número de telefone já está cadastrado para outro contato.");
+          throw new Error("Este número de telefone já está cadastrado para outro contato. Por favor, use um número diferente.");
+        } else if (errorMessage.includes("Este número de telefone já está cadastrado")) {
+          throw new Error("Este número de telefone já está cadastrado para outro contato. Por favor, use um número diferente.");
         } else if (errorMessage.includes("Phone number should be in e164 format")) {
-          throw new Error("O número de telefone precisa estar no formato internacional (+5531999999999).");
+          throw new Error("O número de telefone precisa estar no formato internacional. Verifique o formato e tente novamente.");
         } else {
           throw new Error(`Erro ao criar contato: ${errorMessage}`);
         }
@@ -137,17 +139,23 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
     // Remove todos os caracteres não numéricos
     const digitsOnly = phone.replace(/\D/g, '');
     
-    // Verifica se já começa com + ou adiciona o código do Brasil (+55)
-    if (digitsOnly.length > 0) {
-      // Se tiver 10 ou 11 dígitos (com DDD brasileiro), adiciona +55
-      if (digitsOnly.length >= 10 && digitsOnly.length <= 11) {
-        return `+55${digitsOnly}`;
-      }
-      // Se já tiver código do país ou outro formato
+    // Se o telefone estiver vazio, retorna vazio
+    if (digitsOnly.length === 0) {
+      return '';
+    }
+    
+    // Se já começar com código do Brasil (55), certifique-se de que está no formato correto
+    if (digitsOnly.startsWith('55') && (digitsOnly.length === 12 || digitsOnly.length === 13)) {
       return `+${digitsOnly}`;
     }
     
-    return '';
+    // Se tiver 10 ou 11 dígitos (padrão brasileiro com DDD), adiciona +55
+    if (digitsOnly.length >= 10 && digitsOnly.length <= 11) {
+      return `+55${digitsOnly}`;
+    }
+    
+    // Para outros formatos, apenas adiciona o + no início
+    return `+${digitsOnly}`;
   };
 
   return (
@@ -159,7 +167,8 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
             Adicionar Novo Contato
           </DialogTitle>
           <DialogDescription>
-            Preencha os campos abaixo para adicionar um novo contato ao Chatwoot.
+            Preencha os campos abaixo para adicionar um novo contato ao Chatwoot. 
+            Para adicionar um contato que já existe no sistema, use o botão de busca.
           </DialogDescription>
         </DialogHeader>
         

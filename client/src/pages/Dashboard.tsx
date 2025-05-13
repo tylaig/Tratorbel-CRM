@@ -264,7 +264,11 @@ export default function Dashboard() {
             )}
             
             {activePipelineId && viewMode === "kanban" && (
-              <KanbanBoard pipelineStages={pipelineStages} filters={filters} />
+              <KanbanBoard 
+                pipelineStages={pipelineStages} 
+                filters={filters} 
+                activePipelineId={activePipelineId}
+              />
             )}
             
             {activePipelineId && viewMode === "list" && (

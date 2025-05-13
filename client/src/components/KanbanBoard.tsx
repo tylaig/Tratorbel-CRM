@@ -44,6 +44,7 @@ import { FilterOptions } from "@/components/FilterBar";
 interface KanbanBoardProps {
   pipelineStages: PipelineStage[];
   filters?: FilterOptions;
+  activePipelineId?: number | null;
 }
 
 interface StageWithDeals extends PipelineStage {
@@ -51,7 +52,7 @@ interface StageWithDeals extends PipelineStage {
   totalValue: number;
 }
 
-export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProps) {
+export default function KanbanBoard({ pipelineStages, filters, activePipelineId }: KanbanBoardProps) {
   // Logamos os estágios recebidos do componente pai
   console.log("KanbanBoard recebeu estágios:", pipelineStages?.length, pipelineStages?.map(s => s.name));
   

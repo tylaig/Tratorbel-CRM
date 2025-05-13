@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlusIcon } from "lucide-react";
+import { UserPlusIcon, AlertCircle, Loader2 } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/formatters";
 
 interface AddContactModalProps {
@@ -31,20 +31,41 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
   
   const { toast } = useToast();
   
+  const [errorMessage, setErrorMessage] = useState("");
+  
   const addContactMutation = useMutation({
     mutationFn: async () => {
       console.log("Criando novo contato no Chatwoot");
+      
+      // Reset error message
+      setErrorMessage("");
+      
       const payload = {
         name,
         email: email || null,
-        phone_number: phone.replace(/\D/g, '') || null, // Remove não-dígitos
+        phone_number: formatE164Phone(phone), // Formato E.164 (+5511999999999)
         company_name: companyName || null
       };
       
       console.log("Dados do novo contato:", payload);
-      const result = await apiRequest('/api/chatwoot/contacts', 'POST', payload);
-      console.log("Contato criado com sucesso:", result);
-      return result;
+      
+      try {
+        const result = await apiRequest('/api/chatwoot/contacts', 'POST', payload);
+        console.log("Contato criado com sucesso:", result);
+        return result;
+      } catch (error: any) {
+        // Extrair mensagens de erro da API
+        const errorData = error?.data || {};
+        const errorMessage = errorData.message || "Erro desconhecido";
+        
+        if (errorMessage.includes("Email has already been taken")) {
+          throw new Error("O email informado já está sendo usado por outro contato.");
+        } else if (errorMessage.includes("Phone number should be in e164 format")) {
+          throw new Error("O número de telefone precisa estar no formato internacional (+5531999999999).");
+        } else {
+          throw new Error(`Erro ao criar contato: ${errorMessage}`);
+        }
+      }
     },
     onSuccess: async (data) => {
       toast({
@@ -67,10 +88,15 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
       resetForm();
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      const errorMsg = error?.message || "Não foi possível adicionar o contato. Por favor, tente novamente.";
+      
+      // Set the error message for display
+      setErrorMessage(errorMsg);
+      
       toast({
         title: "Erro ao adicionar",
-        description: "Não foi possível adicionar o contato. Por favor, tente novamente.",
+        description: errorMsg,
         variant: "destructive",
       });
       console.error("Add contact error:", error);
@@ -98,9 +124,27 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
   };
   
   const formatPhone = (value: string) => {
-    // Formata o telefone conforme o usuário digita
+    // Formata o telefone para exibição conforme o usuário digita
     const formattedPhone = formatPhoneNumber(value);
     setPhone(formattedPhone);
+  };
+  
+  // Converte o telefone para o formato E.164 (padrão internacional)
+  const formatE164Phone = (phone: string): string => {
+    // Remove todos os caracteres não numéricos
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    // Verifica se já começa com + ou adiciona o código do Brasil (+55)
+    if (digitsOnly.length > 0) {
+      // Se tiver 10 ou 11 dígitos (com DDD brasileiro), adiciona +55
+      if (digitsOnly.length >= 10 && digitsOnly.length <= 11) {
+        return `+55${digitsOnly}`;
+      }
+      // Se já tiver código do país ou outro formato
+      return `+${digitsOnly}`;
+    }
+    
+    return '';
   };
 
   return (
@@ -115,6 +159,15 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
             Preencha os campos abaixo para adicionar um novo contato ao Chatwoot.
           </DialogDescription>
         </DialogHeader>
+        
+        {errorMessage && (
+          <div className="rounded-md bg-red-50 p-3 mb-2 border border-red-200">
+            <div className="flex">
+              <AlertCircle className="h-5 w-5 text-red-400 mr-2 flex-shrink-0" />
+              <p className="text-sm text-red-800">{errorMessage}</p>
+            </div>
+          </div>
+        )}
         
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -149,6 +202,9 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
               placeholder="(11) 99999-9999"
               disabled={addContactMutation.isPending}
             />
+            <p className="text-xs text-muted-foreground">
+              Formato: (31) 99871-0945 - Use o código de área.
+            </p>
           </div>
           
           <div className="grid gap-2">

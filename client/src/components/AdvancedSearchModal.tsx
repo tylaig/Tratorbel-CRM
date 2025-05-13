@@ -43,10 +43,11 @@ interface ChatwootContact {
 interface AdvancedSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectContact: (contactId: string, contactName: string) => void;
+  onSelectContact?: (contactId: string, contactName: string) => void;
+  onSelect?: (contactId: string, contactName: string) => void;
 }
 
-export default function AdvancedSearchModal({ isOpen, onClose, onSelectContact }: AdvancedSearchModalProps) {
+export default function AdvancedSearchModal({ isOpen, onClose, onSelectContact, onSelect }: AdvancedSearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -69,7 +70,12 @@ export default function AdvancedSearchModal({ isOpen, onClose, onSelectContact }
   const contacts = data?.contacts || [];
 
   const handleSelectContact = (contact: ChatwootContact) => {
-    onSelectContact(contact.id.toString(), contact.name);
+    // Use qualquer uma das funções de callback que foi fornecida
+    if (onSelect) {
+      onSelect(contact.id.toString(), contact.name);
+    } else if (onSelectContact) {
+      onSelectContact(contact.id.toString(), contact.name);
+    }
     onClose();
   };
 

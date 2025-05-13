@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Deal, LossReason } from '@shared/schema';
@@ -20,7 +20,6 @@ type DealOutcomeModalProps = {
 
 export default function DealOutcomeModal({ isOpen, onClose, deal, targetStageId, targetStageType }: DealOutcomeModalProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Estado para os campos do formulário
   const [salePerformance, setSalePerformance] = useState<string | null>(null);
@@ -32,6 +31,9 @@ export default function DealOutcomeModal({ isOpen, onClose, deal, targetStageId,
     queryKey: ['/api/loss-reasons'],
     enabled: targetStageType === 'lost',
   });
+  
+  // Adicionar logs para depuração
+  console.log("Modal de resultado aberto:", targetStageType, targetStageId, deal?.id);
 
   // Mutação para atualizar o deal
   const { mutate, isPending } = useMutation({
@@ -45,7 +47,8 @@ export default function DealOutcomeModal({ isOpen, onClose, deal, targetStageId,
       if (targetStageType === 'completed') {
         updatedDeal.salePerformance = salePerformance;
       } else if (targetStageType === 'lost') {
-        updatedDeal.lostReason = lostReason;
+        // Converter para número se o lostReason não for nulo
+        updatedDeal.lostReason = lostReason ? parseInt(lostReason, 10) : null;
         updatedDeal.lostNotes = notes;
       }
 

@@ -485,6 +485,26 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                     />
                   </div>
 
+                  <div className="grid gap-2 mb-2">
+                    <Label htmlFor="deal-pipeline">Pipeline</Label>
+                    <Select value={pipelineId} onValueChange={(value) => {
+                      setPipelineId(value);
+                      // Ao mudar o pipeline, limpe a seleção do estágio
+                      setStageId("");
+                    }}>
+                      <SelectTrigger id="deal-pipeline">
+                        <SelectValue placeholder="Selecione um pipeline" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pipelines.map((pipeline) => (
+                          <SelectItem key={pipeline.id} value={pipeline.id.toString()}>
+                            {pipeline.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="deal-stage">Etapa</Label>
@@ -493,7 +513,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                           <SelectValue placeholder="Selecione uma etapa" />
                         </SelectTrigger>
                         <SelectContent>
-                          {pipelineStages.map((stage) => (
+                          {filteredPipelineStages.map((stage) => (
                             <SelectItem key={stage.id} value={stage.id.toString()}>
                               {stage.name}
                             </SelectItem>

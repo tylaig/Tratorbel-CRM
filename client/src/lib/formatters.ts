@@ -77,6 +77,34 @@ export function formatDate(date: Date | string | null | undefined): string {
   return new Intl.DateTimeFormat('pt-BR').format(dateObj);
 }
 
+export function formatDateTime(date: Date | string | null | undefined): string {
+  if (!date) return 'data desconhecida';
+  
+  // Converter para Date se for string
+  let dateObj: Date;
+  if (typeof date === 'string') {
+    dateObj = new Date(date);
+  } else if (date instanceof Date) {
+    dateObj = date;
+  } else {
+    return 'data inválida';
+  }
+  
+  // Verificar se é uma data válida
+  if (isNaN(dateObj.getTime())) {
+    return 'data inválida';
+  }
+  
+  return new Intl.DateTimeFormat('pt-BR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(dateObj);
+}
+
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';

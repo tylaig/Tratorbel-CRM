@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Calendar, Mail, Phone, FileText, MessageCircle, Clock } from 'lucide-react';
-import { formatTimeAgo } from '@/lib/formatters';
+import { formatTimeAgo, formatDateTime } from '@/lib/formatters';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import type { Deal, LeadActivity } from '@shared/schema';
@@ -96,7 +96,9 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
                     </CardTitle>
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Clock className="h-3 w-3 mr-1" />
-                      {formatTimeAgo(new Date(activity.createdAt))}
+                      <span title={formatDateTime(new Date(activity.createdAt))}>
+                        {formatTimeAgo(new Date(activity.createdAt))}
+                      </span>
                     </div>
                   </div>
                   {activity.createdBy && (
@@ -108,17 +110,6 @@ export default function LeadActivities({ deal }: LeadActivitiesProps) {
                 <CardContent className="p-4 pt-0 pb-2">
                   <p className="text-sm">{activity.description}</p>
                 </CardContent>
-                <CardFooter className="p-2 flex justify-end">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => deleteActivityMutation.mutate(activity.id)}
-                    disabled={deleteActivityMutation.isPending}
-                    className="h-8 px-2 text-destructive hover:text-destructive"
-                  >
-                    Remover
-                  </Button>
-                </CardFooter>
               </Card>
             ))}
           </div>

@@ -58,66 +58,70 @@ interface StageWithDeals extends PipelineStage {
 }
 
 export default function KanbanBoard({ pipelineStages, filters, activePipelineId, onAddDeal }: KanbanBoardProps) {
+  // Logamos os estágios recebidos do componente pai
+  console.log("KanbanBoard recebeu estágios:", pipelineStages?.length, pipelineStages?.map(s => s.name));
+  
+  // Use os filtros do componente pai ou crie um padrão
+  const activeFilters = filters || {
+    search: "",
+    status: [] as string[],
+    sortBy: "date",
+    sortOrder: "desc",
+    hideClosed: true,
+    winReason: null as string | null,
+    lostReason: null as string | null
+  };
   const [boardData, setBoardData] = useState<StageWithDeals[]>([]);
+  const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
+  const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
+  const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
+  const [selectedStageForNewDeal, setSelectedStageForNewDeal] = useState<PipelineStage | null>(null);
+  const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
+  const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [selectedStage, setSelectedStage] = useState<PipelineStage | null>(null);
+  const [targetStageInfo, setTargetStageInfo] = useState<{id: number, type: 'completed' | 'lost' | null}>({ id: 0, type: null });
   const { toast } = useToast();
   
-  // Estado para o modal de edição de negócio
-  const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
-  
-  // Estado para o modal de edição de estágio
-  const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
-  const [selectedStage, setSelectedStage] = useState<PipelineStage | null>(null);
-  
-  // Estado para o modal de adição de estágio
-  const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
-  
-  // Estado para o modal de adição de negócio
-  const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
-  const [selectedStageForNewDeal, setSelectedStageForNewDeal] = useState<PipelineStage | null>(null);
-  
-  // Estado para o modal de resultado de negócio
-  const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false);
-  const [targetStageInfo, setTargetStageInfo] = useState<{ id: number, type: 'completed' | 'lost' | null }>({ id: 0, type: null });
-  
-  // Obter todos os negócios
-  const { data: deals, isLoading, isError } = useQuery<Deal[]>({
+  // Get deals com configurações para garantir atualização imediata e tempo real
+  const { data: deals, isLoading } = useQuery<Deal[]>({
     queryKey: ['/api/deals'],
+    refetchOnMount: true,         // Recarregar ao montar
+    refetchOnWindowFocus: true,   // Recarregar quando a janela ganhar foco
+    staleTime: 0,                 // Considerar dados obsoletos imediatamente (sempre buscar dados frescos)
+    refetchInterval: 2000,        // Recarregar a cada 2 segundos para garantir dados atualizados
   });
   
-  // Mutation para atualizar um negócio
+  // Update deal stage or order when dragged
   const updateDealMutation = useMutation({
-    mutationFn: async (data: { dealId: number, stageId?: number, order?: number }) => {
-      return apiRequest(`/api/deals/${data.dealId}`, 'PUT', data);
+    mutationFn: async (data: { 
+      dealId: number; 
+      stageId?: number; 
+      order?: number
+    }) => {
+      return await apiRequest(`/api/deals/${data.dealId}`, 'PUT', data);
     }
   });
   
-  // Função para organizar os dados do quadro com base nos estágios e negócios disponíveis
+  // Função para organizar dados do quadro
   const organizeBoardData = () => {
-    if (pipelineStages && deals) {
-      console.log("KanbanBoard recebeu estágios:", pipelineStages.length, pipelineStages.map(s => s.name));
-      
-      let filteredDeals = [...deals];
-      const activeFilters = filters || { search: "", status: [], sortBy: "date", sortOrder: "desc", hideClosed: true };
-      
+    if (pipelineStages.length > 0 && deals) {
       console.log("Filtros aplicados:", activeFilters);
       console.log("Pipeline ativo:", activePipelineId);
       
-      // Filtrar por pipeline ativo
-      if (activePipelineId) {
-        filteredDeals = filteredDeals.filter(deal => deal.pipelineId === activePipelineId);
-      }
+      // Filtrar todos os deals com base nos filtros
+      let filteredDeals = [...deals];
       
-      // Filtrar por busca
+      // Filtrar por termo de busca
       if (activeFilters.search) {
         const searchTerm = activeFilters.search.toLowerCase();
-        filteredDeals = filteredDeals.filter(deal => 
-          deal.name.toLowerCase().includes(searchTerm) || 
-          deal.leadData?.name?.toLowerCase().includes(searchTerm) ||
-          deal.leadData?.companyName?.toLowerCase().includes(searchTerm) ||
-          deal.leadData?.phone?.toLowerCase().includes(searchTerm) ||
-          deal.leadData?.email?.toLowerCase().includes(searchTerm)
-        );
+        filteredDeals = filteredDeals.filter(deal => {
+          // Buscar em vários campos
+          return (
+            deal.name?.toLowerCase().includes(searchTerm) ||
+            deal.notes?.toLowerCase().includes(searchTerm)
+          );
+        });
       }
       
       // Filtrar por status
@@ -174,18 +178,14 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         }
         // Para o estágio de vendas realizadas, mostrar deals marcados como ganhos
         else if (stage.stageType === "completed") {
-          stageDeals = filteredDeals.filter(deal => 
-            deal.saleStatus === "won"
-          );
-        }
+          stageDeals = filteredDeals.filter(deal => deal.saleStatus === 'won');
+        } 
         // Para o estágio de vendas perdidas, mostrar deals marcados como perdidos
         else if (stage.stageType === "lost") {
-          stageDeals = filteredDeals.filter(deal => 
-            deal.saleStatus === "lost"
-          );
+          stageDeals = filteredDeals.filter(deal => deal.saleStatus === 'lost');
         }
         
-        // Calcular o valor total dos negócios no estágio
+        // Calcular o total baseado no valor do deal
         const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
         
         return {
@@ -202,7 +202,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   // Organize deals by stage quando os dados ou filtros mudam
   useEffect(() => {
     organizeBoardData();
-  }, [pipelineStages, deals, filters]);
+  }, [pipelineStages, deals, activeFilters]);
   
   // Handle drag and drop
   const onDragEnd = async (result: DropResult) => {
@@ -249,44 +249,82 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         dealId 
       };
       
-      // Se estivermos movendo para um estágio diferente
-      if (sourceStageId !== targetStageId) {
-        updateData.stageId = targetStageId;
-      }
+      // Vamos criar uma cópia para manipular o novo estado do board
+      let newBoardData = [...boardData];
       
-      // Calcular nova ordem
-      updateData.order = destination.index;
-      
-      // Atualizar estado localmente para feedback visual imediato
-      const newBoardData = [...boardData];
-      
-      // Remover o deal da origem
-      const sourceStageIndex = newBoardData.findIndex(s => s.id === sourceStageId);
-      if (sourceStageIndex >= 0) {
-        newBoardData[sourceStageIndex] = {
-          ...newBoardData[sourceStageIndex],
-          deals: newBoardData[sourceStageIndex].deals.filter(d => d.id !== dealId)
-        };
-      }
-      
-      // Adicionar o deal ao destino na posição correta
-      const targetStageIndex = newBoardData.findIndex(s => s.id === targetStageId);
-      if (targetStageIndex >= 0 && movedDeal) {
-        const updatedDeal = { ...movedDeal, stageId: targetStageId };
-        const targetDeals = [...newBoardData[targetStageIndex].deals];
-        targetDeals.splice(destination.index, 0, updatedDeal);
+      // Caso 1: Reordenação dentro da mesma coluna - mover para cima ou para baixo
+      if (source.droppableId === destination.droppableId) {
+        // Encontrar o estágio relevante
+        const stageIndex = newBoardData.findIndex(s => s.id === sourceStageId);
+        if (stageIndex === -1) return;
         
-        newBoardData[targetStageIndex] = {
-          ...newBoardData[targetStageIndex],
-          deals: targetDeals
+        // Criar uma cópia dos deals desse estágio
+        const stageDeals = [...newBoardData[stageIndex].deals];
+        
+        // Remover o deal da posição atual
+        const [removedDeal] = stageDeals.splice(source.index, 1);
+        
+        // Inserir o deal na nova posição
+        stageDeals.splice(destination.index, 0, removedDeal);
+        
+        // Atualizar as posições dos deals
+        const updatedStageDeals = stageDeals.map((deal, index) => ({
+          ...deal,
+          order: index
+        }));
+        
+        // Atualizar o estado do estágio
+        newBoardData[stageIndex] = {
+          ...newBoardData[stageIndex],
+          deals: updatedStageDeals,
+          // Use apenas o valor do deal (que já inclui o valor da cotação quando apropriado)
+          totalValue: updatedStageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0)
         };
+        
+        // Definir a nova ordem para o servidor
+        updateData.order = destination.index;
+      } 
+      // Caso 2: Movendo entre colunas diferentes
+      else {
+        // Adicionar o dealId ao estágio de destino
+        updateData.stageId = targetStageId;
+        
+        // Atualizar o deal local com o novo stageId
+        const updatedDeals = deals.map(deal => 
+          deal.id === dealId ? { ...deal, stageId: targetStageId } : deal
+        );
+        
+        // Atualizar o queryCache local para feedback imediato
+        queryClient.setQueryData(['/api/deals'], updatedDeals);
+        
+        // Atualizar o board visualmente
+        newBoardData = newBoardData.map(stage => {
+          // Adicionar o deal à nova coluna
+          if (stage.id === targetStageId) {
+            // Remover o deal da coluna antiga se já existir por algum motivo
+            const filteredDeals = stage.deals.filter(d => d.id !== dealId);
+            // Adicionar o deal na nova posição
+            const newDeals = [...filteredDeals];
+            newDeals.splice(destination.index, 0, {...movedDeal, stageId: targetStageId, order: destination.index});
+            
+            return {
+              ...stage,
+              deals: newDeals,
+              totalValue: newDeals.reduce((sum, d) => sum + (d.value || 0), 0)
+            };
+          } 
+          // Remover o deal da coluna original
+          else if (stage.id === sourceStageId) {
+            const newDeals = stage.deals.filter(d => d.id !== dealId);
+            return {
+              ...stage,
+              deals: newDeals,
+              totalValue: newDeals.reduce((sum, d) => sum + (d.value || 0), 0)
+            };
+          }
+          return stage;
+        });
       }
-      
-      // Atualizar os valores totais dos estágios
-      newBoardData.forEach(stage => {
-        stage.totalValue = stage.deals.reduce((sum, d) => sum + (d.value || 0), 0);
-        return stage;
-      });
       
       // Aplicar a mudança visual imediatamente
       setBoardData(newBoardData);
@@ -337,17 +375,23 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
       });
     } catch (error) {
       console.error("Erro ao mover negócio:", error);
-      organizeBoardData(); // Recarregue os dados para voltar ao estado anterior em caso de erro
+      
+      // Restaurar a disposição original do quadro
+      organizeBoardData();
+      
+      // Recarregar todos os dados do servidor de forma assíncrona
+      queryClient.fetchQuery({ queryKey: ['/api/deals'] });
+      
       toast({
-        title: "Erro ao mover negócio",
-        description: "Não foi possível atualizar a posição. Tente novamente.",
+        title: "Erro ao mover",
+        description: "Não foi possível mover o negócio. Tente novamente.",
         variant: "destructive",
       });
     }
   };
   
-  // Helper function para obter o status badge com a classe CSS correta
-  const getStatusBadge = (status: string | null) => {
+  // Get status badge based on deal status
+  const getStatusBadge = (status: string | null | undefined) => {
     const statusMap: Record<string, string> = {
       'in_progress': 'Em andamento',
       'waiting': 'Aguardando',
@@ -378,49 +422,51 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   }
   
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex flex-col h-full">
-        {/* Modals */}
-        <EditDealModal 
-          isOpen={isEditDealModalOpen}
+    <>
+      {/* Modal de edição de negócio */}
+      <EditDealModal 
+        isOpen={isEditDealModalOpen}
+        onClose={() => {
+          setIsEditDealModalOpen(false);
+          setSelectedDeal(null);
+        }}
+        deal={selectedDeal}
+        pipelineStages={pipelineStages}
+      />
+      
+      {/* Modal de edição de estágio */}
+      <EditStageModal 
+        isOpen={isEditStageModalOpen}
+        onClose={() => {
+          setIsEditStageModalOpen(false);
+          setSelectedStage(null);
+        }}
+        stage={selectedStage}
+      />
+      
+      {/* Modal de adição de estágio */}
+      <AddStageModal 
+        isOpen={isAddStageModalOpen}
+        onClose={() => setIsAddStageModalOpen(false)}
+        pipelineStages={pipelineStages}
+      />
+      
+      {/* Modal de definição de resultado de negócio */}
+      {selectedDeal && (
+        <DealOutcomeModal
+          isOpen={isOutcomeModalOpen}
           onClose={() => {
-            setIsEditDealModalOpen(false);
+            setIsOutcomeModalOpen(false);
             setSelectedDeal(null);
+            setTargetStageInfo({ id: 0, type: null });
           }}
           deal={selectedDeal}
-          pipelineStages={pipelineStages}
+          targetStageId={targetStageInfo.id}
+          targetStageType={targetStageInfo.type}
         />
-        
-        <EditStageModal 
-          isOpen={isEditStageModalOpen}
-          onClose={() => {
-            setIsEditStageModalOpen(false);
-            setSelectedStage(null);
-          }}
-          stage={selectedStage}
-        />
-        
-        <AddStageModal 
-          isOpen={isAddStageModalOpen}
-          onClose={() => setIsAddStageModalOpen(false)}
-          pipelineStages={pipelineStages}
-        />
-        
-        {selectedDeal && (
-          <DealOutcomeModal
-            isOpen={isOutcomeModalOpen}
-            onClose={() => {
-              setIsOutcomeModalOpen(false);
-              setSelectedDeal(null);
-              setTargetStageInfo({ id: 0, type: null });
-            }}
-            deal={selectedDeal}
-            targetStageId={targetStageInfo.id}
-            targetStageType={targetStageInfo.type}
-          />
-        )}
-        
-        {/* Header com botões */}
+      )}
+      
+      <div className="flex flex-col h-full">
         <div className="flex justify-between items-center px-4 py-2 mb-2 flex-none">
           <div className="flex-grow">
             <Button
@@ -428,9 +474,11 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
               size="sm"
               className="bg-yellow-400 hover:bg-yellow-500 text-blue-950 shadow-sm border-none flex items-center gap-1"
               onClick={() => {
+                // Verificar se existe a função externa (prioridade) ou usar a função interna
                 if (onAddDeal) {
                   onAddDeal();
                 } else {
+                  // Se não há estágios disponíveis, não podemos adicionar um negócio
                   if (pipelineStages.length === 0) {
                     toast({
                       title: "Não é possível adicionar um negócio",
@@ -440,6 +488,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                     return;
                   }
                   
+                  // Usar o primeiro estágio normal como padrão
                   const defaultStage = pipelineStages.find(s => s.stageType === "normal" || s.stageType === null);
                   setSelectedStageForNewDeal(defaultStage || pipelineStages[0]);
                   setIsAddDealModalOpen(true);
@@ -459,89 +508,89 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
             <span>Adicionar Estágio</span>
           </Button>
         </div>
-        
-        {/* Kanban Board */}
         <div className="flex overflow-x-auto px-2 board-container flex-1">
-          {boardData.map((stage) => (
-            <div 
-              key={stage.id} 
-              className={`kanban-column flex-shrink-0 w-72 mx-2 flex flex-col ${
-                stage.stageType === "completed" ? "stage-completed" : 
-                stage.stageType === "lost" ? "stage-lost" : ""
-              }`}
-            >
-              <div className={`flex flex-col rounded-t-lg border shadow-sm hover:shadow-md transition-shadow h-full ${
-                stage.stageType === "completed" 
-                  ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
-                  : stage.stageType === "lost" 
-                    ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
-                    : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
-              }`}>
-                {/* Stage header */}
-                <div className="p-3 border-b border-gray-200 dark:border-gray-700 sticky top-0 backdrop-blur-sm z-10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {stage.stageType === "completed" && (
-                        <span className="h-3 w-3 bg-green-600 dark:bg-green-500 rounded-full"></span>
-                      )}
-                      {stage.stageType === "lost" && (
-                        <span className="h-3 w-3 bg-red-600 dark:bg-red-500 rounded-full"></span>
-                      )}
-                      {!stage.stageType && (
-                        <span className="h-3 w-3 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
-                      )}
-                      <h3 className="font-semibold text-gray-800 dark:text-gray-200">{stage.name}</h3>
-                      <Badge variant="outline" className="rounded-full px-2 py-0 h-5 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-                        {stage.deals.length}
-                      </Badge>
+          {boardData.map((stage) => {
+            // Definir classes e estilos específicos com base no tipo de estágio
+            let stageClass = "";
+            if (stage.stageType === "completed") {
+              stageClass = "border-green-500 bg-green-50 dark:bg-green-900/20";
+            } else if (stage.stageType === "lost") {
+              stageClass = "border-red-500 bg-red-50 dark:bg-red-900/20";
+            }
+            
+            return (
+              <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col max-h-full overflow-hidden">
+                <div className={`flex flex-col rounded-t-lg border shadow-sm hover:shadow-md transition-shadow h-full ${
+                  stage.stageType === "completed" 
+                    ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
+                    : stage.stageType === "lost" 
+                      ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
+                      : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
+                }`}>
+                  <div className="p-3 border-b border-gray-200 dark:border-gray-700 sticky top-0 backdrop-blur-sm z-10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {stage.stageType === "completed" && (
+                          <span className="h-3 w-3 bg-green-600 dark:bg-green-500 rounded-full"></span>
+                        )}
+                        {stage.stageType === "lost" && (
+                          <span className="h-3 w-3 bg-red-600 dark:bg-red-500 rounded-full"></span>
+                        )}
+                        {!stage.stageType && (
+                          <span className="h-3 w-3 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
+                        )}
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-200">{stage.name}</h3>
+                        <Badge variant="outline" className="rounded-full px-2 py-0 h-5 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                          {stage.deals.length}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center">
+                        {!stage.isSystem && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVerticalIcon className="h-4 w-4 text-gray-400" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setSelectedStage(stage);
+                                  setIsEditStageModalOpen(true);
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <Edit2Icon className="h-4 w-4" />
+                                <span>Editar Estágio</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      {!stage.isSystem && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVerticalIcon className="h-4 w-4 text-gray-400" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                setSelectedStage(stage);
-                                setIsEditStageModalOpen(true);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <Edit2Icon className="h-4 w-4" />
-                              <span>Editar Estágio</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{stage.deals.length} negócios</span>
+                      <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">{formatCurrency(stage.totalValue)}</span>
                     </div>
+                    
+                    {/* Botão de adicionar negócio na coluna */}
+                    {!stage.isSystem && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:bg-yellow-400 hover:text-blue-950 dark:text-gray-400 dark:hover:bg-yellow-400 dark:hover:text-blue-950"
+                        onClick={() => {
+                          setSelectedStageForNewDeal(stage);
+                          setIsAddDealModalOpen(true);
+                        }}
+                      >
+                        <PlusIcon className="h-3 w-3" />
+                        <span>Adicionar Negócio</span>
+                      </Button>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">{stage.deals.length} negócios</span>
-                    <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">{formatCurrency(stage.totalValue)}</span>
-                  </div>
-                  
-                  {/* Botão de adicionar negócio na coluna */}
-                  {!stage.isSystem && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:bg-yellow-400 hover:text-blue-950 dark:text-gray-400 dark:hover:bg-yellow-400 dark:hover:text-blue-950"
-                      onClick={() => {
-                        setSelectedStageForNewDeal(stage);
-                        setIsAddDealModalOpen(true);
-                      }}
-                    >
-                      <PlusIcon className="h-3 w-3" />
-                      <span>Adicionar Negócio</span>
-                    </Button>
-                  )}
                 </div>
                 
-                {/* Deals list */}
                 <Droppable droppableId={stage.id.toString()}>
                   {(provided, snapshot) => (
                     <div
@@ -553,6 +602,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                           : "bg-gray-50 dark:bg-gray-900/20"
                       }`}
                       ref={provided.innerRef}
+                      style={{ flex: 1, overflowY: "auto", maxHeight: "calc(100vh - 200px)" }}
                       {...provided.droppableProps}
                     >
                       {stage.deals.map((deal, index) => (
@@ -568,7 +618,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                               {...provided.dragHandleProps}
                               className={`mb-2 p-3 group border-l-4 ${
                                 snapshot.isDragging
-                                  ? "shadow-lg dark:bg-gray-700 opacity-80"
+                                  ? "shadow-lg dark:bg-gray-700"
                                   : "shadow-sm hover:shadow-md bg-gray-50 dark:bg-gray-800"
                               } ${
                                 deal.status === "completed" 
@@ -593,7 +643,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                                 </div>
                               </div>
                               
-                              <div className="space-y-1 mt-2">
+                              <div className="rounded-md bg-gray-50 dark:bg-gray-700/50 p-2 mt-2 space-y-1">
                                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                   <User2Icon className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
                                   <span className="truncate">
@@ -634,21 +684,21 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                   )}
                 </Droppable>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-        
-        {/* Modal de adição de negócio */}
-        <AddDealModal
-          isOpen={isAddDealModalOpen}
-          onClose={() => {
-            setIsAddDealModalOpen(false);
-            setSelectedStageForNewDeal(null);
-          }}
-          initialStageId={selectedStageForNewDeal?.id}
-          pipelineStages={pipelineStages}
-        />
       </div>
-    </DragDropContext>
+      
+      {/* Modal de adição de negócio */}
+      <AddDealModal
+        isOpen={isAddDealModalOpen}
+        onClose={() => {
+          setIsAddDealModalOpen(false);
+          setSelectedStageForNewDeal(null);
+        }}
+        initialStageId={selectedStageForNewDeal?.id}
+        pipelineStages={pipelineStages}
+      />
+    </>
   );
 }

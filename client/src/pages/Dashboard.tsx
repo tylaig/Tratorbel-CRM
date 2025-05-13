@@ -249,12 +249,12 @@ export default function Dashboard() {
           <div className="flex-1 overflow-hidden">
             {!activePipelineId && (
               <div className="h-full flex items-center justify-center flex-col p-8">
-                <div className="bg-blue-950/50 border border-blue-800 rounded-lg p-8 max-w-md text-center">
-                  <h3 className="text-xl font-bold text-white mb-2">Nenhum Pipeline Selecionado</h3>
-                  <p className="text-gray-300 mb-4">
+                <div className="bg-blue-950 border-2 border-yellow-500 rounded-lg p-8 max-w-md text-center shadow-lg">
+                  <h3 className="text-xl font-bold text-yellow-400 mb-3">Nenhum Pipeline Selecionado</h3>
+                  <p className="text-white mb-4">
                     Selecione um pipeline no menu superior para visualizar e gerenciar seus negócios.
                   </p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-200">
                     Se não houver nenhum pipeline disponível, entre em contato com o administrador para configurar os pipelines.
                   </p>
                 </div>

@@ -472,7 +472,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
             <Button
               variant="default"
               size="sm"
-              className="bg-primary hover:bg-yellow-400 hover:text-blue-950 text-black shadow-sm border-none flex items-center gap-1"
+              className="bg-yellow-400 hover:bg-yellow-500 text-blue-950 shadow-sm border-none flex items-center gap-1"
               onClick={() => {
                 // Verificar se existe a função externa (prioridade) ou usar a função interna
                 if (onAddDeal) {
@@ -525,7 +525,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                     ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
                     : stage.stageType === "lost" 
                       ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
-                      : "bg-gradient-to-b from-blue-100 to-blue-50 border-blue-300 dark:from-blue-900/40 dark:to-blue-900/20 dark:border-blue-700"
+                      : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
                 }`}>
                   <div className="p-3 border-b border-gray-200 dark:border-gray-700 sticky top-0 backdrop-blur-sm z-10">
                     <div className="flex items-center justify-between">
@@ -599,7 +599,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                           ? "bg-yellow-50 dark:bg-yellow-900/20"
                           : stage.stageType === "completed" ? "bg-green-50 dark:bg-green-900/30" 
                           : stage.stageType === "lost" ? "bg-red-50 dark:bg-red-900/30"
-                          : "bg-blue-50 dark:bg-blue-900/20"
+                          : "bg-gray-50 dark:bg-gray-900/20"
                       }`}
                       ref={provided.innerRef}
                       style={{ flex: 1, overflowY: "auto" }}

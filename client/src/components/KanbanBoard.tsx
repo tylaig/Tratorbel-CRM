@@ -282,7 +282,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
     if (!status) return null;
     
     return (
-      <span className={`status-badge ${status.toLowerCase()} px-2 py-0.5 text-xs font-medium rounded-full border`}>
+      <span className={`status-badge ${status.toLowerCase()} px-1 py-0 text-[10px] font-medium rounded-full border h-4 inline-flex items-center`}>
         {status === 'in_progress' && 'Em andamento'}
         {status === 'waiting' && 'Aguardando'}
         {status === 'completed' && 'Concluído'}
@@ -380,8 +380,8 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
               key={stage.id} 
               className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col"
             >
-              {/* Cabeçalho da coluna */}
-              <div className={`p-3 rounded-t-lg border shadow-sm ${
+              {/* Cabeçalho da coluna - sticky */}
+              <div className={`p-3 rounded-t-lg border shadow-sm sticky top-0 z-10 ${
                 stage.stageType === "completed" 
                   ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
                   : stage.stageType === "lost" 
@@ -450,7 +450,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                 )}
               </div>
               
-              {/* Área de cards/droppable */}
+              {/* Área de cards/droppable - altura ajustada para rolagem */}
               <Droppable droppableId={stage.id.toString()}>
                 {(provided, snapshot) => (
                   <div
@@ -462,7 +462,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                           : stage.stageType === "lost" 
                             ? "bg-red-50 dark:bg-red-900/30 border-red-300"
                             : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
-                    } flex-1 max-h-[calc(100vh-180px)] overflow-y-auto`}
+                    } flex-1 h-[calc(100vh-200px)] overflow-y-auto`}
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >
@@ -487,7 +487,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                                 : provided.draggableProps.style?.transform,
                               zIndex: snapshot.isDragging ? 9999 : undefined,
                             }}
-                            className={`mb-2 p-3 group border-l-4 ${
+                            className={`mb-2 p-2 group border-l-4 ${
                               snapshot.isDragging
                                 ? "shadow-lg dark:bg-gray-700 ring-2 ring-yellow-400 ring-opacity-50 deal-card-dragging"
                                 : "shadow-sm hover:shadow-md bg-gray-50 dark:bg-gray-800"
@@ -497,15 +497,15 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                                 : deal.status === "canceled" 
                                   ? "border-l-red-500"
                                   : "border-l-yellow-500"
-                            } cursor-pointer rounded-md`}
+                            } cursor-pointer rounded-md text-sm`}
                             onClick={() => {
                               setSelectedDeal(deal);
                               setIsEditDealModalOpen(true);
                             }}
                           >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between mb-1">
                               <div className="flex-1">
-                                <div className="font-medium text-gray-900 dark:text-gray-100 mb-1 truncate max-w-[180px]">
+                                <div className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[180px] text-xs">
                                   {deal.name}
                                 </div>
                               </div>
@@ -514,35 +514,28 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                               </div>
                             </div>
                             
-                            <div className="space-y-1 mt-2">
-                              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <User2Icon className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
+                            <div className="grid grid-cols-2 gap-1">
+                              <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                                <User2Icon className="w-3 h-3 mr-1 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                 <span className="truncate">
-                                  {deal.leadData?.name || "Contato não definido"}
+                                  {deal.leadData?.name || "N/D"}
                                 </span>
                               </div>
                               
-                              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <Building className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
+                              <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                                <Building className="w-3 h-3 mr-1 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                 <span className="truncate">
-                                  {deal.leadData?.companyName || "Empresa não definida"}
-                                </span>
-                              </div>
-                              
-                              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <Phone className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
-                                <span className="truncate">
-                                  {deal.leadData?.phone || "Telefone não definido"}
+                                  {deal.leadData?.companyName || "N/D"}
                                 </span>
                               </div>
                             </div>
                             
-                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center justify-between mt-1 pt-1 border-t border-gray-100 dark:border-gray-700">
                               <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                                <CalendarIcon className="w-3 h-3 mr-1" />
                                 {formatTimeAgo(deal.updatedAt)}
                               </span>
-                              <span className="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
+                              <span className="px-1.5 py-0.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
                                 {formatCurrency(deal.value || 0)}
                               </span>
                             </div>

@@ -174,9 +174,9 @@ export default function DealResultTab({ deal }: DealResultTabProps) {
             </div>
           )}
           
-          {deal.value > 0 && (
+          {deal.value && deal.value > 0 && (
             <div className="ml-auto text-gray-700 font-medium">
-              {formatCurrency(deal.value)}
+              {formatCurrency(Number(deal.value))}
             </div>
           )}
         </div>

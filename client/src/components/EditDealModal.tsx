@@ -49,6 +49,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import DealOutcomeForm from "@/components/DealOutcomeForm";
+import DealResultTab from "@/components/DealResultTab";
 import ClientMachines from "@/components/ClientMachines";
 import ClientCities from "@/components/ClientCities";
 import LeadActivities from "@/components/LeadActivities";
@@ -857,27 +858,35 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
           {/* Tab Resultado */}
           <TabsContent value="outcome" className="p-1">
             {deal && (
-              <DealOutcomeForm
-                deal={deal}
-                onSuccess={() => {
-                  // Após marcar como ganho ou perdido, removemos do pipeline atualizando o stageId
-                  if (deal.status === "won" || deal.status === "lost") {
-                    // Removemos do pipeline marcando com um estágio especial
-                    // Obtemos o primeiro estágio oculto ou o primeiro da lista
-                    const hiddenStage = pipelineStages.find(s => s.isHidden) || pipelineStages[0];
-                    
-                    if (hiddenStage) {
-                      updateDealMutation.mutate({
-                        stageId: hiddenStage.id // Move para estágio oculto
-                      });
-                    }
-                  }
-                  
-                  // Atualizar query para refletir mudanças
-                  queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
-                  onClose();
-                }}
-              />
+              <>
+                {/* Se o negócio já tem status de ganho ou perdido, mostrar tela de visualização e edição */}
+                {(deal.saleStatus === "won" || deal.saleStatus === "lost") ? (
+                  <DealResultTab deal={deal} />
+                ) : (
+                  /* Caso contrário, mostrar formulário para definir o resultado */
+                  <DealOutcomeForm
+                    deal={deal}
+                    onSuccess={() => {
+                      // Após marcar como ganho ou perdido, removemos do pipeline atualizando o stageId
+                      if (deal.status === "won" || deal.status === "lost") {
+                        // Removemos do pipeline marcando com um estágio especial
+                        // Obtemos o primeiro estágio oculto ou o primeiro da lista
+                        const hiddenStage = pipelineStages.find(s => s.isHidden) || pipelineStages[0];
+                        
+                        if (hiddenStage) {
+                          updateDealMutation.mutate({
+                            stageId: hiddenStage.id // Move para estágio oculto
+                          });
+                        }
+                      }
+                      
+                      // Atualizar query para refletir mudanças
+                      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+                      onClose();
+                    }}
+                  />
+                )}
+              </>
             )}
           </TabsContent>
         </Tabs>

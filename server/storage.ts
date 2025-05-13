@@ -785,11 +785,83 @@ export class DatabaseStorage implements IStorage {
     return partialResults;
   }
 
-  // Pipeline Stages
-  async getPipelineStages(): Promise<PipelineStage[]> {
+  // Pipelines (Funis)
+  async getPipelines(): Promise<Pipeline[]> {
     try {
-      return await db.select().from(pipelineStages).orderBy(asc(pipelineStages.order));
-    } catch (error) {
+      return await db.select().from(pipelines).orderBy(asc(pipelines.name));
+    } catch (error: any) {
+      console.error('Error fetching pipelines:', error);
+      throw new Error(`Failed to fetch pipelines: ${error.message}`);
+    }
+  }
+
+  async getPipeline(id: number): Promise<Pipeline | undefined> {
+    try {
+      const [pipeline] = await db.select().from(pipelines).where(eq(pipelines.id, id));
+      return pipeline;
+    } catch (error: any) {
+      console.error(`Error fetching pipeline id=${id}:`, error);
+      throw new Error(`Failed to fetch pipeline: ${error.message}`);
+    }
+  }
+
+  async getDefaultPipeline(): Promise<Pipeline | undefined> {
+    try {
+      const [pipeline] = await db.select().from(pipelines).where(eq(pipelines.isDefault, true));
+      return pipeline || await this.getPipeline(1); // Retorna o primeiro pipeline se não houver padrão definido
+    } catch (error: any) {
+      console.error('Error fetching default pipeline:', error);
+      throw new Error(`Failed to fetch default pipeline: ${error.message}`);
+    }
+  }
+
+  async createPipeline(pipeline: InsertPipeline): Promise<Pipeline> {
+    try {
+      const [newPipeline] = await db.insert(pipelines).values(pipeline).returning();
+      return newPipeline;
+    } catch (error: any) {
+      console.error('Error creating pipeline:', error);
+      throw new Error(`Failed to create pipeline: ${error.message}`);
+    }
+  }
+
+  async updatePipeline(id: number, data: Partial<Pipeline>): Promise<Pipeline | undefined> {
+    try {
+      const [updatedPipeline] = await db
+        .update(pipelines)
+        .set(data)
+        .where(eq(pipelines.id, id))
+        .returning();
+      return updatedPipeline;
+    } catch (error: any) {
+      console.error(`Error updating pipeline id=${id}:`, error);
+      throw new Error(`Failed to update pipeline: ${error.message}`);
+    }
+  }
+
+  async deletePipeline(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(pipelines).where(eq(pipelines.id, id));
+      return true;
+    } catch (error: any) {
+      console.error(`Error deleting pipeline id=${id}:`, error);
+      throw new Error(`Failed to delete pipeline: ${error.message}`);
+    }
+  }
+
+  // Pipeline Stages
+  async getPipelineStages(pipelineId?: number): Promise<PipelineStage[]> {
+    try {
+      if (pipelineId) {
+        return await db
+          .select()
+          .from(pipelineStages)
+          .where(eq(pipelineStages.pipelineId, pipelineId))
+          .orderBy(asc(pipelineStages.order));
+      } else {
+        return await db.select().from(pipelineStages).orderBy(asc(pipelineStages.order));
+      }
+    } catch (error: any) {
       console.error('Error fetching pipeline stages:', error);
       throw new Error(`Failed to fetch pipeline stages: ${error.message}`);
     }
@@ -825,12 +897,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Deals
-  async getDeals(): Promise<(Deal & Partial<Lead>)[]> {
+  async getDeals(pipelineId?: number): Promise<(Deal & Partial<Lead>)[]> {
     // Fazer um join com a tabela leads para trazer os dados do lead junto com o deal
-    return await db
-      .select({
-        ...deals,
-        // Campos do Lead com prefixo para evitar conflitos
+    try {
+      const query = db
+        .select({
+          ...deals,
+          // Campos do Lead com prefixo para evitar conflitos
         companyName: leads.companyName,
         clientCategory: leads.clientCategory,
         clientType: leads.clientType,
@@ -853,8 +926,18 @@ export class DatabaseStorage implements IStorage {
         chatwootAgentName: leads.chatwootAgentName,
       })
       .from(deals)
-      .leftJoin(leads, eq(deals.leadId, leads.id))
-      .orderBy(desc(deals.updatedAt));
+      .leftJoin(leads, eq(deals.leadId, leads.id));
+      
+      // Filtra por pipeline se um ID for fornecido
+      if (pipelineId) {
+        query.where(eq(deals.pipelineId, pipelineId));
+      }
+      
+      return await query.orderBy(desc(deals.updatedAt));
+    } catch (error: any) {
+      console.error("Erro ao buscar deals:", error);
+      throw new Error(`Failed to fetch deals: ${error.message}`);
+    }
   }
 
   async getDeal(id: number): Promise<(Deal & Partial<Lead>) | undefined> {

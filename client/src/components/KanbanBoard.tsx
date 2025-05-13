@@ -378,7 +378,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
           {boardData.map((stage) => (
             <div 
               key={stage.id} 
-              className="kanban-column flex-shrink-0 w-64 mx-1.5 flex flex-col"
+              className="kanban-column flex-shrink-0 w-72 mx-1.5 flex flex-col"
             >
               {/* Cabeçalho da coluna - sticky */}
               <div className={`p-2 rounded-t-lg border shadow-sm kanban-column-header ${
@@ -462,7 +462,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                           : stage.stageType === "lost" 
                             ? "bg-red-50 dark:bg-red-900/30 border-red-300"
                             : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
-                    } flex-1 min-h-[300px] h-full`}
+                    } flex-1 pb-20`}
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >

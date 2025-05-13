@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ClientMachine, MachineBrand } from "@shared/schema";
+import { ClientMachine, MachineBrand, MachineModel } from "@shared/schema";
 
 import {
   Card,
@@ -22,7 +22,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, Trash2, Check, Edit, X } from "lucide-react";
+import { 
+  PlusCircle, 
+  Trash2, 
+  Check, 
+  Edit, 
+  X, 
+  Plus,
+  Search,
+  RefreshCw
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface ClientMachinesProps {
   dealId: number | null;

@@ -221,8 +221,6 @@ export default function Dashboard() {
         toggleViewMode={toggleViewMode}
         onOpenApiConfig={() => setIsApiModalOpen(true)}
         onAddDeal={() => setIsAddDealModalOpen(true)}
-        onSync={handleSync}
-        syncLoading={syncMutation.isPending}
         hasApiConfig={!!settings?.chatwootApiKey}
         activePipelineId={activePipelineId}
         onPipelineChange={(pipelineId) => setActivePipelineId(pipelineId)}

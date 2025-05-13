@@ -8,7 +8,6 @@ import {
   LayoutIcon,
   PlusIcon,
   KeyIcon,
-  RefreshCwIcon,
   BarChart3Icon,
   GanttChartIcon,
   CheckCircle2Icon,
@@ -29,8 +28,6 @@ interface HeaderProps {
   toggleViewMode: (mode: "kanban" | "list" | "contacts" | "heatmap" | "results") => void;
   onOpenApiConfig: () => void;
   onAddDeal: () => void;
-  onSync: () => void;
-  syncLoading: boolean;
   hasApiConfig?: boolean; // Indica se a API já foi configurada
   activePipelineId?: number | null;
   onPipelineChange?: (pipelineId: number) => void;
@@ -42,8 +39,6 @@ export default function Header({
   toggleViewMode,
   onOpenApiConfig,
   onAddDeal,
-  onSync,
-  syncLoading,
   hasApiConfig = false,
   activePipelineId,
   onPipelineChange
@@ -73,30 +68,6 @@ export default function Header({
           <div className="flex items-center gap-2">
             {hasApiConfig && (
               <>
-                {/* Botão para telas maiores com texto */}
-                <Button 
-                  variant="ghost"
-                  size="sm"
-                  className="relative group text-white hover:text-primary hover:bg-white/10 hidden sm:flex"
-                  onClick={onSync}
-                  disabled={syncLoading}
-                >
-                  <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-white group-hover:text-primary transition-colors'}`} />
-                  <span className="ml-2 text-sm font-medium">Sincronizar</span>
-                </Button>
-                
-                {/* Botão para telas menores apenas com ícone */}
-                <Button 
-                  variant="ghost"
-                  size="icon"
-                  className="relative group text-white hover:text-primary hover:bg-white/10 sm:hidden h-9 w-9"
-                  onClick={onSync}
-                  disabled={syncLoading}
-                  title="Sincronizar"
-                >
-                  <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-white group-hover:text-primary transition-colors'}`} />
-                </Button>
-                
                 {/* Botão para telas maiores com texto */}
                 <Button 
                   variant="ghost"

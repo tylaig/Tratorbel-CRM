@@ -470,7 +470,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
       )}
       
       <div className="flex flex-col h-full">
-        <div className="flex justify-between items-center px-4 py-2 mb-1">
+        <div className="flex justify-between items-center px-4 py-2 mb-1 sticky top-0 bg-white z-10">
           {activeFilters.hideClosed && activePipelineId === 1 && (
             <div className="text-sm text-amber-800 flex items-center gap-2 bg-amber-100 px-3 py-1 rounded-md border border-amber-200">
               <InfoIcon size={16} />
@@ -487,7 +487,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
             <span>Adicionar Estágio</span>
           </Button>
         </div>
-        <div className="flex overflow-x-auto px-2 board-container h-full overflow-y-hidden">
+        <div className="flex overflow-x-auto px-2 board-container h-full">
           {boardData.map((stage) => {
             // Definir classes e estilos específicos com base no tipo de estágio
             let stageClass = "";
@@ -498,9 +498,9 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
             }
             
             return (
-              <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col h-full flex-grow">
-                <div className={`flex flex-col bg-white dark:bg-gray-900 rounded-t-lg border shadow-sm hover:shadow-md transition-shadow flex-shrink-0 ${stageClass}`}>
-                  <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+              <div key={stage.id} className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col max-h-full">
+                <div className={`flex flex-col bg-white dark:bg-gray-900 rounded-t-lg border shadow-sm hover:shadow-md transition-shadow ${stageClass}`}>
+                  <div className="p-3 border-b border-gray-200 dark:border-gray-700 sticky top-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {stage.stageType === "completed" && (
@@ -567,13 +567,13 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
                 <Droppable droppableId={stage.id.toString()}>
                   {(provided, snapshot) => (
                     <div
-                      className={`deal-list p-2 flex-grow rounded-b-lg overflow-y-auto ${
+                      className={`deal-list p-2 rounded-b-lg overflow-y-auto ${
                         snapshot.isDraggingOver
                           ? "bg-yellow-50 dark:bg-yellow-900/20"
                           : "bg-gray-50 dark:bg-gray-800"
                       }`}
                       ref={provided.innerRef}
-                      style={{ flex: "1 1 auto", height: 0 }}
+                      style={{ height: "calc(100vh - 250px)" }}
                       {...provided.droppableProps}
                     >
                       {stage.deals.map((deal, index) => (

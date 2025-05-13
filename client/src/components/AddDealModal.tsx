@@ -95,10 +95,16 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
     enabled: isOpen,
   });
   
+  // Buscar todos os pipelines disponíveis
+  const { data: pipelines } = useQuery<{id: number, name: string, description: string, isDefault: boolean}[]>({
+    queryKey: ['/api/pipelines'],
+    enabled: isOpen,
+  });
+  
   // Carrega os estágios do pipeline se não foram fornecidos via props
   const { data: fetchedPipelineStages } = useQuery<PipelineStage[]>({
-    queryKey: ['/api/pipeline-stages'],
-    enabled: isOpen && !pipelineStages.length,
+    queryKey: ['/api/pipeline-stages', { pipelineId: pipelineId }],
+    enabled: isOpen && !pipelineStages.length && !!pipelineId,
   });
   
   // Usa os estágios fornecidos via props ou os carregados da API
@@ -287,6 +293,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
     setCompanyName("");
     setContactId("");
     setStageId("");
+    setPipelineId("");
     setValue("");
     setStatus("in_progress");
     
@@ -450,10 +457,37 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
               </div>
               
               <div className="grid gap-2">
+                <Label htmlFor="deal-pipeline">Pipeline</Label>
+                <Select 
+                  value={pipelineId}
+                  onValueChange={(value) => {
+                    setPipelineId(value);
+                    // Limpar o estágio selecionado ao mudar de pipeline
+                    setStageId("");
+                  }}
+                >
+                  <SelectTrigger id="deal-pipeline">
+                    <SelectValue placeholder="Selecione um pipeline" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(pipelines || []).map((pipeline) => (
+                      <SelectItem key={pipeline.id} value={pipeline.id.toString()}>
+                        {pipeline.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
                 <Label htmlFor="deal-stage">Etapa</Label>
-                <Select value={stageId} onValueChange={setStageId}>
+                <Select 
+                  value={stageId} 
+                  onValueChange={setStageId}
+                  disabled={!pipelineId}
+                >
                   <SelectTrigger id="deal-stage">
-                    <SelectValue placeholder="Selecione uma etapa" />
+                    <SelectValue placeholder={!pipelineId ? "Selecione um pipeline primeiro" : "Selecione uma etapa"} />
                   </SelectTrigger>
                   <SelectContent>
                     {availablePipelineStages.map((stage) => (

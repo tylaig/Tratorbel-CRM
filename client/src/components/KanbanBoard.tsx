@@ -475,16 +475,10 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
       
       <div className="flex flex-col h-full">
         <div className="flex justify-between items-center px-4 py-2 mb-2 flex-none">
-          {activeFilters.hideClosed && activePipelineId === 1 && (
-            <div className="text-sm text-amber-800 flex items-center gap-2 bg-amber-100 px-3 py-1 rounded-md border border-amber-200">
-              <InfoIcon size={16} />
-              <span>Negócios concluídos estão ocultos no funil Comercial</span>
-            </div>
-          )}
           <div className="flex-grow"></div>
           <Button
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hover:bg-yellow-400 hover:text-blue-950"
             onClick={() => setIsAddStageModalOpen(true)}
           >
             <PlusIcon className="h-4 w-4" />
@@ -602,7 +596,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
                               className={`mb-2 p-3 group border-l-4 ${
                                 snapshot.isDragging
                                   ? "shadow-lg dark:bg-gray-700"
-                                  : "shadow-sm hover:shadow-md bg-white dark:bg-gray-800"
+                                  : "shadow-sm hover:shadow-md bg-gray-50 dark:bg-gray-800"
                               } ${
                                 deal.status === "completed" 
                                   ? "border-l-green-500" 

@@ -233,8 +233,8 @@ export default function Dashboard() {
       <div className="h-16"></div>
       
       {/* Conteúdo principal com rolagem */}
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 bg-gray-50 flex flex-col">
+      <div className="flex flex-1 overflow-auto">
+        <main className="flex-1 bg-gray-50 flex flex-col min-h-full">
           {/* Mostrar o inicializador de banco de dados quando necessário */}
           {showDBInitializer && (
             <div className="px-4 pt-6 pb-4">
@@ -243,7 +243,7 @@ export default function Dashboard() {
           )}
           
           {viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
-            <div className="px-4 py-3 sticky top-0 z-10 bg-gray-50 shadow-sm">
+            <div className="px-4 py-3 bg-gray-50 border-b">
               <FilterBar 
                 onFilterChange={updateFilters}
                 activeFilters={filters}

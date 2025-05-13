@@ -49,6 +49,7 @@ interface KanbanBoardProps {
   pipelineStages: PipelineStage[];
   filters?: FilterOptions;
   activePipelineId?: number | null;
+  onAddDeal?: () => void; // Função opcional para adicionar negócio
 }
 
 interface StageWithDeals extends PipelineStage {
@@ -56,7 +57,7 @@ interface StageWithDeals extends PipelineStage {
   totalValue: number;
 }
 
-export default function KanbanBoard({ pipelineStages, filters, activePipelineId }: KanbanBoardProps) {
+export default function KanbanBoard({ pipelineStages, filters, activePipelineId, onAddDeal }: KanbanBoardProps) {
   // Logamos os estágios recebidos do componente pai
   console.log("KanbanBoard recebeu estágios:", pipelineStages?.length, pipelineStages?.map(s => s.name));
   
@@ -467,7 +468,37 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
       
       <div className="flex flex-col h-full">
         <div className="flex justify-between items-center px-4 py-2 mb-2 flex-none">
-          <div className="flex-grow"></div>
+          <div className="flex-grow">
+            <Button
+              variant="default"
+              size="sm"
+              className="bg-primary hover:bg-yellow-400 hover:text-blue-950 text-black shadow-sm border-none flex items-center gap-1"
+              onClick={() => {
+                // Verificar se existe a função externa (prioridade) ou usar a função interna
+                if (onAddDeal) {
+                  onAddDeal();
+                } else {
+                  // Se não há estágios disponíveis, não podemos adicionar um negócio
+                  if (pipelineStages.length === 0) {
+                    toast({
+                      title: "Não é possível adicionar um negócio",
+                      description: "Crie pelo menos um estágio primeiro.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  // Usar o primeiro estágio normal como padrão
+                  const defaultStage = pipelineStages.find(s => s.stageType === "normal" || s.stageType === null);
+                  setSelectedStageForNewDeal(defaultStage || pipelineStages[0]);
+                  setIsAddDealModalOpen(true);
+                }
+              }}
+            >
+              <PlusIcon className="h-4 w-4" />
+              <span className="font-medium">Novo Negócio</span>
+            </Button>
+          </div>
           <Button
             variant="outline"
             className="flex items-center gap-2 hover:bg-yellow-400 hover:text-blue-950"

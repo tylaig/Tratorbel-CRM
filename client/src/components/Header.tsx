@@ -118,27 +118,7 @@ export default function Header({
               </>
             )}
             
-            {/* Botão para telas maiores com texto */}
-            <Button 
-              variant="default"
-              size="sm"
-              className="bg-primary hover:bg-yellow-400 hover:text-blue-950 text-black shadow-sm ml-2 border-none hidden sm:flex"
-              onClick={onAddDeal}
-            >
-              <PlusIcon className="h-4 w-4 mr-1" />
-              <span className="font-medium">Novo Negócio</span>
-            </Button>
-            
-            {/* Botão para telas menores apenas com ícone */}
-            <Button 
-              variant="default"
-              size="icon"
-              className="bg-primary hover:bg-yellow-400 hover:text-blue-950 text-black shadow-sm ml-2 border-none sm:hidden h-9 w-9"
-              onClick={onAddDeal}
-              title="Novo Negócio"
-            >
-              <PlusIcon className="h-4 w-4" />
-            </Button>
+            {/* Botões de "Novo Negócio" foram movidos para dentro do KanbanBoard */}
           </div>
         </div>
       

@@ -50,6 +50,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
   const [companyName, setCompanyName] = useState("");
   const [contactId, setContactId] = useState("");
   const [stageId, setStageId] = useState("");
+  const [pipelineId, setPipelineId] = useState("");
   const [value, setValue] = useState("");
   const [status, setStatus] = useState("in_progress");
   
@@ -85,6 +86,12 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
   // Get Chatwoot contacts
   const { data: contactsData } = useQuery<{ payload: ChatwootContact[] }>({
     queryKey: ['/api/chatwoot/contacts'],
+    enabled: isOpen,
+  });
+  
+  // Buscar o pipeline padrão
+  const { data: defaultPipeline } = useQuery<{id: number, name: string, isDefault: boolean}>({
+    queryKey: ['/api/pipelines/default'],
     enabled: isOpen,
   });
   
@@ -132,6 +139,13 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
       setStageId(initialStageId.toString());
     }
   }, [initialStageId]);
+  
+  // Efeito para definir o pipeline padrão quando os dados forem carregados
+  useEffect(() => {
+    if (defaultPipeline?.id) {
+      setPipelineId(defaultPipeline.id.toString());
+    }
+  }, [defaultPipeline]);
   
   const addDealMutation = useMutation({
     mutationFn: async () => {
@@ -202,6 +216,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
           name,
           leadId,  // Campo obrigatório - ID do lead
           stageId: parseInt(stageId),
+          pipelineId: parseInt(pipelineId), // Campo obrigatório - ID do pipeline
           value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
           status,
           notes: "",
@@ -254,10 +269,10 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
   });
   
   const handleSave = () => {
-    if (!name || !stageId) {
+    if (!name || !stageId || !pipelineId) {
       toast({
         title: "Campos obrigatórios",
-        description: "Nome do negócio e etapa do funil são obrigatórios.",
+        description: "Nome do negócio, etapa do funil e pipeline são obrigatórios.",
         variant: "destructive",
       });
       return;

@@ -15,6 +15,7 @@ interface Deal extends BaseDeal {
   } | null;
 }
 import { formatCurrency, formatTimeAgo } from "@/lib/formatters";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,10 @@ import {
   UserCircle,
   InfoIcon,
   Plus,
-  Phone
+  Phone,
+  User2,
+  Calendar as CalendarIcon,
+  User as User2Icon
 } from "lucide-react";
 import {
   DropdownMenu,

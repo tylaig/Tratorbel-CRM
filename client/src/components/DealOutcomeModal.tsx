@@ -47,8 +47,9 @@ export default function DealOutcomeModal({ isOpen, onClose, deal, targetStageId,
       if (targetStageType === 'completed') {
         updatedDeal.salePerformance = salePerformance;
       } else if (targetStageType === 'lost') {
-        // Converter para número se o lostReason não for nulo
-        updatedDeal.lostReason = lostReason ? parseInt(lostReason, 10) : null;
+        // Para o lostReason, envie o ID como uma string que será tratada no backend
+        // Isso evita problemas de tipagem com o Drizzle/PostgreSQL
+        updatedDeal.lostReason = lostReason;
         updatedDeal.lostNotes = notes;
       }
 

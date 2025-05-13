@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Calendar, Mail, Phone, FileText, MessageCircle, Clock } from 'lucide-react';
+import { Calendar, Mail, Phone, FileText, MessageCircle, Clock, ArrowRightLeft, GitBranch } from 'lucide-react';
 import { formatTimeAgo, formatDateTime } from '@/lib/formatters';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -24,6 +24,8 @@ const activityTypes = [
   { value: 'proposal_created', label: 'Proposta criada', icon: FileText },
   { value: 'meeting_scheduled', label: 'Reunião agendada', icon: Calendar },
   { value: 'note_added', label: 'Anotação', icon: MessageCircle },
+  { value: 'pipeline_change', label: 'Mudança de Pipeline', icon: GitBranch },
+  { value: 'stage_change', label: 'Mudança de Etapa', icon: ArrowRightLeft },
 ];
 
 export default function LeadActivities({ deal }: LeadActivitiesProps) {

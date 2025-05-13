@@ -246,6 +246,16 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     },
   });
 
+  // Mutation para criar uma atividade quando o pipeline muda
+  const createActivityMutation = useMutation({
+    mutationFn: async (activityData: { description: string; dealId: number; activityType: string }) => {
+      return apiRequest('/api/lead-activities', 'POST', activityData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/lead-activities/${deal?.id}`] });
+    }
+  });
+
   // Mutation para atualizar deal
   const updateDealMutation = useMutation({
     mutationFn: async (data: Partial<Deal>) => {
@@ -267,6 +277,30 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         title: "Sucesso!",
         description: "Informações atualizadas com sucesso.",
       });
+      
+      // Verificar se o pipeline foi alterado e registrar atividade
+      if (deal && pipelineId && deal.pipelineId !== parseInt(pipelineId)) {
+        const oldPipelineName = pipelines.find(p => p.id === deal.pipelineId)?.name || "Desconhecido";
+        const newPipelineName = pipelines.find(p => p.id === parseInt(pipelineId))?.name || "Desconhecido";
+        
+        createActivityMutation.mutate({
+          description: `Negócio movido do pipeline "${oldPipelineName}" para "${newPipelineName}"`,
+          dealId: deal.id,
+          activityType: "pipeline_change"
+        });
+      }
+      
+      // Verificar se o estágio foi alterado e registrar atividade
+      if (deal && stageId && deal.stageId !== parseInt(stageId)) {
+        const oldStageName = pipelineStages.find(s => s.id === deal.stageId)?.name || "Desconhecido";
+        const newStageName = pipelineStages.find(s => s.id === parseInt(stageId))?.name || "Desconhecido";
+        
+        createActivityMutation.mutate({
+          description: `Negócio movido da etapa "${oldStageName}" para "${newStageName}"`,
+          dealId: deal.id,
+          activityType: "stage_change"
+        });
+      }
       
       // Invalidar consultas para atualizar a interface
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });

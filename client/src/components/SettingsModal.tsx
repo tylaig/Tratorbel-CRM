@@ -562,14 +562,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </DialogHeader>
 
         <Tabs defaultValue="chatwoot" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 mb-4">
+          <TabsList className="grid grid-cols-6 mb-4">
             <TabsTrigger value="chatwoot" className="flex items-center gap-1">
               <MessageSquare className="h-4 w-4" />
               Chatwoot
             </TabsTrigger>
+            <TabsTrigger value="pipelines" className="flex items-center gap-1">
+              <FileLineChart className="h-4 w-4" />
+              Pipelines
+            </TabsTrigger>
             <TabsTrigger value="pipeline" className="flex items-center gap-1">
               <Layers className="h-4 w-4" />
-              Pipeline
+              Estágios
             </TabsTrigger>
             <TabsTrigger value="loss-reasons" className="flex items-center gap-1">
               <XCircle className="h-4 w-4" />
@@ -644,6 +648,79 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {saveChatwootMutation.isPending ? "Salvando..." : "Salvar Configurações"}
                 </Button>
               </CardFooter>
+            </Card>
+          </TabsContent>
+
+          {/* Aba Pipelines */}
+          <TabsContent value="pipelines">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileLineChart className="h-5 w-5" />
+                    Gerenciamento de Pipelines
+                  </div>
+                </CardTitle>
+                <CardDescription>
+                  Escolha o pipeline padrão que será mostrado quando o sistema for carregado.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1">
+                  <Label htmlFor="defaultPipeline">Pipeline Padrão</Label>
+                  <div className="grid gap-4">
+                    <select
+                      id="defaultPipeline"
+                      className="w-full p-2 rounded-md border"
+                      value={defaultPipelineId || ""}
+                      onChange={(e) => setDefaultPipelineId(e.target.value ? Number(e.target.value) : null)}
+                    >
+                      <option value="">Selecione um pipeline</option>
+                      {pipelines.map((pipeline) => (
+                        <option key={pipeline.id} value={pipeline.id}>
+                          {pipeline.name}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    <p className="text-sm text-gray-500">
+                      O pipeline selecionado será carregado automaticamente quando o usuário abrir o sistema.
+                    </p>
+                    
+                    <Button 
+                      onClick={saveDefaultPipeline} 
+                      className="w-full md:w-auto"
+                      disabled={saveDefaultPipelineMutation.isPending}
+                    >
+                      {saveDefaultPipelineMutation.isPending ? "Salvando..." : "Salvar Pipeline Padrão"}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="mt-8">
+                  <h3 className="text-lg font-medium mb-2">Pipelines Disponíveis</h3>
+                  <div className="border rounded-md divide-y">
+                    {pipelines.map((pipeline) => (
+                      <div key={pipeline.id} className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{pipeline.name}</p>
+                          <p className="text-sm text-gray-500">{pipeline.description}</p>
+                          {pipeline.isDefault && (
+                            <span className="inline-flex items-center px-2 py-1 mt-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                              Padrão
+                            </span>
+                          )}
+                          {pipeline.hasFixedStages && (
+                            <span className="inline-flex items-center px-2 py-1 mt-1 ml-2 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                              Estágios Fixos
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
             </Card>
           </TabsContent>
 

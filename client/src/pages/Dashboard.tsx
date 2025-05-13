@@ -345,7 +345,7 @@ export default function Dashboard() {
             )}
             
             {activePipelineId && viewMode === "kanban" && (
-              <div className="flex-1 overflow-auto h-[calc(100vh-240px)]">
+              <div className="flex-1 overflow-x-auto overflow-y-hidden h-[calc(100vh-240px)]">
                 <KanbanBoard 
                   pipelineStages={pipelineStages} 
                   filters={filters} 

@@ -13,7 +13,7 @@ import InitializeDB from "@/components/InitializeDB";
 import { usePipeline } from "@/hooks/usePipeline";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import { type Settings } from "@shared/schema";
+import { Settings, Pipeline } from "@shared/schema";
 import HeatmapView from "@/pages/Heatmap";
 
 export default function Dashboard() {
@@ -25,9 +25,17 @@ export default function Dashboard() {
   const { toast } = useToast();
   const { pipelineStages, refreshPipelineData, filters, updateFilters } = usePipeline();
   
+  // Estado para controlar o pipeline ativo
+  const [activePipelineId, setActivePipelineId] = useState<number | null>(null);
+  
   // Get settings
   const { data: settings, isLoading: isLoadingSettings } = useQuery<Settings | undefined>({
     queryKey: ['/api/settings'],
+    onSuccess: (data) => {
+      if (data?.activePipelineId) {
+        setActivePipelineId(data.activePipelineId);
+      }
+    }
   });
 
   // Handle URL parameters for API configuration

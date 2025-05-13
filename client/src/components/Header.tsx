@@ -16,9 +16,11 @@ import {
   Settings as SettingsIcon,
   UserIcon,
   UsersIcon,
-  MapIcon
+  MapIcon,
+  FilterIcon
 } from "lucide-react";
 import SettingsModal from "./SettingsModal";
+import PipelineSelector from "./PipelineSelector";
 import tbcLogo from "../assets/tbc-logo.png";
 
 interface HeaderProps {
@@ -30,6 +32,8 @@ interface HeaderProps {
   onSync: () => void;
   syncLoading: boolean;
   hasApiConfig?: boolean; // Indica se a API já foi configurada
+  activePipelineId?: number | null;
+  onPipelineChange?: (pipelineId: number) => void;
 }
 
 export default function Header({
@@ -40,7 +44,9 @@ export default function Header({
   onAddDeal,
   onSync,
   syncLoading,
-  hasApiConfig = false
+  hasApiConfig = false,
+  activePipelineId,
+  onPipelineChange
 }: HeaderProps) {
   const [location] = useLocation();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -48,11 +54,20 @@ export default function Header({
     <header className="bg-[hsl(var(--header-background))] text-[hsl(var(--header-foreground))] border-b border-[hsl(var(--header-border))]">
       <div className="container mx-auto px-4">
         <div className="h-16 flex items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             <img src={tbcLogo} alt="Grupo TBC Logo" className="h-10" />
-            <span className="ml-3 text-[10px] font-medium py-1 px-2 bg-primary/20 text-primary rounded-full">
+            <span className="text-[10px] font-medium py-1 px-2 bg-primary/20 text-primary rounded-full">
               Beta
             </span>
+            {/* Pipeline Selector */}
+            {hasApiConfig && onPipelineChange && (
+              <div className="ml-4 flex items-center">
+                <PipelineSelector 
+                  onPipelineChange={onPipelineChange}
+                  activePipelineId={activePipelineId}
+                />
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-2">

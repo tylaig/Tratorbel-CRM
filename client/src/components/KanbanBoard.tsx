@@ -578,7 +578,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                        className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:bg-yellow-400 hover:text-blue-950 dark:text-gray-400 dark:hover:bg-yellow-400 dark:hover:text-blue-950"
                         onClick={() => {
                           setSelectedStageForNewDeal(stage);
                           setIsAddDealModalOpen(true);

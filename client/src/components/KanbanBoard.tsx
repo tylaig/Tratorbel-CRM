@@ -364,18 +364,13 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
           />
         )}
         
-        {/* Área fixa superior sem os botões (apenas para padding/espaçamento) */}
-        <div className="sticky top-0 z-30 bg-white dark:bg-gray-900 shadow-sm">
-          <div className="px-4 py-2 flex-none border-b border-gray-200 dark:border-gray-800">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                {activePipelineId ? 'Pipeline de Negócios' : 'Selecione um pipeline'}
-              </h3>
-              
-              {/* Espaço onde antes estavam os botões - mantido para consistência de layout */}
-              <div></div>
-            </div>
-          </div>
+        {/* Espaço oculto para o botão de adicionar estágio */}
+        <div className="hidden">
+          <button
+            id="add-stage-button"
+            onClick={() => setIsAddStageModalOpen(true)}
+            aria-hidden="true"
+          />
         </div>
         
         {/* Área principal de rolagem horizontal com os estágios */}

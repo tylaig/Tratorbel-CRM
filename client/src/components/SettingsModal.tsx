@@ -593,7 +593,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </DialogHeader>
 
         <Tabs defaultValue="chatwoot" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-6 mb-4">
+          <TabsList className="grid grid-cols-7 mb-4">
             <TabsTrigger value="chatwoot" className="flex items-center gap-1">
               <MessageSquare className="h-4 w-4" />
               Chatwoot
@@ -604,7 +604,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </TabsTrigger>
             <TabsTrigger value="machine-brands" className="flex items-center gap-1">
               <Car className="h-4 w-4" />
-              Marcas & Modelos
+              Marcas
+            </TabsTrigger>
+            <TabsTrigger value="models" className="flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="18" height="10" x="3" y="8" rx="2" />
+                <path d="M10 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+                <path d="M8 16v-1a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" />
+              </svg>
+              Modelos
             </TabsTrigger>
             <TabsTrigger value="loss-reasons" className="flex items-center gap-1">
               <XCircle className="h-4 w-4" />

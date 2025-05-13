@@ -214,9 +214,9 @@ export default function Dashboard() {
   }, [dbCheckPerformed]);
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen overflow-hidden">
       {/* Cabeçalho fixo */}
-      <div className="fixed top-0 left-0 right-0 z-20">
+      <div className="flex-none">
         <Header 
           toggleSidebar={toggleSidebar}
           viewMode={viewMode} 
@@ -229,21 +229,19 @@ export default function Dashboard() {
         />
       </div>
       
-      {/* Espaçador para compensar o cabeçalho fixo */}
-      <div className="h-16"></div>
-      
-      {/* Conteúdo principal com rolagem */}
-      <div className="flex flex-1 overflow-auto">
-        <main className="flex-1 bg-gray-50 flex flex-col min-h-full">
+      {/* Conteúdo principal - tudo abaixo do cabeçalho */}
+      <div className="flex-grow flex flex-col overflow-hidden">
+        <main className="flex-grow flex flex-col overflow-hidden bg-gray-50">
           {/* Mostrar o inicializador de banco de dados quando necessário */}
           {showDBInitializer && (
-            <div className="px-4 pt-6 pb-4">
+            <div className="px-4 pt-6 pb-4 flex-none">
               <InitializeDB />
             </div>
           )}
           
+          {/* Barra de filtros - tamanho fixo */}
           {viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
-            <div className="px-4 py-3 bg-gray-50 border-b">
+            <div className="px-4 py-3 bg-gray-50 border-b flex-none">
               <FilterBar 
                 onFilterChange={updateFilters}
                 activeFilters={filters}
@@ -253,7 +251,8 @@ export default function Dashboard() {
             </div>
           )}
           
-          <div className="flex-1">
+          {/* Área de conteúdo com scroll */}
+          <div className="flex-grow overflow-auto">
             {!activePipelineId && (
               <div className="flex items-center justify-center flex-col p-8">
                 <div className="bg-blue-950 border-2 border-yellow-500 rounded-lg p-8 max-w-md text-center shadow-lg">
@@ -269,11 +268,13 @@ export default function Dashboard() {
             )}
             
             {activePipelineId && viewMode === "kanban" && (
-              <KanbanBoard 
-                pipelineStages={pipelineStages} 
-                filters={filters} 
-                activePipelineId={activePipelineId}
-              />
+              <div className="h-full overflow-auto">
+                <KanbanBoard 
+                  pipelineStages={pipelineStages} 
+                  filters={filters} 
+                  activePipelineId={activePipelineId}
+                />
+              </div>
             )}
             
             {activePipelineId && viewMode === "list" && (

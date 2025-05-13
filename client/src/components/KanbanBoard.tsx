@@ -323,10 +323,9 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
           />
         )}
         
-        {/* Barra fixa superior com botões e cabeçalhos dos estágios */}
-        <div className="flex flex-col sticky top-0 z-20 bg-white dark:bg-gray-900 shadow-sm">
-          {/* Botões "Novo Negócio" e "Adicionar Estágio" */}
-          <div className="flex justify-between items-center px-4 py-2 mb-2 flex-none border-b border-gray-200 dark:border-gray-800">
+        {/* Botões "Novo Negócio" e "Adicionar Estágio" - área fixa no topo */}
+        <div className="sticky top-0 z-30 bg-white dark:bg-gray-900 shadow-sm">
+          <div className="flex justify-between items-center px-4 py-2 flex-none border-b border-gray-200 dark:border-gray-800">
             <div className="flex-grow">
               <Button
                 variant="default"
@@ -364,96 +363,90 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
               <span>Adicionar Estágio</span>
             </Button>
           </div>
-          
-          {/* Cabeçalhos dos estágios */}
-          <div className="flex px-2 overflow-x-auto pb-2">
-            {boardData.map((stage) => (
-              <div key={`header-${stage.id}`} className="flex-shrink-0 w-72 mx-2">
-                <div className={`p-3 rounded-t-lg border shadow-sm ${
-                  stage.stageType === "completed" 
-                    ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
-                    : stage.stageType === "lost" 
-                      ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
-                      : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {stage.stageType === "completed" && (
-                        <span className="h-3 w-3 bg-green-600 dark:bg-green-500 rounded-full"></span>
-                      )}
-                      {stage.stageType === "lost" && (
-                        <span className="h-3 w-3 bg-red-600 dark:bg-red-500 rounded-full"></span>
-                      )}
-                      {!stage.stageType && (
-                        <span className="h-3 w-3 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
-                      )}
-                      <h3 className="font-semibold text-gray-800 dark:text-gray-200">{stage.name}</h3>
-                      <Badge variant="outline" className="rounded-full px-2 py-0 h-5 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-                        {stage.deals.length}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center">
-                      {!stage.isSystem && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVerticalIcon className="h-4 w-4 text-gray-400" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                setSelectedStage(stage);
-                                setIsEditStageModalOpen(true);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <Edit2Icon className="h-4 w-4" />
-                              <span>Editar Estágio</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">{stage.deals.length} negócios</span>
-                    <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">{formatCurrency(stage.totalValue)}</span>
-                  </div>
-                  
-                  {/* Botão de adicionar negócio na coluna */}
-                  {!stage.isSystem && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:bg-yellow-400 hover:text-blue-950 dark:text-gray-400 dark:hover:bg-yellow-400 dark:hover:text-blue-950"
-                      onClick={() => {
-                        setSelectedStageForNewDeal(stage);
-                        setIsAddDealModalOpen(true);
-                      }}
-                    >
-                      <PlusIcon className="h-3 w-3" />
-                      <span>Adicionar Negócio</span>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
         
-        {/* Contêiner principal com cards arrastáveis */}
+        {/* Área principal de rolagem horizontal com os estágios */}
         <div className="flex overflow-x-auto px-2 board-container flex-1 mt-2">
           {boardData.map((stage) => (
             <div 
               key={stage.id} 
-              className="kanban-column flex-shrink-0 w-72 mx-2"
+              className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col"
             >
-              {/* Droppable area */}
+              {/* Cabeçalho da coluna */}
+              <div className={`p-3 rounded-t-lg border shadow-sm ${
+                stage.stageType === "completed" 
+                  ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
+                  : stage.stageType === "lost" 
+                    ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
+                    : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {stage.stageType === "completed" && (
+                      <span className="h-3 w-3 bg-green-600 dark:bg-green-500 rounded-full"></span>
+                    )}
+                    {stage.stageType === "lost" && (
+                      <span className="h-3 w-3 bg-red-600 dark:bg-red-500 rounded-full"></span>
+                    )}
+                    {!stage.stageType && (
+                      <span className="h-3 w-3 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
+                    )}
+                    <h3 className="font-semibold text-gray-800 dark:text-gray-200">{stage.name}</h3>
+                    <Badge variant="outline" className="rounded-full px-2 py-0 h-5 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                      {stage.deals.length}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center">
+                    {!stage.isSystem && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVerticalIcon className="h-4 w-4 text-gray-400" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedStage(stage);
+                              setIsEditStageModalOpen(true);
+                            }}
+                            className="flex items-center gap-2"
+                          >
+                            <Edit2Icon className="h-4 w-4" />
+                            <span>Editar Estágio</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{stage.deals.length} negócios</span>
+                  <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">{formatCurrency(stage.totalValue)}</span>
+                </div>
+                
+                {/* Botão de adicionar negócio na coluna */}
+                {!stage.isSystem && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:bg-yellow-400 hover:text-blue-950 dark:text-gray-400 dark:hover:bg-yellow-400 dark:hover:text-blue-950"
+                    onClick={() => {
+                      setSelectedStageForNewDeal(stage);
+                      setIsAddDealModalOpen(true);
+                    }}
+                  >
+                    <PlusIcon className="h-3 w-3" />
+                    <span>Adicionar Negócio</span>
+                  </Button>
+                )}
+              </div>
+              
+              {/* Área de cards/droppable */}
               <Droppable droppableId={stage.id.toString()}>
                 {(provided, snapshot) => (
                   <div
-                    className={`deal-list p-2 rounded-lg border ${
+                    className={`deal-list p-2 rounded-b-lg border border-t-0 ${
                       snapshot.isDraggingOver
                         ? "droppable-hover bg-yellow-50 dark:bg-yellow-900/20"
                         : stage.stageType === "completed" 
@@ -461,7 +454,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                           : stage.stageType === "lost" 
                             ? "bg-red-50 dark:bg-red-900/30 border-red-300"
                             : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
-                    } h-full`}
+                    } flex-1 max-h-[calc(100vh-180px)] overflow-y-auto`}
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >

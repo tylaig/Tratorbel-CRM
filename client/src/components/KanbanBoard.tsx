@@ -374,181 +374,172 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         </div>
         
         {/* Área principal com os estágios */}
-        <div className="flex px-2 board-container flex-1 mt-2 overflow-x-auto pb-4" style={{ overscrollBehavior: 'contain' }}>
+        <div className="board-container flex-1 mt-2 pb-4 overflow-x-auto" style={{ overscrollBehavior: 'contain' }}>
+          <div className="flex flex-row space-x-2 h-full">
             {boardData.map((stage) => (
               <div 
-                key={stage.id} 
-              className="kanban-column flex-shrink-0 w-72 mx-1.5 flex flex-col h-full"
-            >
-              {/* Cabeçalho da coluna - sticky */}
-              <div className={`p-2 rounded-t-lg border shadow-sm kanban-column-header sticky top-0 z-10 ${
-                stage.stageType === "completed" 
-                  ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
-                  : stage.stageType === "lost" 
-                    ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
-                    : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {stage.stageType === "completed" && (
-                      <span className="h-2.5 w-2.5 bg-green-600 dark:bg-green-500 rounded-full"></span>
-                    )}
-                    {stage.stageType === "lost" && (
-                      <span className="h-2.5 w-2.5 bg-red-600 dark:bg-red-500 rounded-full"></span>
-                    )}
+                key={stage.id}
+                className="kanban-column flex-shrink-0 w-72 mx-1.5 flex flex-col h-full"
+              >
+                {/* Cabeçalho da coluna - sticky */}
+                <div className={`p-2 rounded-t-lg border shadow-sm kanban-column-header sticky top-0 z-10 ${
+                  stage.stageType === "completed" 
+                    ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
+                    : stage.stageType === "lost" 
+                      ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
+                      : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      {stage.stageType === "completed" && (
+                        <span className="h-2.5 w-2.5 bg-green-600 dark:bg-green-500 rounded-full"></span>
+                      )}
+                      {stage.stageType === "lost" && (
+                        <span className="h-2.5 w-2.5 bg-red-600 dark:bg-red-500 rounded-full"></span>
+                      )}
+                      {!stage.stageType && (
+                        <span className="h-2.5 w-2.5 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
+                      )}
+                      <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{stage.name}</h3>
+                      <Badge variant="outline" className="rounded-full px-1.5 py-0 h-4 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                        {stage.deals.length}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center">
+                      {!stage.isSystem && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 p-0.5">
+                              <MoreVerticalIcon className="h-3 w-3 text-gray-400" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedStage(stage);
+                                setIsEditStageModalOpen(true);
+                              }}
+                            >
+                              <Edit2Icon className="mr-2 h-4 w-4" />
+                              <span>Editar Estágio</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatCurrency(stage.totalValue)}
+                    </div>
+                    
+                    {/* Botão adicionar negócio - exceto para estágios de resultados */}
                     {!stage.stageType && (
-                      <span className="h-2.5 w-2.5 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
-                    )}
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{stage.name}</h3>
-                    <Badge variant="outline" className="rounded-full px-1.5 py-0 h-4 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-                      {stage.deals.length}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center">
-                    {!stage.isSystem && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 p-0.5">
-                            <MoreVerticalIcon className="h-3 w-3 text-gray-400" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              setSelectedStage(stage);
-                              setIsEditStageModalOpen(true);
-                            }}
-                            className="flex items-center gap-2"
-                          >
-                            <Edit2Icon className="h-4 w-4" />
-                            <span>Editar Estágio</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:bg-yellow-400 hover:text-blue-950 dark:text-gray-400 dark:hover:bg-yellow-400 dark:hover:text-blue-950"
+                        onClick={() => {
+                          setSelectedStageForNewDeal(stage);
+                          setIsAddDealModalOpen(true);
+                        }}
+                      >
+                        <PlusIcon className="h-3 w-3" />
+                        <span>Adicionar Negócio</span>
+                      </Button>
                     )}
                   </div>
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{stage.deals.length} negócios</span>
-                  <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">{formatCurrency(stage.totalValue)}</span>
                 </div>
                 
-                {/* Botão de adicionar negócio na coluna */}
-                {!stage.isSystem && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="w-full mt-2 text-xs flex items-center justify-center gap-1 text-gray-500 hover:bg-yellow-400 hover:text-blue-950 dark:text-gray-400 dark:hover:bg-yellow-400 dark:hover:text-blue-950"
-                    onClick={() => {
-                      setSelectedStageForNewDeal(stage);
-                      setIsAddDealModalOpen(true);
-                    }}
-                  >
-                    <PlusIcon className="h-3 w-3" />
-                    <span>Adicionar Negócio</span>
-                  </Button>
-                )}
-              </div>
-              
-              {/* Área de cards/droppable - altura ajustada para rolagem */}
-              <Droppable droppableId={stage.id.toString()}>
-                {(provided, snapshot) => (
-                  <div
-                    className={`deal-list p-2 rounded-b-lg border border-t-0 ${
-                      snapshot.isDraggingOver
-                        ? "droppable-hover bg-yellow-50 dark:bg-yellow-900/20"
-                        : stage.stageType === "completed" 
-                          ? "bg-green-50 dark:bg-green-900/30 border-green-300" 
-                          : stage.stageType === "lost" 
-                            ? "bg-red-50 dark:bg-red-900/30 border-red-300"
-                            : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
-                    } flex-1 h-full min-h-[100px]`}
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                  >
-                    {stage.deals.map((deal, index) => (
-                      <Draggable
-                        key={deal.id.toString()}
-                        draggableId={deal.id.toString()}
-                        index={index}
-                      >
-                        {(provided, snapshot) => (
-                          <Card
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={{
-                              ...provided.draggableProps.style,
-                              // Efeitos visuais durante o arraste
-                              opacity: snapshot.isDragging ? 0.9 : 1,
-                              boxShadow: snapshot.isDragging ? '0 8px 15px rgba(0, 0, 0, 0.15)' : '',
-                              transform: snapshot.isDragging && provided.draggableProps.style?.transform 
-                                ? `${provided.draggableProps.style.transform} rotate(1deg)` 
-                                : provided.draggableProps.style?.transform,
-                              zIndex: snapshot.isDragging ? 9999 : undefined,
-                            }}
-                            className={`mb-2 p-2 group border-l-4 ${
-                              snapshot.isDragging
-                                ? "shadow-lg dark:bg-gray-700 ring-2 ring-yellow-400 ring-opacity-50 deal-card-dragging"
-                                : "shadow-sm hover:shadow-md bg-gray-50 dark:bg-gray-800"
-                            } ${
-                              deal.status === "completed" 
-                                ? "border-l-green-500" 
-                                : deal.status === "canceled" 
-                                  ? "border-l-red-500"
-                                  : "border-l-yellow-500"
-                            } cursor-pointer rounded-md text-sm`}
-                            onClick={() => {
-                              setSelectedDeal(deal);
-                              setIsEditDealModalOpen(true);
-                            }}
-                          >
-                            <div className="flex items-center justify-between mb-0.5">
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[150px] text-[10px]">
-                                  {deal.name}
+                {/* Área de cards/droppable - altura ajustada para rolagem */}
+                <Droppable droppableId={stage.id.toString()}>
+                  {(provided, snapshot) => (
+                    <div
+                      className={`deal-list p-2 rounded-b-lg border border-t-0 ${
+                        snapshot.isDraggingOver
+                          ? "droppable-hover bg-yellow-50 dark:bg-yellow-900/20"
+                          : stage.stageType === "completed" 
+                            ? "bg-green-50 dark:bg-green-900/30 border-green-300" 
+                            : stage.stageType === "lost" 
+                              ? "bg-red-50 dark:bg-red-900/30 border-red-300"
+                              : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
+                      } flex-1 h-full min-h-[100px] overflow-y-auto scrollbar-thin`}
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                    >
+                      {stage.deals.map((deal, index) => (
+                        <Draggable
+                          key={deal.id.toString()}
+                          draggableId={deal.id.toString()}
+                          index={index}
+                        >
+                          {(provided, snapshot) => (
+                            <Card
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`deal-card mb-2 p-1.5 ${
+                                snapshot.isDragging ? "deal-card-dragging" : ""
+                              } hover:shadow-md transition-shadow ${
+                                deal.saleStatus === "won" 
+                                  ? "border-l-2 border-l-green-500" 
+                                  : deal.saleStatus === "lost" 
+                                    ? "border-l-2 border-l-red-500"
+                                    : "border-l-2 border-l-blue-500"
+                              }`}
+                              onClick={() => {
+                                setSelectedDeal(deal);
+                                setIsEditDealModalOpen(true);
+                              }}
+                            >
+                              <div className="flex items-center justify-between mb-0.5">
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[150px] text-[10px]">
+                                    {deal.name}
+                                  </div>
+                                </div>
+                                <div>
+                                  {getStatusBadge(deal.status)}
                                 </div>
                               </div>
-                              <div>
-                                {getStatusBadge(deal.status)}
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-0.5">
-                              <div className="flex items-center text-[9px] text-gray-600 dark:text-gray-400">
-                                <User2Icon className="w-2.5 h-2.5 mr-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                                <span className="truncate">
-                                  {deal.leadData?.name || "N/D"}
-                                </span>
+                              
+                              <div className="grid grid-cols-2 gap-0.5">
+                                <div className="flex items-center text-[9px] text-gray-600 dark:text-gray-400">
+                                  <User2Icon className="h-2.5 w-2.5 mr-1" />
+                                  <span className="truncate">
+                                    {deal.leadData?.name || "Sem contato"}
+                                  </span>
+                                </div>
+                                
+                                <div className="flex items-center text-[9px] text-gray-600 dark:text-gray-400">
+                                  <Building className="h-2.5 w-2.5 mr-1 flex-shrink-0" />
+                                  <span className="truncate">
+                                    {deal.leadData?.companyName || "N/A"}
+                                  </span>
+                                </div>
                               </div>
                               
-                              <div className="flex items-center text-[9px] text-gray-600 dark:text-gray-400">
-                                <Building className="w-2.5 h-2.5 mr-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                                <span className="truncate">
-                                  {deal.leadData?.companyName || "N/D"}
+                              <div className="flex items-center justify-between mt-0.5 pt-0.5 border-t border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center text-[9px] text-gray-500 dark:text-gray-400">
+                                  <CalendarIcon className="h-2.5 w-2.5 mr-1" />
+                                  <span>{formatTimeAgo(deal.createdAt)}</span>
+                                </div>
+                                <span className="px-1 py-0.5 text-[9px] font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
+                                  {formatCurrency(deal.value || 0)}
                                 </span>
                               </div>
-                            </div>
-                            
-                            <div className="flex items-center justify-between mt-0.5 pt-0.5 border-t border-gray-100 dark:border-gray-700">
-                              <span className="text-[9px] text-gray-500 dark:text-gray-400 flex items-center">
-                                <CalendarIcon className="w-2.5 h-2.5 mr-0.5" />
-                                {formatTimeAgo(deal.updatedAt)}
-                              </span>
-                              <span className="px-1 py-0.5 text-[9px] font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
-                                {formatCurrency(deal.value || 0)}
-                              </span>
-                            </div>
-                          </Card>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </div>
-          ))}
+                            </Card>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            ))}
+          </div>
         </div>
         
         {/* Modal de adição de negócio */}

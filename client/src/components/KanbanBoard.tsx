@@ -474,7 +474,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
       )}
       
       <div className="flex flex-col h-full">
-        <div className="flex justify-between items-center px-4 py-2 mb-1 sticky top-0 bg-white z-10">
+        <div className="flex justify-between items-center px-4 py-2 mb-1 sticky top-0 bg-gray-50 z-10">
           {activeFilters.hideClosed && activePipelineId === 1 && (
             <div className="text-sm text-amber-800 flex items-center gap-2 bg-amber-100 px-3 py-1 rounded-md border border-amber-200">
               <InfoIcon size={16} />
@@ -491,7 +491,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
             <span>Adicionar Estágio</span>
           </Button>
         </div>
-        <div className="flex overflow-x-auto px-2 board-container h-full">
+        <div className="flex overflow-x-auto px-2 board-container h-full pb-12">
           {boardData.map((stage) => {
             // Definir classes e estilos específicos com base no tipo de estágio
             let stageClass = "";

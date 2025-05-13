@@ -215,19 +215,26 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header 
-        toggleSidebar={toggleSidebar}
-        viewMode={viewMode} 
-        toggleViewMode={toggleViewMode}
-        onOpenApiConfig={() => setIsApiModalOpen(true)}
-        onAddDeal={() => setIsAddDealModalOpen(true)}
-        hasApiConfig={!!settings?.chatwootApiKey}
-        activePipelineId={activePipelineId}
-        onPipelineChange={(pipelineId) => setActivePipelineId(pipelineId)}
-      />
+      {/* Cabeçalho fixo */}
+      <div className="fixed top-0 left-0 right-0 z-10">
+        <Header 
+          toggleSidebar={toggleSidebar}
+          viewMode={viewMode} 
+          toggleViewMode={toggleViewMode}
+          onOpenApiConfig={() => setIsApiModalOpen(true)}
+          onAddDeal={() => setIsAddDealModalOpen(true)}
+          hasApiConfig={!!settings?.chatwootApiKey}
+          activePipelineId={activePipelineId}
+          onPipelineChange={(pipelineId) => setActivePipelineId(pipelineId)}
+        />
+      </div>
       
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
+      {/* Espaçador para compensar o cabeçalho fixo */}
+      <div className="h-20"></div>
+      
+      {/* Conteúdo principal com rolagem */}
+      <div className="flex flex-1 overflow-y-auto">
+        <main className="flex-1 bg-gray-50 flex flex-col">
           {/* Mostrar o inicializador de banco de dados quando necessário */}
           {showDBInitializer && (
             <div className="px-4 pt-6 pb-4">
@@ -236,7 +243,7 @@ export default function Dashboard() {
           )}
           
           {viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
-            <div className="px-4 py-4">
+            <div className="px-4 py-4 sticky top-0 z-10 bg-gray-50">
               <FilterBar 
                 onFilterChange={updateFilters}
                 activeFilters={filters}
@@ -246,7 +253,7 @@ export default function Dashboard() {
             </div>
           )}
           
-          <div className="flex-1 overflow-y-auto" style={{height: 'calc(100vh - 140px)'}}>
+          <div className="flex-1">
             {!activePipelineId && (
               <div className="flex items-center justify-center flex-col p-8">
                 <div className="bg-blue-950 border-2 border-yellow-500 rounded-lg p-8 max-w-md text-center shadow-lg">

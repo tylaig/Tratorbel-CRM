@@ -618,10 +618,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </svg>
               Desempenho
             </TabsTrigger>
-            <TabsTrigger value="machine-brands" className="flex items-center gap-1">
-              <Car className="h-4 w-4" />
-              Marcas
-            </TabsTrigger>
+
           </TabsList>
 
           {/* Aba Chatwoot */}

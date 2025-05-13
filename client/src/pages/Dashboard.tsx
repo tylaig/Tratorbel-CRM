@@ -238,8 +238,8 @@ export default function Dashboard() {
             </div>
           )}
           
-          {/* Barra de filtros - tamanho fixo */}
-          {viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
+          {/* Barra de filtros - tamanho fixo - somente quando um pipeline estiver selecionado */}
+          {activePipelineId && viewMode !== "contacts" && viewMode !== "heatmap" && viewMode !== "results" && (
             <div className="px-4 py-3 bg-gray-50 border-b flex-none">
               <FilterBar 
                 onFilterChange={updateFilters}

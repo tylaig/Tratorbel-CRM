@@ -48,8 +48,8 @@ import { FilterOptions } from "@/components/FilterBar";
 interface KanbanBoardProps {
   pipelineStages: PipelineStage[];
   filters?: FilterOptions;
-  activePipelineId?: number | null;
-  onAddDeal?: () => void; // Função opcional para adicionar negócio
+  activePipelineId: number | null;
+  onAddDeal: () => void; // Função para abrir o modal de adicionar negócio
 }
 
 interface StageWithDeals extends PipelineStage {

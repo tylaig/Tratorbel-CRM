@@ -169,19 +169,11 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId 
         
         // Para estágios normais, mostrar os deals corretamente com base no pipeline
         if (stage.stageType === "normal") {
-          if (activePipelineId === 1) {
-            // No pipeline Comercial, ocultar negócios concluídos (ganhos/perdidos) nos estágios normais
-            stageDeals = filteredDeals.filter(deal => 
-              deal.stageId === stage.id && 
-              deal.saleStatus !== 'won' && 
-              deal.saleStatus !== 'lost'
-            );
-          } else {
-            // Para outros pipelines (ex: Compras/Logística), mostrar todos os negócios, incluindo concluídos
-            stageDeals = filteredDeals.filter(deal => 
-              deal.stageId === stage.id
-            );
-          }
+          // Para todos os pipelines, mostrar todos os negócios nos seus respectivos estágios
+          // Removido o tratamento especial para negócios concluídos (ganhos/perdidos)
+          stageDeals = filteredDeals.filter(deal => 
+            deal.stageId === stage.id
+          );
         }
         // Para o estágio de vendas realizadas, mostrar deals marcados como ganhos
         else if (stage.stageType === "completed") {

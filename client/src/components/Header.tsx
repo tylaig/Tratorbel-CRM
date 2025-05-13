@@ -122,7 +122,7 @@ export default function Header({
             <Button 
               variant="default"
               size="sm"
-              className="bg-primary hover:bg-primary/90 text-black shadow-sm ml-2 border-none hidden sm:flex"
+              className="bg-primary hover:bg-yellow-400 hover:text-blue-950 text-black shadow-sm ml-2 border-none hidden sm:flex"
               onClick={onAddDeal}
             >
               <PlusIcon className="h-4 w-4 mr-1" />
@@ -133,7 +133,7 @@ export default function Header({
             <Button 
               variant="default"
               size="icon"
-              className="bg-primary hover:bg-primary/90 text-black shadow-sm ml-2 border-none sm:hidden h-9 w-9"
+              className="bg-primary hover:bg-yellow-400 hover:text-blue-950 text-black shadow-sm ml-2 border-none sm:hidden h-9 w-9"
               onClick={onAddDeal}
               title="Novo Negócio"
             >

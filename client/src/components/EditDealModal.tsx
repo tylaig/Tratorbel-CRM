@@ -121,21 +121,17 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     enabled: !!deal?.leadId,
   });
   
+  // Já temos a query de pipelines definida acima
+  
   // Buscar os itens da cotação para calcular o valor total
   const { data: quoteItems } = useQuery<any[]>({
     queryKey: [`/api/quote-items/${deal?.id}`],
     enabled: !!deal?.id
   });
   
-  // Buscar os estágios do pipeline selecionado
-  const { data: filteredPipelineStages = [] } = useQuery<PipelineStage[]>({
-    queryKey: ['/api/pipeline-stages', pipelineId],
-    queryFn: async () => {
-      if (!pipelineId) return [];
-      const response = await apiRequest(`/api/pipeline-stages?pipelineId=${pipelineId}`, 'GET');
-      return (response as unknown) as PipelineStage[];
-    },
-    enabled: !!pipelineId,
+  // Filtra os estágios por pipeline
+  const filteredStages = pipelineStages.filter(stage => {
+    return pipelineId ? stage.pipelineId === parseInt(pipelineId) : true;
   });
   
   // Calcular o valor total da cotação quando os itens estiverem disponíveis
@@ -513,7 +509,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                           <SelectValue placeholder="Selecione uma etapa" />
                         </SelectTrigger>
                         <SelectContent>
-                          {filteredPipelineStages.map((stage) => (
+                          {filteredStages.map((stage) => (
                             <SelectItem key={stage.id} value={stage.id.toString()}>
                               {stage.name}
                             </SelectItem>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,9 +44,23 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     queryKey: ['/api/pipelines'],
   });
   
-  // Consulta para carregar estágios do pipeline
+  // Estado para controlar pipeline selecionado na tela de configurações
+  const [selectedPipelineId, setSelectedPipelineId] = useState<number | null>(null);
+  
+  // Consulta para carregar estágios do pipeline selecionado
   const { data: pipelineStages = [] } = useQuery<PipelineStage[]>({
-    queryKey: ['/api/pipeline-stages'],
+    queryKey: ['/api/pipeline-stages', selectedPipelineId],
+    queryFn: async () => {
+      const url = selectedPipelineId 
+        ? `/api/pipeline-stages?pipelineId=${selectedPipelineId}` 
+        : '/api/pipeline-stages';
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Falha ao carregar estágios do pipeline');
+      }
+      return response.json();
+    },
+    enabled: !!selectedPipelineId,
   });
 
   // Consulta para carregar motivos de perdas
@@ -73,6 +87,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Estado para controlar o pipeline padrão
   const [defaultPipelineId, setDefaultPipelineId] = useState<number | null>(settings?.activePipelineId || null);
 
+  // Inicializa o selectedPipelineId quando os pipelines são carregados
+  useEffect(() => {
+    if (pipelines.length > 0 && !selectedPipelineId) {
+      setSelectedPipelineId(pipelines[0].id);
+    }
+  }, [pipelines, selectedPipelineId]);
+  
   // Estados para edição de estágios
   const [newStageName, setNewStageName] = useState("");
   const [editingStage, setEditingStage] = useState<{ id: number, name: string } | null>(null);
@@ -137,13 +158,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para criar estágio
   const createStageMutation = useMutation({
     mutationFn: async (data: { name: string }) => {
+      if (!selectedPipelineId) {
+        throw new Error("Selecione um pipeline primeiro");
+      }
       return await apiRequest('/api/pipeline-stages', 'POST', {
         name: data.name,
-        order: pipelineStages.length + 1
+        order: pipelineStages.length + 1,
+        pipelineId: selectedPipelineId
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages', selectedPipelineId] });
       setNewStageName("");
       toast({
         title: "Estágio criado",
@@ -163,13 +188,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const updateStageMutation = useMutation({
     mutationFn: async (data: { id: number, name: string }) => {
       console.log("Chamando API para atualizar estágio:", data);
+      if (!selectedPipelineId) {
+        throw new Error("Selecione um pipeline primeiro");
+      }
       // Certificando-se de passar os argumentos na ordem correta
       return await apiRequest(`/api/pipeline-stages/${data.id}`, 'PUT', {
         name: data.name
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages', selectedPipelineId] });
       setEditingStage(null);
       toast({
         title: "Estágio atualizado",
@@ -188,10 +216,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Mutation para excluir estágio
   const deleteStageMutation = useMutation({
     mutationFn: async (id: number) => {
+      if (!selectedPipelineId) {
+        throw new Error("Selecione um pipeline primeiro");
+      }
       return await apiRequest(`/api/pipeline-stages/${id}`, 'DELETE');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages', selectedPipelineId] });
       toast({
         title: "Estágio excluído",
         description: "O estágio foi excluído com sucesso.",

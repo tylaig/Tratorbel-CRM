@@ -10,7 +10,8 @@ import {
   machineBrands, type MachineBrand, type InsertMachineBrand,
   leads, type Lead, type InsertLead,
   stageHistory,
-  salePerformanceReasons, type SalePerformanceReason, type InsertSalePerformanceReason
+  salePerformanceReasons, type SalePerformanceReason, type InsertSalePerformanceReason,
+  pipelines, type Pipeline, type InsertPipeline
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, or, like } from "drizzle-orm";
@@ -37,8 +38,16 @@ export interface IStorage {
   deleteSalePerformanceReason(id: number): Promise<boolean>;
   searchLeads(query: string): Promise<Lead[]>;
   
+  // Pipelines (Funis)
+  getPipelines(): Promise<Pipeline[]>;
+  getPipeline(id: number): Promise<Pipeline | undefined>;
+  getDefaultPipeline(): Promise<Pipeline | undefined>;
+  createPipeline(pipeline: InsertPipeline): Promise<Pipeline>;
+  updatePipeline(id: number, pipeline: Partial<Pipeline>): Promise<Pipeline | undefined>;
+  deletePipeline(id: number): Promise<boolean>;
+  
   // Pipeline Stages
-  getPipelineStages(): Promise<PipelineStage[]>;
+  getPipelineStages(pipelineId?: number): Promise<PipelineStage[]>;
   getPipelineStage(id: number): Promise<PipelineStage | undefined>;
   createPipelineStage(stage: InsertPipelineStage): Promise<PipelineStage>;
   updatePipelineStage(id: number, stage: Partial<PipelineStage>): Promise<PipelineStage | undefined>;

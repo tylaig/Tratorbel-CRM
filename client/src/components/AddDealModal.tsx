@@ -598,6 +598,16 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
                       placeholder="00.000.000/0000-00"
                     />
                   </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="deal-state-registration">Inscrição Estadual</Label>
+                    <Input
+                      id="deal-state-registration"
+                      value={stateRegistration}
+                      onChange={(e) => setStateRegistration(e.target.value)}
+                      placeholder="Inscrição estadual"
+                    />
+                  </div>
                 </>
               ) : clientType === "person" ? (
                 <>
@@ -608,16 +618,6 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
                       value={cpf}
                       onChange={(e) => setCpf(e.target.value)}
                       placeholder="000.000.000-00"
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="deal-state-registration">Inscrição Estadual</Label>
-                    <Input
-                      id="deal-state-registration"
-                      value={stateRegistration}
-                      onChange={(e) => setStateRegistration(e.target.value)}
-                      placeholder="Inscrição estadual"
                     />
                   </div>
                 </>

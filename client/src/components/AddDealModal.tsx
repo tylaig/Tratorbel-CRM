@@ -165,7 +165,19 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
       });
   };
   
-  const contacts = contactsData?.payload || [];
+  // Vamos obter os contatos do Chatwoot da estrutura de resposta adequada
+  // Verificando logs verificamos que o formato é diferente do esperado
+  const contacts = Array.isArray(contactsData?.payload) 
+    ? contactsData?.payload 
+    : [];
+    
+  // Para debug
+  useEffect(() => {
+    if (contactsData) {
+      console.log("Dados de contatos recebidos:", contactsData);
+      console.log("Contatos após processamento:", contacts);
+    }
+  }, [contactsData]);
   
   // Preencher os dados do contato selecionado quando disponível
   useEffect(() => {

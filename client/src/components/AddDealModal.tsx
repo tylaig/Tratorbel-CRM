@@ -86,9 +86,11 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
   const { toast } = useToast();
   
   // Get Chatwoot contacts
-  const { data: contactsData, refetch: refetchContacts } = useQuery<{ payload: ChatwootContact[] }>({
+  const { data: contactsData, refetch: refetchContacts, isLoading: isLoadingContacts } = useQuery<{ payload: ChatwootContact[], meta: any }>({
     queryKey: ['/api/chatwoot/contacts'],
     enabled: isOpen,
+    refetchOnWindowFocus: true, // Recarrega quando a janela ganha foco
+    staleTime: 0, // Sempre considera os dados obsoletos
   });
   
   // Buscar o pipeline padrão
@@ -113,6 +115,53 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
   const availablePipelineStages = pipelineStages.length > 0 
     ? pipelineStages 
     : (fetchedPipelineStages || []);
+  
+  // Função para lidar com a criação de contato
+  const handleContactCreated = (newContact: any) => {
+    console.log("Contato criado com sucesso:", newContact);
+    
+    // Atualizar a lista de contatos imediatamente
+    refetchContacts()
+      .then(() => {
+        // Quando a lista de contatos for atualizada, selecionar o novo contato
+        if (newContact?.payload?.contact?.id) {
+          const contactId = newContact.payload.contact.id.toString();
+          console.log("Selecionando contato recém-criado ID:", contactId);
+          setContactId(contactId);
+          
+          // Atualizar o formulário com os dados do contato
+          if (newContact?.payload?.contact?.name) {
+            setName(newContact.payload.contact.name);
+          }
+          if (newContact?.payload?.contact?.company_name) {
+            setCompanyName(newContact.payload.contact.company_name);
+            setCorporateName(newContact.payload.contact.company_name);
+            setClientType("company");
+            setIsCompany(true);
+          } else {
+            setClientType("person");
+            setIsCompany(false);
+          }
+          setEmail(newContact.payload.contact.email || "");
+          setPhone(formatPhoneNumber(newContact.payload.contact.phone_number) || "");
+        }
+        
+        // Notification
+        toast({
+          title: "Contato criado com sucesso",
+          description: "O contato foi adicionado e selecionado automaticamente.",
+          variant: "success",
+        });
+      })
+      .catch(error => {
+        console.error("Erro ao atualizar lista de contatos:", error);
+        toast({
+          title: "Erro ao atualizar contatos",
+          description: "Não foi possível atualizar a lista de contatos. Tente novamente.",
+          variant: "destructive",
+        });
+      });
+  };
   
   const contacts = contactsData?.payload || [];
   
@@ -339,41 +388,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
     }
   };
   
-  // Handle contact created from AddContactModal
-  const handleContactCreated = async (contactId: string, contactName: string, contact?: any) => {
-    console.log(`Contato criado: ${contactName} (ID: ${contactId})`, contact);
-    
-    // Recarregar a lista de contatos para incluir o novo contato
-    await refetchContacts();
-    
-    // Definir o contato recém-criado como selecionado
-    setContactId(contactId);
-    setName(contactName);
-    
-    // Preencher informações adicionais do contato se estiverem disponíveis
-    if (contact) {
-      if (contact.email) {
-        setEmail(contact.email);
-      }
-      
-      if (contact.phone_number) {
-        setPhone(formatPhoneNumber(contact.phone_number));
-      }
-      
-      if (contact.company_name) {
-        setCompanyName(contact.company_name);
-        setClientType("company");
-        setIsCompany(true);
-      }
-    }
-
-    // Exibir mensagem de sucesso
-    toast({
-      title: "Contato criado com sucesso",
-      description: `O contato ${contactName} foi criado e selecionado automaticamente.`,
-      variant: "default",
-    });
-  };
+  // Esta função não é mais usada, foi substituída pela implementação acima
   
   // Preencher dados quando houver um contato pré-selecionado
   useEffect(() => {

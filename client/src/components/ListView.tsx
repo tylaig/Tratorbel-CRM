@@ -28,9 +28,10 @@ import { queryClient } from "@/lib/queryClient";
 interface ListViewProps {
   pipelineStages: PipelineStage[];
   filters?: FilterOptions;
+  activePipelineId?: number | null;
 }
 
-export default function ListView({ pipelineStages, filters }: ListViewProps) {
+export default function ListView({ pipelineStages, filters, activePipelineId }: ListViewProps) {
   // Use os filtros do componente pai ou crie um padrão
   const activeFilters = filters || {
     search: "",
@@ -44,9 +45,9 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toast } = useToast();
   
-  // Fetch deals
+  // Fetch deals com o pipeline atual
   const { data: allDeals = [], isLoading } = useQuery<Deal[]>({
-    queryKey: ['/api/deals'],
+    queryKey: ['/api/deals', activePipelineId],
     refetchOnMount: true,        // Recarregar quando o componente for montado
     refetchOnWindowFocus: true,  // Recarregar quando a janela ganhar foco
     staleTime: 0,                // Considerar dados obsoletos imediatamente
@@ -82,9 +83,18 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
     setIsEditModalOpen(true);
   };
   
+  // Buscar dados da pipeline selecionada para saber se precisa filtrar vendas concluídas
+  const { data: currentPipeline } = useQuery({
+    queryKey: ['/api/pipelines', activePipelineId],
+    enabled: !!activePipelineId
+  });
+
   // Aplicar filtros sempre que allDeals ou activeFilters mudarem
   useEffect(() => {
-    let result = [...allDeals];
+    // Primeiro, filtramos por pipeline (se selecionado)
+    let result = activePipelineId 
+      ? allDeals.filter(deal => deal.pipelineId === activePipelineId)
+      : [...allDeals];
     
     // Aplicar filtro de busca
     if (activeFilters.search) {
@@ -113,11 +123,21 @@ export default function ListView({ pipelineStages, filters }: ListViewProps) {
     }
     
     // Filtrar negócios concluídos se hideClosed estiver ativo
+    // OBS: No funil de Compras/Logística, devemos mostrar os negócios com status "won" (vendas realizadas)
     if (activeFilters.hideClosed) {
-      result = result.filter(deal => 
-        deal.saleStatus !== 'won' && 
-        deal.saleStatus !== 'lost'
-      );
+      // Verificar se estamos no pipeline não-default (ex: Compras/Logística) que deve mostrar vendas realizadas
+      const isNonDefaultPipeline = currentPipeline && !currentPipeline.isDefault;
+      
+      if (isNonDefaultPipeline) {
+        // No pipeline não-default, filtra apenas as vendas perdidas
+        result = result.filter(deal => deal.saleStatus !== 'lost');
+      } else {
+        // No pipeline default (Comercial), filtra tanto as vendas realizadas quanto as perdidas
+        result = result.filter(deal => 
+          deal.saleStatus !== 'won' && 
+          deal.saleStatus !== 'lost'
+        );
+      }
     }
     
     // Aplicar filtro de estágio

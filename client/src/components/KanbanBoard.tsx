@@ -503,6 +503,9 @@ export default function KanbanBoard({ pipelineStages, filters }: KanbanBoardProp
                           <span className="h-3 w-3 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
                         )}
                         <h3 className="font-semibold text-gray-800 dark:text-gray-200">{stage.name}</h3>
+                        <Badge variant="outline" className="rounded-full px-2 py-0 h-5 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                          {stage.deals.length}
+                        </Badge>
                       </div>
                       <div className="flex items-center">
                         {!stage.isSystem && (

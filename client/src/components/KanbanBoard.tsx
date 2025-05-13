@@ -313,7 +313,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-[calc(100vh-180px)]">
         {/* Botão oculto para ser clicado pelo Header para adicionar estágio */}
         <button
           id="add-stage-button"
@@ -374,7 +374,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         </div>
         
         {/* Área principal com os estágios */}
-        <div className="flex px-2 board-container flex-1 mt-2">
+        <div className="flex px-2 board-container flex-1 mt-2 overflow-x-auto pb-4">
           {boardData.map((stage) => (
             <div 
               key={stage.id} 

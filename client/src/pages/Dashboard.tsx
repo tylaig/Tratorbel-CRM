@@ -242,6 +242,8 @@ export default function Dashboard() {
               <FilterBar 
                 onFilterChange={updateFilters}
                 activeFilters={filters}
+                activePipelineId={activePipelineId}
+                isDefaultPipeline={defaultPipeline?.id === activePipelineId}
               />
             </div>
           )}

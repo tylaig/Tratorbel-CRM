@@ -105,7 +105,7 @@ export default function FilterBar({
   };
   
   // Aplicar filtro de motivo de perda
-  const applyLostReasonFilter = (reason: string | null) => {
+  const applyLossReasonFilter = (reason: string | null) => {
     // Limpar o filtro de ganho se estiver ativo
     if (filters.winReason) {
       updateFilter({ lostReason: reason || null, winReason: null });

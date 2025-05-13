@@ -802,7 +802,14 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
       <AdvancedSearchModal 
         isOpen={isAdvancedSearchOpen}
         onClose={() => setIsAdvancedSearchOpen(false)}
-        onSelectContact={handleAdvancedSearchSelect}
+        onSelect={handleAdvancedSearchSelect}
+      />
+      
+      {/* Modal de adicionar contato */}
+      <AddContactModal
+        isOpen={isAddContactOpen}
+        onClose={() => setIsAddContactOpen(false)}
+        onContactCreated={handleContactCreated}
       />
     </Dialog>
   );

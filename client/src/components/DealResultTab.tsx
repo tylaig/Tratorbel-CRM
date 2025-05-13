@@ -73,8 +73,13 @@ export default function DealResultTab({ deal }: DealResultTabProps) {
       if (deal.saleStatus === "won") {
         payload.salePerformance = salePerformance;
       } else if (deal.saleStatus === "lost") {
+        // Garantir que o lostReason seja um ID válido
         payload.lostReason = lossReason;
         payload.lostNotes = notes;
+        console.log("Atualizando motivo de perda:", { 
+          lostReason, 
+          availableReasons: lossReasons.map(r => ({ id: r.id, reason: r.reason }))
+        });
       }
       
       return await apiRequest(`/api/deals/${deal.id}`, 'PUT', payload);

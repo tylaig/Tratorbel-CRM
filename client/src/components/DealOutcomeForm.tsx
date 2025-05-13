@@ -68,6 +68,12 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
     }
   };
   
+  // Buscar os estágios do pipeline para encontrar os estágios de "completed" e "lost"
+  const { data: pipelineStages = [] } = useQuery({
+    queryKey: ['/api/pipeline-stages'],
+    select: (data) => data || [],
+  });
+  
   const updateDealMutation = useMutation({
     mutationFn: async () => {
       if (!deal) return null;
@@ -77,10 +83,32 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
         ? parseFloat(finalValue.replace(/[^\d,]/g, "").replace(",", "."))
         : 0;
       
+      // Encontrar o estágio correto baseado no outcome (ganho ou perdido)
+      const targetStageType = outcome === "won" ? "completed" : "lost";
+      const targetStage = pipelineStages.find(
+        (stage) => stage.stageType === targetStageType && stage.pipelineId === deal.pipelineId
+      );
+      
+      console.log("Buscando estágio para mover o negócio:", { 
+        outcome, 
+        targetStageType, 
+        foundStage: targetStage,
+        pipelineId: deal.pipelineId,
+        availableStages: pipelineStages.map(s => ({ id: s.id, name: s.name, type: s.stageType, pipelineId: s.pipelineId }))
+      });
+      
       const payload: any = {
         saleStatus: outcome,
         value: numericValue,
       };
+      
+      // Importante: Definir o novo stageId para mover o negócio para o estágio correto
+      if (targetStage) {
+        payload.stageId = targetStage.id;
+        console.log(`Movendo negócio para o estágio ${targetStage.name} (ID: ${targetStage.id})`);
+      } else {
+        console.error(`Não foi possível encontrar estágio do tipo ${targetStageType} para o pipeline ${deal.pipelineId}`);
+      }
       
       // Adicionar informações específicas com base no resultado
       if (outcome === "won") {
@@ -92,6 +120,7 @@ export default function DealOutcomeForm({ deal, onSuccess }: DealOutcomeFormProp
         payload.lostNotes = notes;
       }
       
+      console.log("Enviando payload:", payload);
       return await apiRequest(`/api/deals/${deal.id}`, 'PUT', payload);
     },
     onSuccess: () => {

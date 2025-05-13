@@ -1513,6 +1513,139 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Aba Modelos */}
+          <TabsContent value="models">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Modelos de Máquinas</CardTitle>
+                <CardDescription>
+                  Gerencie os modelos de máquinas disponíveis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label>Selecione uma Marca</Label>
+                    <select
+                      className="w-full p-2 rounded-md border"
+                      value={selectedBrandId || ""}
+                      onChange={(e) => setSelectedBrandId(e.target.value ? Number(e.target.value) : null)}
+                    >
+                      <option value="">Selecione uma marca</option>
+                      {machineBrands.map((brand) => (
+                        <option key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                      Selecione uma marca para gerenciar seus modelos
+                    </p>
+                  </div>
+
+                  {selectedBrandId && (
+                    <div className="space-y-2 border-t pt-4">
+                      <Label>Adicionar Novo Modelo</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          placeholder="Nome do modelo"
+                          value={newModelName}
+                          onChange={(e) => setNewModelName(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button 
+                          onClick={createModel} 
+                          disabled={createModelMutation.isPending}
+                        >
+                          <PlusCircle className="h-4 w-4 mr-1" />
+                          Adicionar
+                        </Button>
+                      </div>
+
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium mb-2">Modelos da Marca {machineBrands.find(b => b.id === selectedBrandId)?.name}</h4>
+                        
+                        {machineModels.length > 0 ? (
+                          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                            {machineModels.map((model) => (
+                              <div 
+                                key={model.id}
+                                className="flex items-center justify-between p-3 border rounded-md"
+                              >
+                                {editingModel?.id === model.id ? (
+                                  <form 
+                                    className="flex items-center gap-2 flex-1"
+                                    onSubmit={(e) => {
+                                      e.preventDefault();
+                                      updateModel();
+                                    }}
+                                  >
+                                    <Input
+                                      value={editingModel.name}
+                                      onChange={(e) => setEditingModel({ ...editingModel, name: e.target.value, brandId: selectedBrandId || editingModel.brandId })}
+                                      autoFocus
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          updateModel();
+                                        }
+                                      }}
+                                    />
+                                    <Button variant="ghost" size="sm" type="submit">
+                                      <Check className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => setEditingModel(null)}
+                                      type="button"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </form>
+                                ) : (
+                                  <>
+                                    <div className="flex items-center">
+                                      <span className="text-sm font-medium">{model.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => setEditingModel({ id: model.id, name: model.name, brandId: model.brandId })}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => {
+                                          if (window.confirm("Tem certeza que deseja excluir este modelo?")) {
+                                            deleteModelMutation.mutate(model.id);
+                                          }
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-4 text-muted-foreground">
+                            Nenhum modelo encontrado para esta marca. Adicione um novo modelo acima.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>

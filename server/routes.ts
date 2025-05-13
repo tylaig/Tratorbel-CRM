@@ -1274,19 +1274,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : undefined;
       
-      // Construir a consulta base
-      let query = storage.db.select().from(machineModels);
-      
-      // Filtrar por marca se brandId for fornecido
       if (brandId) {
-        query = query.where(eq(machineModels.brandId, brandId));
+        // Se temos um brandId, vamos filtrar pelo id da marca
+        const { db } = storage;
+        const models = await db.select()
+          .from(machineModels)
+          .where(eq(machineModels.brandId, brandId))
+          .orderBy(machineModels.name);
+        
+        console.log(`Buscando modelos para marca id=${brandId}, encontrados: ${models.length}`);
+        return res.json(models);
+      } else {
+        // Sem brandId, retornar todos os modelos
+        const { db } = storage;
+        const models = await db.select()
+          .from(machineModels)
+          .orderBy(machineModels.name);
+        
+        console.log(`Buscando todos os modelos, encontrados: ${models.length}`);
+        return res.json(models);
       }
-      
-      // Executar a consulta
-      const models = await query.orderBy(machineModels.name);
-      
-      res.json(models);
     } catch (error) {
+      console.error("Erro ao buscar modelos:", error);
       res.status(500).json({ error: `Erro ao buscar modelos de máquinas: ${error}` });
     }
   });
@@ -1299,25 +1308,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Nome e ID da marca são obrigatórios" });
       }
 
+      console.log(`Tentando adicionar modelo: nome="${name}", brandId=${brandId}`);
+
       // Verificar se a marca existe
-      const [brand] = await storage.db.select().from(machineBrands)
+      const { db } = storage;
+      const brands = await db.select().from(machineBrands)
         .where(eq(machineBrands.id, brandId));
       
-      if (!brand) {
+      if (!brands.length) {
+        console.log(`Marca não encontrada com ID ${brandId}`);
         return res.status(404).json({ error: "Marca não encontrada" });
       }
       
-      // Inserir o novo modelo
-      const [model] = await storage.db.insert(machineModels)
-        .values({
-          name,
-          brandId,
-          active: active !== undefined ? active : true,
-        })
-        .returning();
+      console.log(`Marca encontrada: ${brands[0].name}`);
       
-      res.status(201).json(model);
+      try {
+        // Inserir o novo modelo com validações explícitas
+        const modelData = {
+          name: String(name),
+          brandId: Number(brandId),
+          active: active !== undefined ? Boolean(active) : true,
+        };
+        
+        console.log("Dados do modelo a inserir:", modelData);
+        
+        const newModels = await db.insert(machineModels)
+          .values(modelData)
+          .returning();
+        
+        if (!newModels.length) {
+          throw new Error("Falha ao inserir: nenhum registro retornado");
+        }
+        
+        console.log(`Modelo criado com sucesso: ID=${newModels[0].id}`);
+        res.status(201).json(newModels[0]);
+      } catch (insertError) {
+        console.error("Erro ao inserir modelo:", insertError);
+        throw insertError;
+      }
     } catch (error) {
+      console.error("Erro completo ao criar modelo:", error);
       res.status(500).json({ error: `Erro ao criar modelo de máquina: ${error}` });
     }
   });

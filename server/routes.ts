@@ -12,11 +12,14 @@ import {
   insertQuoteItemSchema,
   insertLeadActivitySchema,
   insertMachineBrandSchema,
+  insertMachineModelSchema,
   insertLeadSchema,
   insertSalePerformanceReasonSchema,
   Deal,
   SalePerformanceReason,
-  salePerformanceReasons
+  salePerformanceReasons,
+  machineModels,
+  machineBrands
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -1263,6 +1266,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: `Erro ao excluir motivo de desempenho: ${error}` });
+    }
+  });
+
+  // API Endpoints para modelos de máquinas
+  apiRouter.get("/machine-models", async (req: Request, res: Response) => {
+    try {
+      const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : undefined;
+      
+      // Construir a consulta base
+      let query = storage.db.select().from(machineModels);
+      
+      // Filtrar por marca se brandId for fornecido
+      if (brandId) {
+        query = query.where(eq(machineModels.brandId, brandId));
+      }
+      
+      // Executar a consulta
+      const models = await query.orderBy(machineModels.name);
+      
+      res.json(models);
+    } catch (error) {
+      res.status(500).json({ error: `Erro ao buscar modelos de máquinas: ${error}` });
+    }
+  });
+
+  apiRouter.post("/machine-models", async (req: Request, res: Response) => {
+    try {
+      const { name, brandId, active } = req.body;
+      
+      if (!name || !brandId) {
+        return res.status(400).json({ error: "Nome e ID da marca são obrigatórios" });
+      }
+
+      // Verificar se a marca existe
+      const [brand] = await storage.db.select().from(machineBrands)
+        .where(eq(machineBrands.id, brandId));
+      
+      if (!brand) {
+        return res.status(404).json({ error: "Marca não encontrada" });
+      }
+      
+      // Inserir o novo modelo
+      const [model] = await storage.db.insert(machineModels)
+        .values({
+          name,
+          brandId,
+          active: active !== undefined ? active : true,
+        })
+        .returning();
+      
+      res.status(201).json(model);
+    } catch (error) {
+      res.status(500).json({ error: `Erro ao criar modelo de máquina: ${error}` });
+    }
+  });
+
+  apiRouter.put("/machine-models/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID inválido" });
+      }
+      
+      const { name, brandId, active } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ error: "Nome é obrigatório" });
+      }
+
+      // Verificar se o modelo existe
+      const [existingModel] = await storage.db.select().from(machineModels)
+        .where(eq(machineModels.id, id));
+      
+      if (!existingModel) {
+        return res.status(404).json({ error: "Modelo não encontrado" });
+      }
+      
+      // Verificar se a marca existe, se fornecida
+      if (brandId) {
+        const [brand] = await storage.db.select().from(machineBrands)
+          .where(eq(machineBrands.id, brandId));
+        
+        if (!brand) {
+          return res.status(404).json({ error: "Marca não encontrada" });
+        }
+      }
+      
+      // Atualizar o modelo
+      const [updatedModel] = await storage.db.update(machineModels)
+        .set({
+          name,
+          brandId: brandId || existingModel.brandId,
+          active: active !== undefined ? active : existingModel.active,
+        })
+        .where(eq(machineModels.id, id))
+        .returning();
+      
+      res.json(updatedModel);
+    } catch (error) {
+      res.status(500).json({ error: `Erro ao atualizar modelo de máquina: ${error}` });
+    }
+  });
+
+  apiRouter.delete("/machine-models/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID inválido" });
+      }
+      
+      // Verificar se o modelo existe
+      const [model] = await storage.db.select().from(machineModels)
+        .where(eq(machineModels.id, id));
+      
+      if (!model) {
+        return res.status(404).json({ error: "Modelo não encontrado" });
+      }
+      
+      // Excluir o modelo
+      await storage.db.delete(machineModels)
+        .where(eq(machineModels.id, id));
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: `Erro ao excluir modelo de máquina: ${error}` });
     }
   });
 

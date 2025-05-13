@@ -56,6 +56,11 @@ export default function DealResultTab({ deal }: DealResultTabProps) {
       setLossReason(deal.lostReason || "");
       setSalePerformance(deal.salePerformance || "");
       setNotes(deal.lostNotes || "");
+      console.log("Deal atualizado em DealResultTab:", { 
+        id: deal.id, 
+        saleStatus: deal.saleStatus, 
+        lostReason: deal.lostReason 
+      });
     }
   }, [deal]);
   
@@ -232,7 +237,7 @@ export default function DealResultTab({ deal }: DealResultTabProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {lossReasons.map((reason) => (
-                      <SelectItem key={reason.id} value={reason.reason}>
+                      <SelectItem key={reason.id} value={reason.id.toString()}>
                         {reason.reason}
                       </SelectItem>
                     ))}
@@ -240,7 +245,13 @@ export default function DealResultTab({ deal }: DealResultTabProps) {
                 </Select>
               ) : (
                 <div className="mt-1 text-sm bg-white p-2 rounded border">
-                  {deal.lostReason || <span className="text-gray-500 italic">Não informado</span>}
+                  {deal.lostReason ? (
+                    // Buscar o nome da razão pelo ID
+                    lossReasons.find(item => item.id.toString() === deal.lostReason)?.reason || 
+                    <span className="text-gray-500 italic">Razão não encontrada (ID: {deal.lostReason})</span>
+                  ) : (
+                    <span className="text-gray-500 italic">Não informado</span>
+                  )}
                 </div>
               )}
             </div>

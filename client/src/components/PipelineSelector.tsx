@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pipeline } from "@shared/schema";
+import { cn } from "@/lib/utils";
 
 interface PipelineSelectorProps {
   activePipelineId: number | null;
@@ -35,8 +36,17 @@ export default function PipelineSelector({
         value={activePipelineId?.toString() || ""}
         onValueChange={(value) => onPipelineChange(Number(value))}
       >
-        <SelectTrigger className="h-9 border-2 border-yellow-500 bg-blue-950 text-yellow-400 hover:bg-blue-900">
-          <SelectValue placeholder="Selecionar pipeline" />
+        <SelectTrigger 
+          className={cn(
+            "h-9 border-2 border-yellow-500 bg-blue-950 hover:bg-blue-900",
+            // Forçar a cor do texto para amarelo tanto selecionado quanto placeholder
+            "text-yellow-400 [&>span]:text-yellow-400 [&_[data-placeholder]]:text-yellow-400"
+          )}
+        >
+          <SelectValue 
+            placeholder="Selecionar pipeline" 
+            className="text-yellow-400"
+          />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>

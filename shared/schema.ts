@@ -85,21 +85,56 @@ export const leadsRelations = relations(leads, ({ many }) => ({
   deals: many(deals)
 }));
 
+// Funis (Pipelines)
+export const pipelines = pgTable("pipelines", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isDefault: boolean("is_default").default(false), // Indica se é o funil padrão
+  hasFixedStages: boolean("has_fixed_stages").default(true), // Indica se o funil tem os estágios fixos (Vendas Realizadas/Vendas Perdidas)
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPipelineSchema = createInsertSchema(pipelines).pick({
+  name: true,
+  description: true,
+  isDefault: true,
+  hasFixedStages: true,
+  isActive: true,
+});
+
+export type InsertPipeline = z.infer<typeof insertPipelineSchema>;
+export type Pipeline = typeof pipelines.$inferSelect;
+
+export const pipelinesRelations = relations(pipelines, ({ many }) => ({
+  stages: many(pipelineStages),
+}));
+
 // Pipeline Stages
 export const pipelineStages = pgTable("pipeline_stages", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   order: integer("order").notNull(),
+  pipelineId: integer("pipeline_id").notNull(), // ID do funil ao qual o estágio pertence
   isDefault: boolean("is_default").default(false), // Indica se o estágio é padrão para contatos importados
   isHidden: boolean("is_hidden").default(false),   // Indica se o estágio está oculto na visualização normal
   isSystem: boolean("is_system").default(false),   // Indica se o estágio é do sistema (não pode ser excluído)
   stageType: text("stage_type").default("normal"), // normal, completed, lost
   createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => {
+  return {
+    pipelineIdForeignKey: foreignKey({
+      columns: [table.pipelineId],
+      foreignColumns: [pipelines.id],
+    }),
+  }
 });
 
 export const insertPipelineStageSchema = createInsertSchema(pipelineStages).pick({
   name: true,
   order: true,
+  pipelineId: true,
   isDefault: true,
   isHidden: true,
   isSystem: true,
@@ -109,7 +144,11 @@ export const insertPipelineStageSchema = createInsertSchema(pipelineStages).pick
 export type InsertPipelineStage = z.infer<typeof insertPipelineStageSchema>;
 export type PipelineStage = typeof pipelineStages.$inferSelect;
 
-export const pipelineStagesRelations = relations(pipelineStages, ({ many }) => ({
+export const pipelineStagesRelations = relations(pipelineStages, ({ many, one }) => ({
+  pipeline: one(pipelines, {
+    fields: [pipelineStages.pipelineId],
+    references: [pipelines.id],
+  }),
   deals: many(deals),
   stageHistory: many(stageHistory),
 }));
@@ -120,6 +159,7 @@ export const deals = pgTable("deals", {
   name: text("name").notNull(),
   leadId: integer("lead_id").notNull(),
   stageId: integer("stage_id").notNull(),
+  pipelineId: integer("pipeline_id").notNull(), // ID do funil ao qual o negócio pertence
   order: integer("order").default(0), // Posição do deal dentro do estágio para ordenação
   value: doublePrecision("value").default(0),
   quoteValue: doublePrecision("quote_value").default(0),
@@ -145,6 +185,10 @@ export const deals = pgTable("deals", {
       columns: [table.stageId],
       foreignColumns: [pipelineStages.id],
     }),
+    pipelineIdForeignKey: foreignKey({
+      columns: [table.pipelineId],
+      foreignColumns: [pipelines.id],
+    }),
   }
 });
 
@@ -152,6 +196,7 @@ export const insertDealSchema = createInsertSchema(deals).pick({
   name: true,
   leadId: true,
   stageId: true,
+  pipelineId: true,
   order: true,
   value: true,
   quoteValue: true,
@@ -176,6 +221,10 @@ export const dealsRelations = relations(deals, ({ one, many }) => ({
   stage: one(pipelineStages, {
     fields: [deals.stageId],
     references: [pipelineStages.id],
+  }),
+  pipeline: one(pipelines, {
+    fields: [deals.pipelineId],
+    references: [pipelines.id],
   }),
   quoteItems: many(quoteItems),
   clientMachines: many(clientMachines),
@@ -276,12 +325,14 @@ export const settings = pgTable("settings", {
   chatwootUrl: text("chatwoot_url"),
   accountId: text("account_id"),
   lastSyncAt: timestamp("last_sync_at"),
+  activePipelineId: integer("active_pipeline_id"), // ID do funil ativo atualmente
 });
 
 export const insertSettingsSchema = createInsertSchema(settings).pick({
   chatwootApiKey: true,
   chatwootUrl: true,
   accountId: true,
+  activePipelineId: true,
 });
 
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;

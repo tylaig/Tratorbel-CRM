@@ -133,10 +133,39 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         
         console.log("Fetched deals:", deals.length);
         
+        // Preparar todos os negócios para processamento
+        const processedDeals: { [id: number]: boolean } = {};
+
         const stagesWithDeals = pipelineStages
           .filter(stage => !stage.isHidden) // Só mostrar os estágios visíveis
           .map((stage) => {
-            const stageDeals = deals.filter(deal => deal.stageId === stage.id);
+            // Filtrar negócios para este estágio, com tratamento especial para estágios de vendas realizadas/perdidas
+            let stageDeals: Deal[] = [];
+            
+            if (stage.stageType === "completed") {
+              // Para estágio "Vendas Realizadas", mostrar apenas negócios com status "won"
+              stageDeals = deals.filter(deal => 
+                deal.stageId === stage.id && deal.saleStatus === "won"
+              );
+            } else if (stage.stageType === "lost") {
+              // Para estágio "Vendas Perdidas", mostrar apenas negócios com status "lost"
+              stageDeals = deals.filter(deal => 
+                deal.stageId === stage.id && deal.saleStatus === "lost"
+              );
+            } else {
+              // Para estágios normais, só mostrar negócios que NÃO estão completos/perdidos
+              stageDeals = deals.filter(deal => 
+                deal.stageId === stage.id && 
+                deal.saleStatus !== "won" && 
+                deal.saleStatus !== "lost"
+              );
+            }
+            
+            // Marcar todos os negócios deste estágio como processados
+            stageDeals.forEach(deal => {
+              processedDeals[deal.id] = true;
+            });
+            
             const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
             
             // Calcule o valor total do estágio

@@ -77,7 +77,7 @@ export default function DealResultTab({ deal }: DealResultTabProps) {
         payload.lostReason = lossReason;
         payload.lostNotes = notes;
         console.log("Atualizando motivo de perda:", { 
-          lostReason, 
+          lossReason, 
           availableReasons: lossReasons.map(r => ({ id: r.id, reason: r.reason }))
         });
       }

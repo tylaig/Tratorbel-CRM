@@ -27,7 +27,7 @@ interface HeaderProps {
   viewMode: "kanban" | "list" | "contacts" | "heatmap" | "results";
   toggleViewMode: (mode: "kanban" | "list" | "contacts" | "heatmap" | "results") => void;
   onOpenApiConfig: () => void;
-  onAddDeal: () => void;
+  // Removido: onAddDeal: () => void; // Agora é implementado diretamente no KanbanBoard
   hasApiConfig?: boolean; // Indica se a API já foi configurada
   activePipelineId?: number | null;
   onPipelineChange?: (pipelineId: number) => void;
@@ -38,7 +38,7 @@ export default function Header({
   viewMode,
   toggleViewMode,
   onOpenApiConfig,
-  onAddDeal,
+  // onAddDeal removido pois a função foi movida para o KanbanBoard
   hasApiConfig = false,
   activePipelineId,
   onPipelineChange

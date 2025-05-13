@@ -223,7 +223,7 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
           leadId,  // Campo obrigatório - ID do lead
           stageId: parseInt(stageId),
           pipelineId: parseInt(pipelineId), // Campo obrigatório - ID do pipeline
-          value: parseFloat(value.replace(/[^\d.-]/g, "") || "0"),
+          value: 0, // Valor inicial zero, será atualizado posteriormente pela cotação
           status,
           notes: "",
           chatwootContactId: contactId,
@@ -325,17 +325,8 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
     setZipCode("");
   };
   
-  // Format currency input
-  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/[^\d]/g, "");
-    const numericValue = parseInt(rawValue) / 100;
-    
-    if (!isNaN(numericValue)) {
-      setValue(formatCurrency(numericValue));
-    } else if (rawValue === "") {
-      setValue("");
-    }
-  };
+  // Essa função não é mais necessária, pois o campo de valor foi removido
+  // O valor será definido posteriormente através da cotação
   
   // Set company name when contact changes
   const handleContactChange = (value: string) => {

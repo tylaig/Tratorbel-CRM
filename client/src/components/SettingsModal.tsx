@@ -805,7 +805,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                   <div className="border-t pt-4 mt-4">
                     <h3 className="text-lg font-medium mb-2">Gerenciar Estágios dos Pipelines</h3>
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                       <Label htmlFor="selectedPipeline">Selecione o Pipeline para Editar Estágios</Label>
                       <select
                         id="selectedPipeline"
@@ -820,9 +820,121 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           </option>
                         ))}
                       </select>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 mb-4">
                         Selecione um pipeline para gerenciar seus estágios abaixo.
                       </p>
+                      
+                      {selectedPipelineId && (
+                        <div className="mt-4 border-t pt-4">
+                          <h4 className="text-md font-medium mb-3">Estágios do Pipeline</h4>
+                          
+                          <div className="mb-4 flex items-center gap-2">
+                            <Input
+                              placeholder="Nome do novo estágio"
+                              value={newStageName}
+                              onChange={(e) => setNewStageName(e.target.value)}
+                            />
+                            <Button 
+                              onClick={createStage} 
+                              disabled={createStageMutation.isPending || !newStageName.trim()}
+                              size="sm"
+                            >
+                              <PlusCircle className="h-4 w-4 mr-1" />
+                              Adicionar
+                            </Button>
+                          </div>
+                          
+                          {pipelineStages.length > 0 ? (
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                              {pipelineStages.map((stage) => (
+                                <div 
+                                  key={stage.id}
+                                  className="flex items-center justify-between p-3 border rounded-md"
+                                >
+                                  {editingStage?.id === stage.id ? (
+                                    <form 
+                                      className="flex items-center gap-2 flex-1"
+                                      onSubmit={(e) => {
+                                        e.preventDefault();
+                                        updateStage();
+                                      }}
+                                    >
+                                      <Input
+                                        value={editingStage.name}
+                                        onChange={(e) => setEditingStage({ ...editingStage, name: e.target.value })}
+                                        autoFocus
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            updateStage();
+                                          }
+                                        }}
+                                      />
+                                      <Button variant="ghost" size="sm" type="submit">
+                                        <Check className="h-4 w-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={() => setEditingStage(null)}
+                                        type="button"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </form>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center">
+                                        <span className="text-sm font-medium">{stage.name}</span>
+                                        {stage.isSystem && (
+                                          <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                                            Sistema
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => setEditingStage({ id: stage.id, name: stage.name })}
+                                          disabled={stage.isSystem}
+                                        >
+                                          <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm"
+                                          onClick={() => {
+                                            if (stage.isSystem) {
+                                              toast({
+                                                title: "Operação não permitida",
+                                                description: "Não é possível excluir estágios do sistema.",
+                                                variant: "destructive"
+                                              });
+                                              return;
+                                            }
+                                            
+                                            if (window.confirm("Tem certeza que deseja excluir este estágio?")) {
+                                              deleteStageMutation.mutate(stage.id);
+                                            }
+                                          }}
+                                          disabled={stage.isSystem}
+                                        >
+                                          <Trash2 className={`h-4 w-4 ${stage.isSystem ? 'text-muted-foreground' : 'text-red-500'}`} />
+                                        </Button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-4 text-muted-foreground">
+                              Nenhum estágio encontrado. Adicione um novo estágio acima.
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

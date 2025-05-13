@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
 import ListView from "@/components/ListView";
 import ChatwootContacts from "@/components/ChatwootContacts";
-import SalesResultStages from "@/components/SalesResultStages";
+// Importação de SalesResultStages removida
 import FilterBar, { FilterOptions } from "@/components/FilterBar";
 import ApiConfigModal from "@/components/ApiConfigModal";
 import AddDealModal from "@/components/AddDealModal";
@@ -269,7 +269,11 @@ export default function Dashboard() {
             
             {activePipelineId && viewMode === "list" && (
               <div className="px-4 overflow-y-auto h-full">
-                <ListView pipelineStages={pipelineStages} filters={filters} />
+                <ListView 
+                  pipelineStages={pipelineStages} 
+                  filters={filters} 
+                  activePipelineId={activePipelineId} 
+                />
               </div>
             )}
             
@@ -285,11 +289,7 @@ export default function Dashboard() {
               </div>
             )}
             
-            {activePipelineId && viewMode === "results" && (
-              <div className="px-4 overflow-y-auto h-full">
-                <SalesResultStages pipelineStages={pipelineStages} filters={filters} />
-              </div>
-            )}
+            {/* Bloco de resultados de vendas removido conforme solicitado */}
           </div>
         </main>
       </div>

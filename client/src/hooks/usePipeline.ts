@@ -120,7 +120,9 @@ export function usePipeline(activePipelineId?: number | null) {
     }
     
     // Filtro específico para excluir negócios ganhos ou perdidos do pipeline
-    if (filters.hideClosed && !filters.winReason && !filters.lostReason) {
+    // SOMENTE no pipeline Comercial (ID 1) devemos aplicar o filtro de ocultar negócios fechados
+    // Para outros pipelines (como Compras/Logística), mostrar todos os negócios
+    if (filters.hideClosed && !filters.winReason && !filters.lostReason && activePipelineId === 1) {
       result = result.filter(deal => 
         deal.saleStatus !== 'won' && 
         deal.saleStatus !== 'lost'
@@ -164,6 +166,7 @@ export function usePipeline(activePipelineId?: number | null) {
   
   // Calculate stats for a stage
   const calculateStageStats = (stageId: number) => {
+    console.log(`Calculando estatísticas para o estágio ${stageId} no pipeline ${activePipelineId}`);
     const stageDeals = filteredDeals.filter(deal => deal.stageId === stageId);
     const value = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
     return {

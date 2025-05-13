@@ -18,10 +18,11 @@ import {
   Layers,
   XCircle,
   Car,
-  BuildingIcon
+  BuildingIcon,
+  FileLineChart
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings as SettingsType, PipelineStage, LossReason, MachineBrand, SalePerformanceReason } from "@shared/schema";
+import { Settings as SettingsType, PipelineStage, LossReason, MachineBrand, SalePerformanceReason, Pipeline } from "@shared/schema";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -38,6 +39,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     queryKey: ['/api/settings'],
   });
 
+  // Consulta para carregar os pipelines disponíveis
+  const { data: pipelines = [] } = useQuery<Pipeline[]>({
+    queryKey: ['/api/pipelines'],
+  });
+  
   // Consulta para carregar estágios do pipeline
   const { data: pipelineStages = [] } = useQuery<PipelineStage[]>({
     queryKey: ['/api/pipeline-stages'],
@@ -63,6 +69,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [chatwootUrl, setChatwootUrl] = useState(settings?.chatwootUrl || "");
   const [chatwootApiKey, setChatwootApiKey] = useState(settings?.chatwootApiKey || "");
   const [accountId, setAccountId] = useState(settings?.accountId || "");
+  
+  // Estado para controlar o pipeline padrão
+  const [defaultPipelineId, setDefaultPipelineId] = useState<number | null>(settings?.activePipelineId || null);
 
   // Estados para edição de estágios
   const [newStageName, setNewStageName] = useState("");
@@ -99,6 +108,27 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       toast({
         title: "Erro ao salvar",
         description: `Ocorreu um erro ao salvar as configurações: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Mutation para salvar o pipeline padrão
+  const saveDefaultPipelineMutation = useMutation({
+    mutationFn: async (data: { activePipelineId: number | null }) => {
+      return await apiRequest('/api/settings', 'POST', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+      toast({
+        title: "Pipeline padrão",
+        description: "O pipeline padrão foi configurado com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao salvar",
+        description: `Ocorreu um erro ao definir o pipeline padrão: ${error}`,
         variant: "destructive",
       });
     }
@@ -401,6 +431,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       chatwootApiKey,
       chatwootUrl,
       accountId
+    });
+  };
+  
+  // Função para salvar o pipeline padrão
+  const saveDefaultPipeline = () => {
+    saveDefaultPipelineMutation.mutate({
+      activePipelineId: defaultPipelineId
     });
   };
 

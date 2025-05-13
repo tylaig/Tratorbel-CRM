@@ -20,7 +20,7 @@ import { formatPhoneNumber } from "@/lib/formatters";
 interface AddContactModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onContactCreated?: (contactId: string, contactName: string) => void;
+  onContactCreated?: (contactId: string, contactName: string, contact?: any) => void;
 }
 
 export default function AddContactModal({ isOpen, onClose, onContactCreated }: AddContactModalProps) {
@@ -82,12 +82,19 @@ export default function AddContactModal({ isOpen, onClose, onContactCreated }: A
       // Invalidar cache de contatos
       await queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
       
-      // Chama a função de callback com o ID e nome do contato criado
+      // Chama a função de callback com o ID e nome do contato criado e o objeto completo
       if (onContactCreated && data?.payload?.contact?.id) {
-        onContactCreated(
-          data.payload.contact.id.toString(),
-          data.payload.contact.name
-        );
+        // Invalidar cache de contatos para atualizar a lista
+        await queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
+        
+        // Depois de 500ms para dar tempo de atualizar o cache, chamar o callback
+        setTimeout(() => {
+          onContactCreated(
+            data.payload.contact.id.toString(),
+            data.payload.contact.name,
+            data.payload.contact
+          );
+        }, 500);
       }
       
       resetForm();

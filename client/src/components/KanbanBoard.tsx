@@ -1,10 +1,52 @@
-import { useState, useEffect } from "react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { 
+  CalendarIcon, 
+  MoreVerticalIcon, 
+  Phone,
+  User2Icon,
+  Building,
+  MessagesSquareIcon,
+  PlusIcon,
+  Edit2Icon,
+} from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
+
+import { Card } from "@/components/ui/card";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency, formatTimeAgo } from "@/lib/formatters";
 import { useToast } from "@/hooks/use-toast";
-import { Deal as BaseDeal, PipelineStage } from "@shared/schema";
+
+import EditStageModal from "./EditStageModal";
+import AddStageModal from "./AddStageModal";
+import EditDealModal from "./EditDealModal";
+import DealOutcomeModal from "./DealOutcomeModal";
+import AddDealModal from "./AddDealModal";
+
+interface BaseDeal {
+  id: number;
+  name: string;
+  leadId: number;
+  stageId: number;
+  pipelineId: number;
+  value: number | null;
+  status: string | null;
+  saleStatus: string | null;
+  lostReason: string | null;
+  performanceReason: string | null;
+  chatwootContactId: string | null;
+  chatwootConversationId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 interface Deal extends BaseDeal {
   leadData?: {
@@ -14,36 +56,27 @@ interface Deal extends BaseDeal {
     email: string | null;
   } | null;
 }
-import { formatCurrency, formatTimeAgo } from "@/lib/formatters";
-import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Edit2Icon, 
-  MoreVerticalIcon, 
-  Building, 
-  PlusIcon,
-  UserCircle,
-  InfoIcon,
-  Plus,
-  Phone,
-  User2,
-  Calendar as CalendarIcon,
-  User as User2Icon
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import EditDealModal from "@/components/EditDealModal";
-import AddDealModal from "@/components/AddDealModal";
-import EditStageModal from "@/components/EditStageModal";
-import AddStageModal from "@/components/AddStageModal";
-import DealOutcomeModal from "@/components/DealOutcomeModal";
-import { FilterOptions } from "@/components/FilterBar";
+
+interface PipelineStage {
+  id: number;
+  name: string;
+  pipelineId: number;
+  order: number;
+  createdAt: Date;
+  isDefault: boolean | null;
+  isHidden: boolean | null;
+  isSystem: boolean | null;
+  stageType: string | null;
+}
+
+interface FilterOptions {
+  search: string;
+  status: string[];
+  sortBy: string;
+  sortOrder: string;
+  hideClosed: boolean;
+  stageId?: number | null;
+}
 
 interface KanbanBoardProps {
   pipelineStages: PipelineStage[];
@@ -59,320 +92,188 @@ interface StageWithDeals extends PipelineStage {
 
 export default function KanbanBoard({ pipelineStages, filters, activePipelineId, onAddDeal }: KanbanBoardProps) {
   const [boardData, setBoardData] = useState<StageWithDeals[]>([]);
+  const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
+  const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
+  const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
+  const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
+  const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false);
+  const [selectedStage, setSelectedStage] = useState<PipelineStage | null>(null);
+  const [selectedStageForNewDeal, setSelectedStageForNewDeal] = useState<PipelineStage | null>(null);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [targetStageInfo, setTargetStageInfo] = useState<{ id: number, type: string | null }>({ id: 0, type: null });
+  
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Estado para o modal de edição de negócio
-  const [isEditDealModalOpen, setIsEditDealModalOpen] = useState(false);
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
-  
-  // Estado para o modal de edição de estágio
-  const [isEditStageModalOpen, setIsEditStageModalOpen] = useState(false);
-  const [selectedStage, setSelectedStage] = useState<PipelineStage | null>(null);
-  
-  // Estado para o modal de adição de estágio
-  const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
-  
-  // Estado para o modal de adição de negócio
-  const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
-  const [selectedStageForNewDeal, setSelectedStageForNewDeal] = useState<PipelineStage | null>(null);
-  
-  // Estado para o modal de resultado de negócio
-  const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false);
-  const [targetStageInfo, setTargetStageInfo] = useState<{ id: number, type: 'completed' | 'lost' | null }>({ id: 0, type: null });
-  
-  // Obter todos os negócios
-  const { data: deals, isLoading, isError } = useQuery<Deal[]>({
-    queryKey: ['/api/deals'],
-  });
-  
-  // Mutation para atualizar um negócio
-  const updateDealMutation = useMutation({
-    mutationFn: async (data: { dealId: number, stageId?: number, order?: number }) => {
-      return apiRequest(`/api/deals/${data.dealId}`, 'PUT', data);
-    }
-  });
-  
-  // Função para organizar os dados do quadro com base nos estágios e negócios disponíveis
-  const organizeBoardData = () => {
-    if (pipelineStages && deals) {
-      console.log("KanbanBoard recebeu estágios:", pipelineStages.length, pipelineStages.map(s => s.name));
-      
-      let filteredDeals = [...deals];
-      const activeFilters = filters || { search: "", status: [], sortBy: "date", sortOrder: "desc", hideClosed: true };
-      
-      console.log("Filtros aplicados:", activeFilters);
-      console.log("Pipeline ativo:", activePipelineId);
-      
-      // Filtrar por pipeline ativo
-      if (activePipelineId) {
-        filteredDeals = filteredDeals.filter(deal => deal.pipelineId === activePipelineId);
-      }
-      
-      // Filtrar por busca
-      if (activeFilters.search) {
-        const searchTerm = activeFilters.search.toLowerCase();
-        filteredDeals = filteredDeals.filter(deal => 
-          deal.name.toLowerCase().includes(searchTerm) || 
-          deal.leadData?.name?.toLowerCase().includes(searchTerm) ||
-          deal.leadData?.companyName?.toLowerCase().includes(searchTerm) ||
-          deal.leadData?.phone?.toLowerCase().includes(searchTerm) ||
-          deal.leadData?.email?.toLowerCase().includes(searchTerm)
-        );
-      }
-      
-      // Filtrar por status
-      if (activeFilters.status && activeFilters.status.length > 0) {
-        filteredDeals = filteredDeals.filter(deal => 
-          activeFilters.status.includes(deal.status || '')
-        );
-      }
-      
-      // Filtrar por motivo de ganho
-      if (activeFilters.winReason) {
-        filteredDeals = filteredDeals.filter(deal => 
-          deal.saleStatus === 'won' && deal.salePerformance === activeFilters.winReason
-        );
-      }
-      
-      // Filtrar por motivo de perda
-      if (activeFilters.lostReason) {
-        filteredDeals = filteredDeals.filter(deal => 
-          deal.saleStatus === 'lost' && deal.lostReason === activeFilters.lostReason
-        );
-      }
-      
-      // Ocultar negócios fechados se a opção estiver ativada
-      if (activeFilters.hideClosed) {
-        // Não aplicamos esse filtro aqui pois a lógica de distribuição por estágios já trata isso
-      }
-      
-      console.log("Negócios filtrados:", filteredDeals.length);
-      
-      // Filtrar estágios que não estão ocultos (isHidden === false ou undefined)
-      const visibleStages = pipelineStages.filter(stage => stage.isHidden !== true);
-      console.log("Estágios visíveis:", visibleStages.length, visibleStages.map(s => s.name));
-      
-      // Separar os estágios especiais (completed e lost) dos normais
-      const normalStages = visibleStages.filter(stage => stage.stageType !== "completed" && stage.stageType !== "lost");
-      const completedStages = visibleStages.filter(stage => stage.stageType === "completed");
-      const lostStages = visibleStages.filter(stage => stage.stageType === "lost");
-      
-      // Reordenar os estágios para que os especiais fiquem no final
-      const orderedStages = [...normalStages, ...completedStages, ...lostStages];
-      console.log("Estágios ordenados:", orderedStages.map(s => s.name + (s.stageType ? ` (${s.stageType})` : "")));
-      
-      const stagesWithDeals = orderedStages.map(stage => {
-        let stageDeals: Deal[] = [];
-        
-        // Para estágios normais, mostrar os deals corretamente com base no pipeline
-        if (stage.stageType === "normal") {
-          // Para todos os pipelines, mostrar todos os negócios nos seus respectivos estágios
-          // Removido o tratamento especial para negócios concluídos (ganhos/perdidos)
-          stageDeals = filteredDeals.filter(deal => 
-            deal.stageId === stage.id
-          );
-        }
-        // Para o estágio de vendas realizadas, mostrar deals marcados como ganhos
-        else if (stage.stageType === "completed") {
-          stageDeals = filteredDeals.filter(deal => 
-            deal.saleStatus === "won"
-          );
-        }
-        // Para o estágio de vendas perdidas, mostrar deals marcados como perdidos
-        else if (stage.stageType === "lost") {
-          stageDeals = filteredDeals.filter(deal => 
-            deal.saleStatus === "lost"
-          );
-        }
-        
-        // Calcular o valor total dos negócios no estágio
-        const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
-        
-        return {
-          ...stage,
-          deals: stageDeals,
-          totalValue
-        };
-      });
-      
-      setBoardData(stagesWithDeals);
-    }
-  };
-  
-  // Organize deals by stage quando os dados ou filtros mudam
   useEffect(() => {
-    organizeBoardData();
-  }, [pipelineStages, deals, filters]);
+    const fetchDeals = async () => {
+      if (!activePipelineId) return;
+      
+      try {
+        let url = `/api/deals?pipelineId=${activePipelineId}`;
+        if (filters) {
+          if (filters.search) url += `&search=${encodeURIComponent(filters.search)}`;
+          if (filters.stageId) url += `&stageId=${filters.stageId}`;
+          if (filters.status && filters.status.length > 0) {
+            filters.status.forEach(status => {
+              url += `&status=${encodeURIComponent(status)}`;
+            });
+          }
+          
+          if (filters.sortOrder && filters.sortBy) {
+            url += `&sortBy=${filters.sortBy}&sortOrder=${filters.sortOrder}`;
+          }
+          
+          if (filters.hideClosed) {
+            url += `&hideClosed=true`;
+          }
+        }
+        
+        const deals: Deal[] = await apiRequest(url, 'GET');
+        
+        console.log("Fetched deals:", deals.length);
+        
+        const stagesWithDeals = pipelineStages
+          .filter(stage => !stage.isHidden) // Só mostrar os estágios visíveis
+          .map((stage) => {
+            const stageDeals = deals.filter(deal => deal.stageId === stage.id);
+            const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
+            
+            // Calcule o valor total do estágio
+            return {
+              ...stage,
+              deals: stageDeals,
+              totalValue
+            };
+          })
+          .sort((a, b) => {
+            // Ordenação especial para colocar estágios completados e perdidos por último
+            if (a.stageType === "completed" && b.stageType !== "completed") return 1;
+            if (a.stageType !== "completed" && b.stageType === "completed") return -1;
+            if (a.stageType === "lost" && b.stageType !== "lost") return 1;
+            if (a.stageType !== "lost" && b.stageType === "lost") return -1;
+            return a.order - b.order;
+          });
+        
+        console.log("Stages with deals:", stagesWithDeals.map(s => `${s.name} (${s.deals.length})`));
+        setBoardData(stagesWithDeals);
+      } catch (error) {
+        console.error("Error fetching deals:", error);
+        toast({
+          title: "Erro ao carregar negócios",
+          description: "Não foi possível carregar os negócios.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    fetchDeals();
+  }, [pipelineStages, activePipelineId, filters, toast]);
   
-  // Handle drag and drop
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
     
-    // Se não houver destino, não fazemos nada
-    if (!destination) {
+    // Se não tiver destino ou se o destino for o mesmo que a origem, não fazer nada
+    if (!destination || 
+        (destination.droppableId === source.droppableId && 
+         destination.index === source.index)) {
       return;
     }
     
-    // Get the deal ID and source/target stage IDs
-    const dealId = parseInt(draggableId);
-    const sourceStageId = parseInt(source.droppableId);
-    const targetStageId = parseInt(destination.droppableId);
+    const sourceStage = boardData.find(stage => stage.id.toString() === source.droppableId);
+    const destStage = boardData.find(stage => stage.id.toString() === destination.droppableId);
     
+    if (!sourceStage || !destStage) {
+      return;
+    }
+    
+    const dealId = parseInt(draggableId);
+    const deal = sourceStage.deals.find(d => d.id === dealId);
+    
+    if (!deal) {
+      return;
+    }
+    
+    // Verificar se é uma mudança para um estágio especial (completado/perdido)
+    if (destStage.stageType === "completed" || destStage.stageType === "lost") {
+      setSelectedDeal(deal);
+      setTargetStageInfo({ id: destStage.id, type: destStage.stageType });
+      setIsOutcomeModalOpen(true);
+      return; // Não continuar com a movimentação aqui, será feita após o modal
+    }
+    
+    // Reordenar localmente para feedback visual imediato
+    const updatedBoardData = [...boardData];
+    
+    // Remover o negócio do estágio de origem
+    const sourceBoardIndex = updatedBoardData.findIndex(stage => stage.id === sourceStage.id);
+    const [movedDeal] = updatedBoardData[sourceBoardIndex].deals.splice(source.index, 1);
+    
+    // Adicionar o negócio ao estágio de destino
+    const destBoardIndex = updatedBoardData.findIndex(stage => stage.id === destStage.id);
+    updatedBoardData[destBoardIndex].deals.splice(destination.index, 0, movedDeal);
+    
+    // Atualizar o estado local imediatamente para feedback visual
+    setBoardData(updatedBoardData);
+    
+    // Fazer a atualização no servidor
     try {
-      // Fazer uma cópia dos dados atuais
-      if (!deals) return;
-      
-      // Encontrar o deal que está sendo movido
-      const movedDeal = deals.find(d => d.id === dealId);
-      if (!movedDeal) return;
-      
-      // Encontrar o estágio de destino para verificar se é um estágio especial
-      const targetStage = pipelineStages.find(s => s.id === targetStageId);
-      if (!targetStage) return;
-      
-      // Se for um estágio especial (concluído ou perdido), abrir o modal de confirmação
-      if (targetStage.stageType === 'completed' || targetStage.stageType === 'lost') {
-        // Configurar o estado para o modal
-        setSelectedDeal(movedDeal);
-        setTargetStageInfo({
-          id: targetStageId,
-          type: targetStage.stageType as 'completed' | 'lost'
-        });
-        setIsOutcomeModalOpen(true);
-        
-        // Não prosseguir com a operação de drag, o modal vai cuidar disso
-        return;
-      }
-      
-      // Dados atualizados que enviaremos para o servidor
-      const updateData: { dealId: number; stageId?: number; order?: number } = { 
-        dealId 
-      };
-      
-      // Se estivermos movendo para um estágio diferente
-      if (sourceStageId !== targetStageId) {
-        updateData.stageId = targetStageId;
-      }
-      
-      // Calcular nova ordem
-      updateData.order = destination.index;
-      
-      // Atualizar estado localmente para feedback visual imediato
-      const newBoardData = [...boardData];
-      
-      // Remover o deal da origem
-      const sourceStageIndex = newBoardData.findIndex(s => s.id === sourceStageId);
-      if (sourceStageIndex >= 0) {
-        newBoardData[sourceStageIndex] = {
-          ...newBoardData[sourceStageIndex],
-          deals: newBoardData[sourceStageIndex].deals.filter(d => d.id !== dealId)
-        };
-      }
-      
-      // Adicionar o deal ao destino na posição correta
-      const targetStageIndex = newBoardData.findIndex(s => s.id === targetStageId);
-      if (targetStageIndex >= 0 && movedDeal) {
-        const updatedDeal = { ...movedDeal, stageId: targetStageId };
-        const targetDeals = [...newBoardData[targetStageIndex].deals];
-        targetDeals.splice(destination.index, 0, updatedDeal);
-        
-        newBoardData[targetStageIndex] = {
-          ...newBoardData[targetStageIndex],
-          deals: targetDeals
-        };
-      }
-      
-      // Atualizar os valores totais dos estágios
-      newBoardData.forEach(stage => {
-        stage.totalValue = stage.deals.reduce((sum, d) => sum + (d.value || 0), 0);
-        return stage;
+      await apiRequest(`/api/deals/${dealId}`, 'PUT', {
+        stageId: destStage.id,
+        pipelineId: destStage.pipelineId
       });
       
-      // Aplicar a mudança visual imediatamente
-      setBoardData(newBoardData);
-      
-      // Enviar a atualização ao servidor em paralelo
-      updateDealMutation.mutate({
-        dealId,
-        ...(updateData.stageId !== undefined ? { stageId: updateData.stageId } : {}),
-        ...(updateData.order !== undefined ? { order: updateData.order } : {})
-      }, {
-        onSuccess: async () => {
-          // Criar uma entrada no histórico de atividades para essa movimentação
-          const activityText = updateData.stageId 
-            ? `Negócio movido para a etapa "${boardData.find(s => s.id === targetStageId)?.name || 'Nova etapa'}"`
-            : `Negócio reordenado dentro da etapa "${boardData.find(s => s.id === sourceStageId)?.name || 'Atual'}"`;
-            
-          try {
-            // Adicionar atividade de movimentação ao histórico
-            await apiRequest('/api/lead-activities', 'POST', {
-              dealId: dealId,
-              description: activityText,
-              activityType: 'move'
-            });
-            
-            // Forçar atualização completa dos dados
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ['/api/deals'] }),
-              queryClient.invalidateQueries({ queryKey: ['/api/lead-activities'] })
-            ]);
-            
-            // Recarregar explicitamente os dados para garantir atualização na UI
-            await Promise.all([
-              queryClient.refetchQueries({ queryKey: ['/api/deals'] })
-            ]);
-            
-            toast({
-              title: "Negócio movido",
-              description: "Posição atualizada com sucesso.",
-              variant: "default",
-              duration: 1500,
-            });
-          } catch (error) {
-            console.error("Erro ao registrar atividade de movimentação:", error);
-            // Ainda assim, invalidar o cache de deals para garantir que os dados estejam atualizados
-            queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-          }
-        }
+      queryClient.invalidateQueries(['/api/deals']);
+      toast({
+        title: "Negócio movido",
+        description: `"${deal.name}" foi movido para ${destStage.name}`,
       });
     } catch (error) {
-      console.error("Erro ao mover negócio:", error);
-      organizeBoardData(); // Recarregue os dados para voltar ao estado anterior em caso de erro
+      console.error("Error updating deal stage:", error);
       toast({
         title: "Erro ao mover negócio",
-        description: "Não foi possível atualizar a posição. Tente novamente.",
+        description: "Não foi possível atualizar o estágio do negócio.",
         variant: "destructive",
       });
+      // Reverter a alteração local em caso de erro
+      fetchUpdatedData();
     }
   };
   
-  // Helper function para obter o status badge com a classe CSS correta
+  const fetchUpdatedData = async () => {
+    queryClient.invalidateQueries(['/api/deals']);
+  };
+  
+  // Helper para gerar badges de status
   const getStatusBadge = (status: string | null) => {
-    const statusMap: Record<string, string> = {
-      'in_progress': 'Em andamento',
-      'waiting': 'Aguardando',
-      'completed': 'Concluído',
-      'canceled': 'Cancelado'
-    };
+    if (!status) return null;
     
-    // Usar a classe CSS status-badge que definimos em index.css
     return (
-      <Badge 
-        variant="secondary" 
-        className={`status-badge ${status || 'in_progress'}`}
-      >
-        {statusMap[status || 'in_progress'] || 'Em andamento'}
-      </Badge>
+      <span className={`status-badge ${status.toLowerCase()} px-2 py-0.5 text-xs font-medium rounded-full border`}>
+        {status === 'in_progress' && 'Em andamento'}
+        {status === 'waiting' && 'Aguardando'}
+        {status === 'completed' && 'Concluído'}
+        {status === 'canceled' && 'Cancelado'}
+      </span>
     );
   };
   
-  if (isLoading) {
+  // Em caso de não ter estágios ou dados
+  if (boardData.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center p-8">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-          <p className="text-gray-500">Carregando pipeline...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+        <MessagesSquareIcon className="h-12 w-12 text-gray-400 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Nenhum estágio encontrado</h3>
+        <p className="text-gray-500 dark:text-gray-400 mt-2 mb-4">
+          {activePipelineId 
+            ? "Adicione estágios ao funil para começar a gerenciar seus negócios."
+            : "Selecione um funil para visualizar os estágios."}
+        </p>
+        {activePipelineId && (
+          <Button onClick={() => setIsAddStageModalOpen(true)}>
+            Adicionar Estágio
+          </Button>
+        )}
       </div>
     );
   }
@@ -380,23 +281,25 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex flex-col h-full">
-        {/* Modals */}
-        <EditDealModal 
-          isOpen={isEditDealModalOpen}
-          onClose={() => {
-            setIsEditDealModalOpen(false);
-            setSelectedDeal(null);
-          }}
-          deal={selectedDeal}
-          pipelineStages={pipelineStages}
-        />
+        {/* Modais */}
+        {selectedDeal && (
+          <EditDealModal
+            isOpen={isEditDealModalOpen}
+            onClose={() => {
+              setIsEditDealModalOpen(false);
+              setSelectedDeal(null);
+            }}
+            deal={selectedDeal}
+            pipelineStages={pipelineStages}
+            onSaved={() => {
+              fetchUpdatedData();
+            }}
+          />
+        )}
         
         <EditStageModal 
           isOpen={isEditStageModalOpen}
-          onClose={() => {
-            setIsEditStageModalOpen(false);
-            setSelectedStage(null);
-          }}
+          onClose={() => setIsEditStageModalOpen(false)}
           stage={selectedStage}
         />
         
@@ -420,65 +323,59 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
           />
         )}
         
-        {/* Header com botões */}
-        <div className="flex justify-between items-center px-4 py-2 mb-2 flex-none">
-          <div className="flex-grow">
-            <Button
-              variant="default"
-              size="sm"
-              className="bg-yellow-400 hover:bg-yellow-500 text-blue-950 shadow-sm border-none flex items-center gap-1"
-              onClick={() => {
-                if (onAddDeal) {
-                  onAddDeal();
-                } else {
-                  if (pipelineStages.length === 0) {
-                    toast({
-                      title: "Não é possível adicionar um negócio",
-                      description: "Crie pelo menos um estágio primeiro.",
-                      variant: "destructive",
-                    });
-                    return;
+        {/* Barra fixa superior com botões e cabeçalhos dos estágios */}
+        <div className="flex flex-col sticky top-0 z-20 bg-white dark:bg-gray-900 shadow-sm">
+          {/* Botões "Novo Negócio" e "Adicionar Estágio" */}
+          <div className="flex justify-between items-center px-4 py-2 mb-2 flex-none border-b border-gray-200 dark:border-gray-800">
+            <div className="flex-grow">
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-yellow-400 hover:bg-yellow-500 text-blue-950 shadow-sm border-none flex items-center gap-1"
+                onClick={() => {
+                  if (onAddDeal) {
+                    onAddDeal();
+                  } else {
+                    if (pipelineStages.length === 0) {
+                      toast({
+                        title: "Não é possível adicionar um negócio",
+                        description: "Crie pelo menos um estágio primeiro.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    const defaultStage = pipelineStages.find(s => s.stageType === "normal" || s.stageType === null);
+                    setSelectedStageForNewDeal(defaultStage || pipelineStages[0]);
+                    setIsAddDealModalOpen(true);
                   }
-                  
-                  const defaultStage = pipelineStages.find(s => s.stageType === "normal" || s.stageType === null);
-                  setSelectedStageForNewDeal(defaultStage || pipelineStages[0]);
-                  setIsAddDealModalOpen(true);
-                }
-              }}
+                }}
+              >
+                <PlusIcon className="h-4 w-4" />
+                <span className="font-medium">Novo Negócio</span>
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 hover:bg-yellow-400 hover:text-blue-950"
+              onClick={() => setIsAddStageModalOpen(true)}
             >
               <PlusIcon className="h-4 w-4" />
-              <span className="font-medium">Novo Negócio</span>
+              <span>Adicionar Estágio</span>
             </Button>
           </div>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 hover:bg-yellow-400 hover:text-blue-950"
-            onClick={() => setIsAddStageModalOpen(true)}
-          >
-            <PlusIcon className="h-4 w-4" />
-            <span>Adicionar Estágio</span>
-          </Button>
-        </div>
-        
-        {/* Kanban Board */}
-        <div className="flex overflow-x-auto px-2 board-container flex-1">
-          {boardData.map((stage) => (
-            <div 
-              key={stage.id} 
-              className={`kanban-column flex-shrink-0 w-72 mx-2 flex flex-col ${
-                stage.stageType === "completed" ? "stage-completed" : 
-                stage.stageType === "lost" ? "stage-lost" : ""
-              }`}
-            >
-              <div className={`flex flex-col rounded-t-lg border shadow-sm hover:shadow-md transition-shadow h-full ${
-                stage.stageType === "completed" 
-                  ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
-                  : stage.stageType === "lost" 
-                    ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
-                    : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
-              }`}>
-                {/* Stage header */}
-                <div className="p-3 border-b border-gray-200 dark:border-gray-700 sticky top-0 backdrop-blur-sm z-10">
+          
+          {/* Cabeçalhos dos estágios */}
+          <div className="flex px-2 overflow-x-auto pb-2">
+            {boardData.map((stage) => (
+              <div key={`header-${stage.id}`} className="flex-shrink-0 w-72 mx-2">
+                <div className={`p-3 rounded-t-lg border shadow-sm ${
+                  stage.stageType === "completed" 
+                    ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
+                    : stage.stageType === "lost" 
+                      ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
+                      : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
+                }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {stage.stageType === "completed" && (
@@ -540,110 +437,122 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                     </Button>
                   )}
                 </div>
-                
-                {/* Deals list */}
-                <Droppable droppableId={stage.id.toString()}>
-                  {(provided, snapshot) => (
-                    <div
-                      className={`deal-list p-2 rounded-b-lg ${
-                        snapshot.isDraggingOver
-                          ? "droppable-hover bg-yellow-50 dark:bg-yellow-900/20"
-                          : stage.stageType === "completed" ? "bg-green-50 dark:bg-green-900/30" 
-                          : stage.stageType === "lost" ? "bg-red-50 dark:bg-red-900/30"
-                          : "bg-gray-50 dark:bg-gray-900/20"
-                      }`}
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                    >
-                      {stage.deals.map((deal, index) => (
-                        <Draggable
-                          key={deal.id.toString()}
-                          draggableId={deal.id.toString()}
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <Card
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              style={{
-                                ...provided.draggableProps.style,
-                                // Efeitos visuais durante o arraste
-                                opacity: snapshot.isDragging ? 0.9 : 1,
-                                boxShadow: snapshot.isDragging ? '0 8px 15px rgba(0, 0, 0, 0.15)' : '',
-                                transform: snapshot.isDragging && provided.draggableProps.style?.transform 
-                                  ? `${provided.draggableProps.style.transform} rotate(1deg)` 
-                                  : provided.draggableProps.style?.transform,
-                                zIndex: snapshot.isDragging ? 9999 : undefined,
-                              }}
-                              className={`mb-2 p-3 group border-l-4 ${
-                                snapshot.isDragging
-                                  ? "shadow-lg dark:bg-gray-700 ring-2 ring-yellow-400 ring-opacity-50 deal-card-dragging"
-                                  : "shadow-sm hover:shadow-md bg-gray-50 dark:bg-gray-800"
-                              } ${
-                                deal.status === "completed" 
-                                  ? "border-l-green-500" 
-                                  : deal.status === "canceled" 
-                                    ? "border-l-red-500"
-                                    : "border-l-yellow-500"
-                              } cursor-pointer rounded-md`}
-                              onClick={() => {
-                                setSelectedDeal(deal);
-                                setIsEditDealModalOpen(true);
-                              }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <div className="font-medium text-gray-900 dark:text-gray-100 mb-1 truncate max-w-[180px]">
-                                    {deal.name}
-                                  </div>
-                                </div>
-                                <div>
-                                  {getStatusBadge(deal.status)}
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-1 mt-2">
-                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                  <User2Icon className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
-                                  <span className="truncate">
-                                    {deal.leadData?.name || "Contato não definido"}
-                                  </span>
-                                </div>
-                                
-                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                  <Building className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
-                                  <span className="truncate">
-                                    {deal.leadData?.companyName || "Empresa não definida"}
-                                  </span>
-                                </div>
-                                
-                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                  <Phone className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
-                                  <span className="truncate">
-                                    {deal.leadData?.phone || "Telefone não definido"}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                  <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
-                                  {formatTimeAgo(deal.updatedAt)}
-                                </span>
-                                <span className="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
-                                  {formatCurrency(deal.value || 0)}
-                                </span>
-                              </div>
-                            </Card>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
               </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Contêiner principal com cards arrastáveis */}
+        <div className="flex overflow-x-auto px-2 board-container flex-1 mt-2">
+          {boardData.map((stage) => (
+            <div 
+              key={stage.id} 
+              className="kanban-column flex-shrink-0 w-72 mx-2"
+            >
+              {/* Droppable area */}
+              <Droppable droppableId={stage.id.toString()}>
+                {(provided, snapshot) => (
+                  <div
+                    className={`deal-list p-2 rounded-lg border ${
+                      snapshot.isDraggingOver
+                        ? "droppable-hover bg-yellow-50 dark:bg-yellow-900/20"
+                        : stage.stageType === "completed" 
+                          ? "bg-green-50 dark:bg-green-900/30 border-green-300" 
+                          : stage.stageType === "lost" 
+                            ? "bg-red-50 dark:bg-red-900/30 border-red-300"
+                            : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
+                    } h-full`}
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
+                    {stage.deals.map((deal, index) => (
+                      <Draggable
+                        key={deal.id.toString()}
+                        draggableId={deal.id.toString()}
+                        index={index}
+                      >
+                        {(provided, snapshot) => (
+                          <Card
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            style={{
+                              ...provided.draggableProps.style,
+                              // Efeitos visuais durante o arraste
+                              opacity: snapshot.isDragging ? 0.9 : 1,
+                              boxShadow: snapshot.isDragging ? '0 8px 15px rgba(0, 0, 0, 0.15)' : '',
+                              transform: snapshot.isDragging && provided.draggableProps.style?.transform 
+                                ? `${provided.draggableProps.style.transform} rotate(1deg)` 
+                                : provided.draggableProps.style?.transform,
+                              zIndex: snapshot.isDragging ? 9999 : undefined,
+                            }}
+                            className={`mb-2 p-3 group border-l-4 ${
+                              snapshot.isDragging
+                                ? "shadow-lg dark:bg-gray-700 ring-2 ring-yellow-400 ring-opacity-50 deal-card-dragging"
+                                : "shadow-sm hover:shadow-md bg-gray-50 dark:bg-gray-800"
+                            } ${
+                              deal.status === "completed" 
+                                ? "border-l-green-500" 
+                                : deal.status === "canceled" 
+                                  ? "border-l-red-500"
+                                  : "border-l-yellow-500"
+                            } cursor-pointer rounded-md`}
+                            onClick={() => {
+                              setSelectedDeal(deal);
+                              setIsEditDealModalOpen(true);
+                            }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900 dark:text-gray-100 mb-1 truncate max-w-[180px]">
+                                  {deal.name}
+                                </div>
+                              </div>
+                              <div>
+                                {getStatusBadge(deal.status)}
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-1 mt-2">
+                              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <User2Icon className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
+                                <span className="truncate">
+                                  {deal.leadData?.name || "Contato não definido"}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <Building className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
+                                <span className="truncate">
+                                  {deal.leadData?.companyName || "Empresa não definida"}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <Phone className="w-3.5 h-3.5 mr-1.5 text-blue-600 dark:text-blue-400" />
+                                <span className="truncate">
+                                  {deal.leadData?.phone || "Telefone não definido"}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                                {formatTimeAgo(deal.updatedAt)}
+                              </span>
+                              <span className="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
+                                {formatCurrency(deal.value || 0)}
+                              </span>
+                            </div>
+                          </Card>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
             </div>
           ))}
         </div>

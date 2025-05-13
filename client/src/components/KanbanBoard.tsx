@@ -277,16 +277,16 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
     queryClient.invalidateQueries(['/api/deals']);
   };
   
-  // Helper para gerar badges de status
+  // Helper para gerar badges de status mais compactos
   const getStatusBadge = (status: string | null) => {
     if (!status) return null;
     
     return (
-      <span className={`status-badge ${status.toLowerCase()} px-1 py-0 text-[10px] font-medium rounded-full border h-4 inline-flex items-center`}>
-        {status === 'in_progress' && 'Em andamento'}
-        {status === 'waiting' && 'Aguardando'}
-        {status === 'completed' && 'Concluído'}
-        {status === 'canceled' && 'Cancelado'}
+      <span className={`status-badge ${status.toLowerCase()} px-1 py-0 text-[8px] font-medium rounded-full border h-3.5 inline-flex items-center`}>
+        {status === 'in_progress' && 'Em prog.'}
+        {status === 'waiting' && 'Aguard.'}
+        {status === 'completed' && 'Concl.'}
+        {status === 'canceled' && 'Canc.'}
       </span>
     );
   };
@@ -378,10 +378,10 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
           {boardData.map((stage) => (
             <div 
               key={stage.id} 
-              className="kanban-column flex-shrink-0 w-72 mx-2 flex flex-col"
+              className="kanban-column flex-shrink-0 w-64 mx-1.5 flex flex-col"
             >
               {/* Cabeçalho da coluna - sticky */}
-              <div className={`p-3 rounded-t-lg border shadow-sm kanban-column-header ${
+              <div className={`p-2 rounded-t-lg border shadow-sm kanban-column-header ${
                 stage.stageType === "completed" 
                   ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
                   : stage.stageType === "lost" 
@@ -389,18 +389,18 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                     : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
               }`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     {stage.stageType === "completed" && (
-                      <span className="h-3 w-3 bg-green-600 dark:bg-green-500 rounded-full"></span>
+                      <span className="h-2.5 w-2.5 bg-green-600 dark:bg-green-500 rounded-full"></span>
                     )}
                     {stage.stageType === "lost" && (
-                      <span className="h-3 w-3 bg-red-600 dark:bg-red-500 rounded-full"></span>
+                      <span className="h-2.5 w-2.5 bg-red-600 dark:bg-red-500 rounded-full"></span>
                     )}
                     {!stage.stageType && (
-                      <span className="h-3 w-3 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
+                      <span className="h-2.5 w-2.5 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
                     )}
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200">{stage.name}</h3>
-                    <Badge variant="outline" className="rounded-full px-2 py-0 h-5 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{stage.name}</h3>
+                    <Badge variant="outline" className="rounded-full px-1.5 py-0 h-4 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
                       {stage.deals.length}
                     </Badge>
                   </div>
@@ -408,8 +408,8 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                     {!stage.isSystem && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVerticalIcon className="h-4 w-4 text-gray-400" />
+                          <Button variant="ghost" size="icon" className="h-6 w-6 p-0.5">
+                            <MoreVerticalIcon className="h-3 w-3 text-gray-400" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">

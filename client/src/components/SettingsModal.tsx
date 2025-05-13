@@ -403,6 +403,77 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   });
   
+  // Mutation para criar modelo
+  const createModelMutation = useMutation({
+    mutationFn: async (data: { name: string, brandId: number }) => {
+      return await apiRequest('/api/machine-models', 'POST', {
+        name: data.name,
+        brandId: data.brandId,
+        active: true
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/machine-models', selectedBrandId] });
+      setNewModelName("");
+      toast({
+        title: "Modelo criado",
+        description: "O modelo foi criado com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar",
+        description: `Ocorreu um erro ao criar o modelo: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Mutation para atualizar modelo
+  const updateModelMutation = useMutation({
+    mutationFn: async (data: { id: number, name: string, brandId: number }) => {
+      return await apiRequest(`/api/machine-models/${data.id}`, 'PUT', {
+        name: data.name,
+        brandId: data.brandId
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/machine-models', selectedBrandId] });
+      setEditingModel(null);
+      toast({
+        title: "Modelo atualizado",
+        description: "O modelo foi atualizado com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar",
+        description: `Ocorreu um erro ao atualizar o modelo: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Mutation para excluir modelo
+  const deleteModelMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/machine-models/${id}`, 'DELETE');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/machine-models', selectedBrandId] });
+      toast({
+        title: "Modelo excluído",
+        description: "O modelo foi excluído com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao excluir",
+        description: `Ocorreu um erro ao excluir o modelo: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
   // Mutation para criar motivo de desempenho
   const createPerformanceReasonMutation = useMutation({
     mutationFn: async (data: { reason: string, value: string, description: string }) => {

@@ -73,10 +73,11 @@ export default function Header({
           <div className="flex items-center gap-2">
             {hasApiConfig && (
               <>
+                {/* Botão para telas maiores com texto */}
                 <Button 
                   variant="ghost"
                   size="sm"
-                  className="relative group text-white hover:text-primary hover:bg-white/10"
+                  className="relative group text-white hover:text-primary hover:bg-white/10 hidden sm:flex"
                   onClick={onSync}
                   disabled={syncLoading}
                 >
@@ -84,38 +85,88 @@ export default function Header({
                   <span className="ml-2 text-sm font-medium">Sincronizar</span>
                 </Button>
                 
+                {/* Botão para telas menores apenas com ícone */}
+                <Button 
+                  variant="ghost"
+                  size="icon"
+                  className="relative group text-white hover:text-primary hover:bg-white/10 sm:hidden h-9 w-9"
+                  onClick={onSync}
+                  disabled={syncLoading}
+                  title="Sincronizar"
+                >
+                  <RefreshCwIcon className={`h-4 w-4 ${syncLoading ? 'animate-spin text-primary' : 'text-white group-hover:text-primary transition-colors'}`} />
+                </Button>
+                
+                {/* Botão para telas maiores com texto */}
                 <Button 
                   variant="ghost"
                   size="sm"
-                  className="relative group text-white hover:text-primary hover:bg-white/10"
+                  className="relative group text-white hover:text-primary hover:bg-white/10 hidden sm:flex"
                   onClick={() => setIsSettingsModalOpen(true)}
                 >
                   <SettingsIcon className="h-4 w-4 text-white group-hover:text-primary transition-colors" />
                   <span className="ml-2 text-sm font-medium">Configurações</span>
                 </Button>
+                
+                {/* Botão para telas menores apenas com ícone */}
+                <Button 
+                  variant="ghost"
+                  size="icon"
+                  className="relative group text-white hover:text-primary hover:bg-white/10 sm:hidden h-9 w-9"
+                  onClick={() => setIsSettingsModalOpen(true)}
+                  title="Configurações"
+                >
+                  <SettingsIcon className="h-4 w-4 text-white group-hover:text-primary transition-colors" />
+                </Button>
               </>
             )}
             
             {!hasApiConfig && (
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="group text-white hover:text-primary hover:bg-white/10"
-                onClick={onOpenApiConfig}
-              >
-                <KeyIcon className="h-4 w-4 text-white group-hover:text-primary transition-colors" />
-                <span className="ml-2 text-sm font-medium">Configurar API</span>
-              </Button>
+              <>
+                {/* Botão para telas maiores com texto */}
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="group text-white hover:text-primary hover:bg-white/10 hidden sm:flex"
+                  onClick={onOpenApiConfig}
+                >
+                  <KeyIcon className="h-4 w-4 text-white group-hover:text-primary transition-colors" />
+                  <span className="ml-2 text-sm font-medium">Configurar API</span>
+                </Button>
+                
+                {/* Botão para telas menores apenas com ícone */}
+                <Button 
+                  variant="ghost"
+                  size="icon"
+                  className="group text-white hover:text-primary hover:bg-white/10 sm:hidden h-9 w-9"
+                  onClick={onOpenApiConfig}
+                  title="Configurar API"
+                >
+                  <KeyIcon className="h-4 w-4 text-white group-hover:text-primary transition-colors" />
+                </Button>
+              </>
             )}
             
+            {/* Botão para telas maiores com texto */}
             <Button 
               variant="default"
               size="sm"
-              className="bg-primary hover:bg-primary/90 text-black shadow-sm ml-2 border-none"
+              className="bg-primary hover:bg-primary/90 text-black shadow-sm ml-2 border-none hidden sm:flex"
               onClick={onAddDeal}
             >
               <PlusIcon className="h-4 w-4 mr-1" />
               <span className="font-medium">Novo Negócio</span>
+            </Button>
+            
+            {/* Botão para telas menores apenas com ícone */}
+            <Button 
+              variant="default"
+              size="icon"
+              className="bg-primary hover:bg-primary/90 text-black shadow-sm ml-2 border-none sm:hidden h-9 w-9"
+              onClick={onAddDeal}
+              title="Novo Negócio"
+            >
+              <PlusIcon className="h-4 w-4" />
             </Button>
           </div>
         </div>

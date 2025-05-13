@@ -91,6 +91,8 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
     enabled: isOpen,
     refetchOnWindowFocus: true, // Recarrega quando a janela ganha foco
     staleTime: 0, // Sempre considera os dados obsoletos
+    retry: 3, // Tenta até 3 vezes em caso de falha
+    retryDelay: 1000, // Espera 1 segundo entre as tentativas
   });
   
   // Buscar o pipeline padrão
@@ -158,6 +160,11 @@ export default function AddDealModal({ isOpen, onClose, pipelineStages = [], sel
     // Usar setTimeout para dar tempo para a API processar antes de recarregar
     setTimeout(() => {
       console.log("Recarregando lista de contatos...");
+      
+      // Invalidar o cache de contatos primeiro
+      queryClient.invalidateQueries({ queryKey: ['/api/chatwoot/contacts'] });
+      
+      // Depois forçar uma atualização
       refetchContacts()
         .then(() => {
           console.log("Lista de contatos atualizada com sucesso após criação de novo contato");

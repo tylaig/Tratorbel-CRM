@@ -53,7 +53,7 @@ async function createTables() {
       CREATE TABLE IF NOT EXISTS pipeline_stages (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
-        order INTEGER NOT NULL,
+        "order" INTEGER NOT NULL,
         pipeline_id INTEGER NOT NULL,
         is_default BOOLEAN DEFAULT FALSE,
         is_hidden BOOLEAN DEFAULT FALSE,
@@ -105,7 +105,7 @@ async function createTables() {
         lead_id INTEGER NOT NULL,
         stage_id INTEGER NOT NULL,
         pipeline_id INTEGER NOT NULL,
-        order INTEGER DEFAULT 0,
+        "order" INTEGER DEFAULT 0,
         value DOUBLE PRECISION DEFAULT 0,
         quote_value DOUBLE PRECISION DEFAULT 0,
         status TEXT DEFAULT 'in_progress',
@@ -256,7 +256,7 @@ async function createTables() {
     
     // Inserir estágios padrão
     await pool.query(`
-      INSERT INTO pipeline_stages (name, order, pipeline_id, is_default, is_hidden, is_system, stage_type)
+      INSERT INTO pipeline_stages (name, "order", pipeline_id, is_default, is_hidden, is_system, stage_type)
       VALUES 
         ('Fornecedor', 1, 1, false, false, false, 'normal'),
         ('Retirada', 2, 1, false, false, false, 'normal'),

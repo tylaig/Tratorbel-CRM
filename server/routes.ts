@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import axios from "axios";
 import { eq } from "drizzle-orm";
+import { apiKeyAuth } from "./middleware/auth";
 import { 
   insertDealSchema, 
   insertPipelineStageSchema, 
@@ -332,7 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  apiRouter.delete("/deals/:id", async (req: Request, res: Response) => {
+  apiRouter.delete("/deals/:id", apiKeyAuth, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {

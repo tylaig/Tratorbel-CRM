@@ -64,7 +64,7 @@ interface EditDealModalProps {
 
 export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }: EditDealModalProps) {
   const [activeTab, setActiveTab] = useState("lead");
-  
+
   // Campos base do formulário
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -72,44 +72,44 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const [stageId, setStageId] = useState("");
   const [value, setValue] = useState("");
   const [status, setStatus] = useState("in_progress");
-  
+
   // Tipo de cliente
   const [clientCategory, setClientCategory] = useState("final_consumer"); // "final_consumer" (Consumidor Final) ou "reseller" (Revenda)
   const [clientType, setClientType] = useState("person"); // "person" (Pessoa Física) ou "company" (Pessoa Jurídica)
   const [isCompany, setIsCompany] = useState(false); // campo legado
-  
+
   // Campos pessoa jurídica
   const [cnpj, setCnpj] = useState("");
   const [corporateName, setCorporateName] = useState("");
-  
+
   // Campos pessoa física
   const [cpf, setCpf] = useState("");
   const [stateRegistration, setStateRegistration] = useState("");
-  
+
   // Campos de contato
   const [clientCodeSaoPaulo, setClientCodeSaoPaulo] = useState("");
   const [clientCodePara, setClientCodePara] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  
+
   // Campos de endereço
   const [address, setAddress] = useState("");
   const [addressNumber, setAddressNumber] = useState("");
   const [addressComplement, setAddressComplement] = useState("");
-  
+
   // Campo de notas
   const [notes, setNotes] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
-  
+
   // Estado para armazenar o valor da cotação selecionada
   const [selectedQuoteValue, setSelectedQuoteValue] = useState<number | null>(null);
-  
+
   // Ref para armazenar os dados do lead durante a atualização
   const leadUpdateDataRef = useRef<Partial<Lead> | null>(null);
-  
+
   // Ref para controlar o timeout do auto-save das notas
   const notesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -134,16 +134,16 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     queryKey: [`/api/leads/${deal?.leadId}`],
     enabled: !!deal?.leadId,
   });
-  
+
   // Buscar os itens da cotação para calcular o valor total
   const { data: quoteItems } = useQuery<any[]>({
     queryKey: [`/api/quote-items/${deal?.id}`],
     enabled: !!deal?.id
   });
-  
+
   // Usar stages específicas do pipeline selecionado ou todas as stages se nenhum pipeline específico
   const filteredStages = pipelineId ? availableStages : pipelineStages;
-  
+
   // Calcular o valor total da cotação quando os itens estiverem disponíveis
   useEffect(() => {
     if (quoteItems && quoteItems.length > 0) {
@@ -169,34 +169,34 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setQuoteCodePara(deal.quoteCodePara || "");
     }
   }, [deal]);
-  
+
   // Carregar dados do lead quando estiverem disponíveis
   useEffect(() => {
     if (leadData) {
       console.log("Lead carregado:", leadData);
-      
+
       // Campos básicos do lead
       setCompanyName(leadData.companyName || "");
-      
+
       // Tipo de cliente
       setClientCategory(leadData.clientCategory || "final_consumer");
       setClientType(leadData.clientType || "person");
       setIsCompany(leadData.clientType === "company"); 
-      
+
       // Campos pessoa jurídica
       setCnpj(leadData.cnpj || "");
       setCorporateName(leadData.corporateName || "");
-      
+
       // Campos pessoa física
       setCpf(leadData.cpf || "");
       setStateRegistration(leadData.stateRegistration || "");
-      
+
       // Campos de contato
       setClientCodeSaoPaulo(leadData.clientCodeSaoPaulo || "");
       setClientCodePara(leadData.clientCodePara || "");
       setEmail(leadData.email || "");
       setPhone(formatPhoneNumber(leadData.phone) || "");
-      
+
       // Campos de endereço
       setAddress(leadData.address || "");
       setAddressNumber(leadData.addressNumber || "");
@@ -207,18 +207,18 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setZipCode(leadData.zipCode || "");
     }
   }, [leadData]);
-  
+
   // Funções para gerenciar negócios relacionados
   const handleOpenDeal = (dealId: number) => {
     // Fechar este modal primeiro
     onClose();
-    
+
     // Após um breve atraso, invalidar a query para atualizar e abrir o outro negócio
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
     }, 200);
   };
-  
+
   // Mutation para atualizar lead
   const updateLeadMutation = useMutation({
     mutationFn: async (data: Partial<Lead>) => {
@@ -286,24 +286,24 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const updateDealMutation = useMutation({
     mutationFn: async (data: Partial<Deal>) => {
       if (!deal) return null;
-      
+
       // Incluir o valor da cotação selecionada nos dados a serem atualizados
       if (selectedQuoteValue !== null) {
         data.quoteValue = selectedQuoteValue;
         data.value = selectedQuoteValue;
       }
-      
+
       return apiRequest(`/api/deals/${deal.id}`, "PUT", data);
     },
     onSuccess: () => {
       // Limpar a referência aos dados do lead
       leadUpdateDataRef.current = null;
-      
+
       toast({
         title: "Sucesso!",
         description: "Informações atualizadas com sucesso.",
       });
-      
+
       // Verificar se o pipeline foi alterado e registrar atividade
       if (deal && pipelineId && deal.pipelineId !== parseInt(pipelineId)) {
         const oldPipelineName = pipelines.find((p: Pipeline) => p.id === deal.pipelineId)?.name || "Desconhecido";
@@ -324,11 +324,11 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
           activityType: "stage_change"
         });
       }
-      
+
       // Invalidar consultas específicas para reduzir delay
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/pipeline-stages"] });
-      
+
       // Fechar o modal imediatamente para melhor UX
       onClose();
     },
@@ -341,7 +341,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       console.error("Erro ao atualizar deal:", error);
     },
   });
-  
+
   // Mutation para excluir deal
   const deleteDealMutation = useMutation({
     mutationFn: async () => {
@@ -365,7 +365,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       console.error("Erro ao excluir deal:", error);
     },
   });
-  
+
   // Função para manipular salvamento
   const handleSave = () => {
     if (!deal) return;
@@ -417,17 +417,17 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       }
     });
   };
-  
+
   // Confirmar exclusão
   const confirmDelete = () => {
     if (window.confirm("Tem certeza que deseja excluir este negócio? Esta ação não pode ser desfeita.")) {
       deleteDealMutation.mutate();
     }
   };
-  
+
   // A função toggleClientType foi removida pois o tipo de cliente agora é
   // gerenciado pelo componente Select na interface
-  
+
   // Limpar endereço
   const clearAddress = () => {
     setAddress("");
@@ -455,6 +455,23 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   // Campos para código de cotação
   const [quoteCodeSao, setQuoteCodeSao] = useState("");
   const [quoteCodePara, setQuoteCodePara] = useState("");
+
+    // Função para manipular a mudança nas notas com auto-save
+    const handleNotesChange = useCallback((newValue: string) => {
+      setNotes(newValue);
+  
+      // Auto-save com debounce - limpar timeout anterior
+      if (notesTimeoutRef.current) {
+        clearTimeout(notesTimeoutRef.current);
+      }
+  
+      // Configurar novo timeout para salvar após 2 segundos
+      notesTimeoutRef.current = setTimeout(() => {
+        if (deal?.id && newValue !== deal.notes) {
+          autoSaveNotesMutation.mutate({ notes: newValue });
+        }
+      }, 2000);
+    }, [autoSaveNotesMutation, deal, notes]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -510,7 +527,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   Máquinas
                 </TabsTrigger>
               </TabsList>
-              
+
               {/* Sub-aba Detalhes */}
               <TabsContent value="details" className="pt-2">
                 <div className="grid gap-4 py-2">
@@ -593,7 +610,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   </div>
                 </div>
               </TabsContent>
-              
+
               {/* Sub-aba Cliente */}
               <TabsContent value="client" className="pt-2">
                 <div className="grid gap-4 py-2">
@@ -621,7 +638,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {clientCategory === "final_consumer" && (
                     <div className="grid gap-2">
                       <Label htmlFor="client-type">Tipo de Cliente</Label>
@@ -630,7 +647,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                         onValueChange={(value) => {
                           setClientType(value);
                           setIsCompany(value === "company"); // manter compatibilidade
-                          
+
                           // Resetar campos não relevantes quando muda o tipo
                           if (value === "person") {
                             setCnpj("");
@@ -651,7 +668,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       </Select>
                     </div>
                   )}
-                  
+
                   {clientType === "company" ? (
                     // Campos pessoa jurídica
                     <>
@@ -703,7 +720,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       Este tipo de cliente não requer documentos específicos.
                     </div>
                   )}
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="client-code-sp">Código Sisrev São Paulo</Label>
@@ -724,7 +741,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       />
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="email">E-mail</Label>
@@ -748,7 +765,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   </div>
                 </div>
               </TabsContent>
-              
+
               {/* Sub-aba Endereço */}
               <TabsContent value="address" className="pt-2">
                 <div className="grid gap-4 py-2">
@@ -761,7 +778,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       placeholder="Rua, Avenida, etc."
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="address-number">Número</Label>
@@ -782,7 +799,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       />
                     </div>
                   </div>
-                  
+
                   <div className="grid gap-2">
                     <Label htmlFor="neighborhood">Bairro</Label>
                     <Input
@@ -792,7 +809,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       placeholder="Bairro"
                     />
                   </div>
-                  
+
                   <ClientCities
                     dealId={deal?.id || null}
                     leadId={deal?.leadId || null}
@@ -803,18 +820,18 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       // Atualizar os estados locais com os novos valores
                       setCity(updatedCity);
                       setState(updatedState);
-                      
+
                       // Se a atualização foi feita pelo componente, também atualizar nosso objeto leadData
                       if (deal?.leadId && leadData) {
                         // Invalidar a query para que os dados sejam recarregados na próxima vez
                         queryClient.invalidateQueries({ queryKey: [`/api/leads/${deal.leadId}`] });
-                        
+
                         // Forçar refetch para atualizar os dados em memória
                         refetchLeadData();
                       }
                     }}
                   />
-                  
+
                   <div className="grid gap-2">
                     <Label htmlFor="zipcode">CEP</Label>
                     <Input
@@ -824,7 +841,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       placeholder="00000-000"
                     />
                   </div>
-                  
+
                   <Button 
                     variant="outline" 
                     onClick={clearAddress}
@@ -836,7 +853,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   </Button>
                 </div>
               </TabsContent>
-              
+
               {/* Sub-aba Máquinas */}
               <TabsContent value="machines" className="pt-2">
                 {deal && (
@@ -864,22 +881,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   className="flex h-32 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Adicione notas e observações sobre este negócio... (salvamento automático em 2 segundos)"
                   value={notes}
-                  onChange={(e) => {
-                    const newValue = e.target.value;
-                    setNotes(newValue);
-                    
-                    // Auto-save com debounce - limpar timeout anterior
-                    if (notesTimeoutRef.current) {
-                      clearTimeout(notesTimeoutRef.current);
-                    }
-                    
-                    // Configurar novo timeout para salvar após 2 segundos
-                    notesTimeoutRef.current = setTimeout(() => {
-                      if (deal?.id && newValue !== deal.notes) {
-                        autoSaveNotesMutation.mutate({ notes: newValue });
-                      }
-                    }, 2000);
-                  }}
+                  onChange={(e) => handleNotesChange(e.target.value)}
                 />
               </div>
             </div>
@@ -890,76 +892,4 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             {deal && (
               <div className="mb-4 grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="quote-code-sao">Código Cotação SP</Label>
-                  <Input
-                    id="quote-code-sao"
-                    value={quoteCodeSao}
-                    onChange={e => setQuoteCodeSao(e.target.value)}
-                    placeholder="Código Cotação SP"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="quote-code-para">Código Cotação Pará</Label>
-                  <Input
-                    id="quote-code-para"
-                    value={quoteCodePara}
-                    onChange={e => setQuoteCodePara(e.target.value)}
-                    placeholder="Código Cotação Pará"
-                  />
-                </div>
-              </div>
-            )}
-            {deal && deal.id !== undefined && (
-              <QuoteManager
-                dealId={deal.id}
-                onSelectQuote={handleQuoteSelected}
-              />
-            )}
-          </TabsContent>
-
-          {/* Tab Resultado */}
-          <TabsContent value="outcome" className="p-1">
-            {deal && deal.id !== undefined && deal.leadId !== undefined && deal.stageId !== undefined && deal.pipelineId !== undefined && deal.userId !== undefined && (
-              (deal.saleStatus === "won" || deal.saleStatus === "lost") ? (
-                <DealResultTab deal={deal as Deal} />
-              ) : (
-                <DealOutcomeForm deal={deal as Deal} onSuccess={() => {
-                  if (deal.status === "won" || deal.status === "lost") {
-                    const hiddenStage = pipelineStages.find(s => s.isHidden) || pipelineStages[0];
-                    if (hiddenStage) {
-                      updateDealMutation.mutate({
-                        stageId: hiddenStage.id
-                      });
-                    }
-                  }
-                  queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
-                  onClose();
-                }} />
-              )
-            )}
-          </TabsContent>
-        </Tabs>
-
-        <DialogFooter className="flex flex-col sm:flex-row justify-between">
-          <Button 
-            variant="destructive" 
-            onClick={confirmDelete}
-            disabled={updateDealMutation.isPending || deleteDealMutation.isPending}
-          >
-            <TrashIcon className="h-4 w-4 mr-2" />
-            Excluir
-          </Button>
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button 
-              onClick={handleSave}
-              disabled={updateDealMutation.isPending || deleteDealMutation.isPending}
-            >
-              {updateDealMutation.isPending ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+                  <

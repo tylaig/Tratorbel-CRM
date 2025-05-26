@@ -119,7 +119,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
 
   // Buscar stages específicas do pipeline selecionado
   const { data: availableStages = [] } = useQuery<PipelineStage[]>({
-    queryKey: ['/api/pipeline-stages'],
+    queryKey: ['/api/pipeline-stages', pipelineId],
     queryFn: () => apiRequest(`/api/pipeline-stages?pipelineId=${pipelineId}`),
     enabled: !!pipelineId,
     staleTime: 0,
@@ -262,7 +262,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     }
   });
 
-  // Mutation para atualizar deal
+  // Mutation para atualizar deal - otimizada para reduzir delay
   const updateDealMutation = useMutation({
     mutationFn: async (data: Partial<Deal>) => {
       if (!deal) return null;
@@ -286,8 +286,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       
       // Verificar se o pipeline foi alterado e registrar atividade
       if (deal && pipelineId && deal.pipelineId !== parseInt(pipelineId)) {
-        const oldPipelineName = pipelines.find(p => p.id === deal.pipelineId)?.name || "Desconhecido";
-        const newPipelineName = pipelines.find(p => p.id === parseInt(pipelineId))?.name || "Desconhecido";
+        const oldPipelineName = pipelines.find((p: Pipeline) => p.id === deal.pipelineId)?.name || "Desconhecido";
+        const newPipelineName = pipelines.find((p: Pipeline) => p.id === parseInt(pipelineId))?.name || "Desconhecido";
         createActivityMutation.mutate({
           description: `Negócio movido do pipeline "${oldPipelineName}" para "${newPipelineName}"`,
           dealId: deal.id ?? 0,
@@ -296,8 +296,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       }
       // Verificar se o estágio foi alterado e registrar atividade
       if (deal && stageId && deal.stageId !== parseInt(stageId)) {
-        const oldStageName = pipelineStages.find(s => s.id === deal.stageId)?.name || "Desconhecido";
-        const newStageName = pipelineStages.find(s => s.id === parseInt(stageId))?.name || "Desconhecido";
+        const oldStageName = pipelineStages.find((s: PipelineStage) => s.id === deal.stageId)?.name || "Desconhecido";
+        const newStageName = pipelineStages.find((s: PipelineStage) => s.id === parseInt(stageId))?.name || "Desconhecido";
         createActivityMutation.mutate({
           description: `Negócio movido da etapa "${oldStageName}" para "${newStageName}"`,
           dealId: deal.id ?? 0,
@@ -305,10 +305,11 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         });
       }
       
-      // Invalidar consultas para atualizar a interface
+      // Invalidar consultas específicas para reduzir delay
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pipeline-stages"] });
       
-      // Fechar o modal
+      // Fechar o modal imediatamente para melhor UX
       onClose();
     },
     onError: (error) => {
@@ -521,7 +522,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                         <SelectValue placeholder="Selecione um pipeline" />
                       </SelectTrigger>
                       <SelectContent>
-                        {pipelines.map((pipeline) => (
+                        {pipelines.map((pipeline: Pipeline) => (
                           <SelectItem key={pipeline.id} value={pipeline.id.toString()}>
                             {pipeline.name}
                           </SelectItem>
@@ -542,7 +543,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                           <SelectValue placeholder={!pipelineId ? "Selecione um pipeline primeiro" : "Selecione uma etapa"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {filteredStages.map((stage) => (
+                          {filteredStages.map((stage: PipelineStage) => (
                             <SelectItem key={stage.id} value={stage.id.toString()}>
                               {stage.name}
                             </SelectItem>

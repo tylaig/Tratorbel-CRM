@@ -133,6 +133,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   const { data: leadData, refetch: refetchLeadData } = useQuery<Lead>({
     queryKey: [`/api/leads/${deal?.leadId}`],
     enabled: !!deal?.leadId,
+    staleTime: 0, // Sempre buscar dados frescos
+    refetchOnMount: true, // Recarregar quando o componente for montado
   });
 
   // Buscar os itens da cotação para calcular o valor total
@@ -164,9 +166,10 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setStageId(deal.stageId?.toString() || "");
       setValue(formatCurrency(deal.value || 0));
       setStatus(deal.status || "in_progress");
-      setNotes(deal.notes || "");
       setQuoteCodeSao(deal.quoteCodeSao || "");
       setQuoteCodePara(deal.quoteCodePara || "");
+      
+      // Não definir as notas aqui, elas virão do leadData que tem prioridade
     }
   }, [deal]);
 
@@ -205,6 +208,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setCity(leadData.city || "");
       setState(leadData.state || "");
       setZipCode(leadData.zipCode || "");
+      
+      // IMPORTANTE: Carregar as notas do lead, que é onde elas são realmente salvas
+      setNotes(leadData.notes || "");
     }
   }, [leadData]);
 
@@ -268,12 +274,14 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   // Mutation para auto-save das notas em tempo real
   const autoSaveNotesMutation = useMutation({
     mutationFn: async (notesData: { notes: string }) => {
-      if (!deal?.id) return null;
-      return apiRequest(`/api/deals/${deal.id}`, "PUT", { notes: notesData.notes });
+      if (!deal?.leadId) return null;
+      // Salvar as notas no lead, não no deal
+      return apiRequest(`/api/leads/${deal.leadId}`, "PUT", { notes: notesData.notes });
     },
     onSuccess: () => {
       // Atualizar cache silenciosamente sem mostrar toast
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/leads/${deal?.leadId}`] });
     },
     onError: (error) => {
       console.error("Erro ao salvar notas automaticamente:", error);
@@ -467,11 +475,11 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   
       // Configurar novo timeout para salvar após 2 segundos
       notesTimeoutRef.current = setTimeout(() => {
-        if (deal?.id && newValue !== deal.notes) {
+        if (deal?.leadId && newValue !== (leadData?.notes || "")) {
           autoSaveNotesMutation.mutate({ notes: newValue });
         }
       }, 2000);
-    }, [autoSaveNotesMutation, deal, notes]);
+    }, [autoSaveNotesMutation, deal?.leadId, leadData?.notes]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

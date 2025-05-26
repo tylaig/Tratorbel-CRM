@@ -892,4 +892,59 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
             {deal && (
               <div className="mb-4 grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <
+                  <Label htmlFor="quote-code-sao">Código Cotação São Paulo</Label>
+                  <Input
+                    id="quote-code-sao"
+                    value={quoteCodeSao}
+                    onChange={(e) => setQuoteCodeSao(e.target.value)}
+                    placeholder="Código da cotação São Paulo"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="quote-code-para">Código Cotação Pará</Label>
+                  <Input
+                    id="quote-code-para"
+                    value={quoteCodePara}
+                    onChange={(e) => setQuoteCodePara(e.target.value)}
+                    placeholder="Código da cotação Pará"
+                  />
+                </div>
+              </div>
+            )}
+            {deal && (
+              <QuoteManager
+                dealId={deal.id ?? null}
+                onQuoteSelected={handleQuoteSelected}
+              />
+            )}
+          </TabsContent>
+
+          {/* Tab Resultado */}
+          <TabsContent value="outcome" className="p-1">
+            {deal && (
+              <DealResultTab deal={deal as Deal} />
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="flex justify-between">
+          <Button variant="outline" onClick={confirmDelete} className="text-red-600 hover:text-red-700">
+            <Trash2Icon className="h-4 w-4 mr-2" />
+            Excluir
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSave}
+              disabled={updateLeadMutation.isPending || updateDealMutation.isPending}
+            >
+              {updateLeadMutation.isPending || updateDealMutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -65,11 +65,6 @@ interface EditDealModalProps {
 export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }: EditDealModalProps) {
   const [activeTab, setActiveTab] = useState("lead");
   
-  // Buscar a lista de pipelines disponíveis
-  const { data: pipelines = [] } = useQuery<Pipeline[]>({
-    queryKey: ['/api/pipelines'],
-  });
-  
   // Campos base do formulário
   const [name, setName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -117,13 +112,25 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
 
   const { toast } = useToast();
 
+  // Buscar a lista de pipelines disponíveis
+  const { data: pipelines = [] } = useQuery<Pipeline[]>({
+    queryKey: ['/api/pipelines'],
+  });
+
+  // Buscar stages específicas do pipeline selecionado
+  const { data: availableStages = [] } = useQuery<PipelineStage[]>({
+    queryKey: ['/api/pipeline-stages'],
+    queryFn: () => apiRequest(`/api/pipeline-stages?pipelineId=${pipelineId}`),
+    enabled: !!pipelineId,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+
   // Buscar os dados do lead associado
   const { data: leadData, refetch: refetchLeadData } = useQuery<Lead>({
     queryKey: [`/api/leads/${deal?.leadId}`],
     enabled: !!deal?.leadId,
   });
-  
-  // Já temos a query de pipelines definida acima
   
   // Buscar os itens da cotação para calcular o valor total
   const { data: quoteItems } = useQuery<any[]>({
@@ -131,10 +138,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     enabled: !!deal?.id
   });
   
-  // Filtra os estágios por pipeline
-  const filteredStages = pipelineStages.filter(stage => {
-    return pipelineId ? stage.pipelineId === parseInt(pipelineId) : true;
-  });
+  // Usar stages específicas do pipeline selecionado ou todas as stages se nenhum pipeline específico
+  const filteredStages = pipelineId ? availableStages : pipelineStages;
   
   // Calcular o valor total da cotação quando os itens estiverem disponíveis
   useEffect(() => {
@@ -343,7 +348,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   // Função para manipular salvamento
   const handleSave = () => {
     if (!deal) return;
-    // Preparar dados do lead para atualização
+    // Preparar dados do lead para atualização (incluindo as notas)
     const leadUpdateData: Partial<Lead> = {
       companyName,
       clientCategory,
@@ -359,7 +364,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       address,
       addressNumber,
       addressComplement,
-      neighborhood
+      neighborhood,
+      notes: notes // Incluir as notas nos dados do lead
     };
     if (zipCode) {
       leadUpdateData.zipCode = zipCode;

@@ -114,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  apiRouter.delete("/pipeline-stages/:id", async (req: Request, res: Response) => {
+  apiRouter.delete("/pipeline-stages/:id", apiKeyAuth, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {

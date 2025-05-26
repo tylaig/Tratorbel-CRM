@@ -399,17 +399,20 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     // Garante que os valores mais recentes dos códigos de cotação sejam enviados
     updateLeadMutation.mutate(leadUpdateData, {
       onSuccess: () => {
+        // Garantir que as notas atuais sejam preservadas no deal
         const dealUpdate: Partial<Deal> = {
-          ...deal,
+          id: deal.id,
+          name: deal.name,
+          leadId: deal.leadId,
+          stageId: deal.stageId,
+          pipelineId: deal.pipelineId,
+          userId: deal.userId,
           quoteCodeSao,
           quoteCodePara,
-          notes,
+          notes: notes, // Usar sempre o valor atual das notas
+          status: deal.status,
+          value: deal.value
         };
-        if (dealUpdate.id === undefined) delete dealUpdate.id;
-        if (dealUpdate.leadId === undefined) delete dealUpdate.leadId;
-        if (dealUpdate.stageId === undefined) delete dealUpdate.stageId;
-        if (dealUpdate.pipelineId === undefined) delete dealUpdate.pipelineId;
-        if (dealUpdate.userId === undefined) delete dealUpdate.userId;
         updateDealMutation.mutate(dealUpdate);
       }
     });

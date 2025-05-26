@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -109,6 +109,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   
   // Ref para armazenar os dados do lead durante a atualização
   const leadUpdateDataRef = useRef<Partial<Lead> | null>(null);
+  
+  // Ref para controlar o timeout do auto-save das notas
+  const notesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
 
@@ -261,6 +264,36 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       queryClient.invalidateQueries({ queryKey: [`/api/lead-activities/${deal?.id}`] });
     }
   });
+
+  // Mutation para auto-save das notas em tempo real
+  const autoSaveNotesMutation = useMutation({
+    mutationFn: async (notesData: { notes: string }) => {
+      if (!deal?.id) return null;
+      return apiRequest(`/api/deals/${deal.id}`, "PUT", { notes: notesData.notes });
+    },
+    onSuccess: () => {
+      // Atualizar cache silenciosamente sem mostrar toast
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+    },
+    onError: (error) => {
+      console.error("Erro ao salvar notas automaticamente:", error);
+    },
+  });
+
+  // Função para auto-save das notas com debounce
+  const debouncedAutoSaveNotes = useCallback((notesValue: string) => {
+    // Limpar timeout anterior se existir
+    if (notesTimeoutRef.current) {
+      clearTimeout(notesTimeoutRef.current);
+    }
+    
+    // Configurar novo timeout para salvar após 2 segundos de inatividade
+    notesTimeoutRef.current = setTimeout(() => {
+      if (deal?.id && notesValue !== deal.notes) {
+        autoSaveNotesMutation.mutate({ notes: notesValue });
+      }
+    }, 2000); // 2 segundos de delay
+  }, [deal?.id, deal?.notes, autoSaveNotesMutation]);
 
   // Mutation para atualizar deal - otimizada para reduzir delay
   const updateDealMutation = useMutation({
@@ -839,9 +872,14 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                 <textarea
                   id="deal-notes"
                   className="flex h-32 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Adicione notas e observações sobre este negócio..."
+                  placeholder="Adicione notas e observações sobre este negócio... (salvamento automático em 2 segundos)"
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    setNotes(newValue);
+                    // Chamar auto-save com debounce
+                    debouncedAutoSaveNotes(newValue);
+                  }}
                 />
               </div>
             </div>

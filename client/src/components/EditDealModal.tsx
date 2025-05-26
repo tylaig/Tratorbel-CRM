@@ -280,20 +280,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     },
   });
 
-  // Função para auto-save das notas com debounce
-  const debouncedAutoSaveNotes = useCallback((notesValue: string) => {
-    // Limpar timeout anterior se existir
-    if (notesTimeoutRef.current) {
-      clearTimeout(notesTimeoutRef.current);
-    }
-    
-    // Configurar novo timeout para salvar após 2 segundos de inatividade
-    notesTimeoutRef.current = setTimeout(() => {
-      if (deal?.id && notesValue !== deal.notes) {
-        autoSaveNotesMutation.mutate({ notes: notesValue });
-      }
-    }, 2000); // 2 segundos de delay
-  }, [deal?.id, deal?.notes, autoSaveNotesMutation]);
+
 
   // Mutation para atualizar deal - otimizada para reduzir delay
   const updateDealMutation = useMutation({
@@ -877,8 +864,18 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                   onChange={(e) => {
                     const newValue = e.target.value;
                     setNotes(newValue);
-                    // Chamar auto-save com debounce
-                    debouncedAutoSaveNotes(newValue);
+                    
+                    // Auto-save com debounce - limpar timeout anterior
+                    if (notesTimeoutRef.current) {
+                      clearTimeout(notesTimeoutRef.current);
+                    }
+                    
+                    // Configurar novo timeout para salvar após 2 segundos
+                    notesTimeoutRef.current = setTimeout(() => {
+                      if (deal?.id && newValue !== deal.notes) {
+                        autoSaveNotesMutation.mutate({ notes: newValue });
+                      }
+                    }, 2000);
                   }}
                 />
               </div>

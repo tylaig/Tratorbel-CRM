@@ -380,6 +380,17 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
   // Função para manipular salvamento
   const handleSave = () => {
     if (!deal) return;
+    
+    // Validar se pipeline e stage estão selecionados
+    if (!pipelineId || !stageId) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Pipeline e etapa são obrigatórios.",
+      });
+      return;
+    }
+    
     // Preparar dados do lead para atualização (incluindo as notas)
     const leadUpdateData: Partial<Lead> = {
       companyName,
@@ -410,19 +421,19 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     // Garante que os valores mais recentes dos códigos de cotação sejam enviados
     updateLeadMutation.mutate(leadUpdateData, {
       onSuccess: () => {
-        // Garantir que as notas atuais sejam preservadas no deal
+        // Garantir que as notas atuais sejam preservadas no deal E incluir pipeline/stage atualizados
         const dealUpdate: Partial<Deal> = {
           id: deal.id,
-          name: deal.name,
+          name: name, // Usar o valor atual do nome
           leadId: deal.leadId,
-          stageId: deal.stageId,
-          pipelineId: deal.pipelineId,
+          stageId: parseInt(stageId), // Usar o valor atual selecionado
+          pipelineId: parseInt(pipelineId), // Usar o valor atual selecionado
           userId: deal.userId,
           quoteCodeSao,
           quoteCodePara,
           notes: notes, // Usar sempre o valor atual das notas
-          status: deal.status,
-          value: deal.value
+          status: status, // Usar o valor atual do status
+          value: selectedQuoteValue || deal.value || 0
         };
         updateDealMutation.mutate(dealUpdate);
       }

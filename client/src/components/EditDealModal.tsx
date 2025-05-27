@@ -172,6 +172,14 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       setQuoteCodeSao(deal.quoteCodeSao || "");
       setQuoteCodePara(deal.quoteCodePara || "");
       
+      console.log("Carregando deal:", {
+        id: deal.id,
+        name: deal.name,
+        pipelineId: deal.pipelineId,
+        stageId: deal.stageId,
+        status: deal.status
+      });
+      
       // Não definir as notas aqui, elas virão do leadData que tem prioridade
     }
   }, [deal]);
@@ -304,6 +312,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         data.value = selectedQuoteValue;
       }
 
+      console.log("Enviando atualização do deal:", data);
       return apiRequest(`/api/deals/${deal.id}`, "PUT", data);
     },
     onSuccess: () => {
@@ -414,20 +423,37 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       leadUpdateData.zipCode = zipCode;
     }
     leadUpdateDataRef.current = leadUpdateData;
+    
     toast({
       title: "Salvando...",
       description: "Atualizando informações...",
     });
-    // Garante que os valores mais recentes dos códigos de cotação sejam enviados
+    
+    // Atualizar o lead primeiro
     updateLeadMutation.mutate(leadUpdateData, {
       onSuccess: () => {
-        // Garantir que as notas atuais sejam preservadas no deal E incluir pipeline/stage atualizados
+        // Verificar se pipeline foi alterado para mover para primeiro estágio do novo pipeline
+        let targetStageId = parseInt(stageId);
+        let targetPipelineId = parseInt(pipelineId);
+        
+        // Se o pipeline mudou, mover para o primeiro estágio do novo pipeline
+        if (deal.pipelineId !== targetPipelineId) {
+          const newPipelineStages = availableStages.filter(stage => stage.pipelineId === targetPipelineId);
+          if (newPipelineStages.length > 0) {
+            // Ordenar por ordem e pegar o primeiro estágio
+            const firstStage = newPipelineStages.sort((a, b) => (a.order || 0) - (b.order || 0))[0];
+            targetStageId = firstStage.id;
+            console.log(`Pipeline alterado de ${deal.pipelineId} para ${targetPipelineId}, movendo para primeiro estágio: ${firstStage.name} (ID: ${targetStageId})`);
+          }
+        }
+        
+        // Preparar dados do deal para atualização
         const dealUpdate: Partial<Deal> = {
           id: deal.id,
           name: name, // Usar o valor atual do nome
           leadId: deal.leadId,
-          stageId: parseInt(stageId), // Usar o valor atual selecionado
-          pipelineId: parseInt(pipelineId), // Usar o valor atual selecionado
+          stageId: targetStageId, // Usar o stage correto (primeiro do pipeline se mudou)
+          pipelineId: targetPipelineId, // Usar o pipeline selecionado
           userId: deal.userId,
           quoteCodeSao,
           quoteCodePara,
@@ -435,6 +461,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
           status: status, // Usar o valor atual do status
           value: selectedQuoteValue || deal.value || 0
         };
+        
+        console.log("Atualizando deal com dados:", dealUpdate);
         updateDealMutation.mutate(dealUpdate);
       }
     });

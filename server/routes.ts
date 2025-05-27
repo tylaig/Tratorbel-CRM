@@ -349,6 +349,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Atualização normal via formulário
       const validatedData = insertDealSchema.partial().parse(req.body);
       
+      // NOVA VALIDAÇÃO: garantir que o stageId pertence ao pipelineId, se ambos forem enviados
+      if (validatedData.pipelineId !== undefined && validatedData.stageId !== undefined) {
+        const stage = await storage.getPipelineStage(Number(validatedData.stageId));
+        if (!stage || stage.pipelineId !== Number(validatedData.pipelineId)) {
+          return res.status(400).json({ error: "O estágio não pertence ao pipeline informado." });
+        }
+      }
+      
       // Lógica para mover automaticamente para estágios de vendas realizadas/perdidas
       if (validatedData.saleStatus) {
         // Buscar o pipeline padrão

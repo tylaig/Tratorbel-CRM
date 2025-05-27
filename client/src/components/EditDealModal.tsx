@@ -299,8 +299,6 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     },
   });
 
-
-
   // Mutation para atualizar deal - otimizada para reduzir delay
   const updateDealMutation = useMutation({
     mutationFn: async (data: Partial<Deal>) => {
@@ -315,7 +313,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
       console.log("Enviando atualização do deal:", data);
       return apiRequest(`/api/deals/${deal.id}`, "PUT", data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Limpar a referência aos dados do lead
       leadUpdateDataRef.current = null;
 
@@ -357,7 +355,15 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         console.log(`Invalidando cache dos pipelines ${deal.pipelineId} e ${pipelineId}`);
       }
 
-      // Fechar o modal imediatamente para melhor UX
+      // AGUARDAR O REFRESH DAS QUERIES ANTES DE FECHAR O MODAL
+      await queryClient.refetchQueries({ queryKey: ["/api/deals"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/pipeline-stages"] });
+      if (deal && pipelineId && deal.pipelineId !== parseInt(pipelineId)) {
+        await queryClient.refetchQueries({ queryKey: ["/api/deals", deal.pipelineId] });
+        await queryClient.refetchQueries({ queryKey: ["/api/deals", parseInt(pipelineId)] });
+      }
+
+      // Fechar o modal somente após garantir que os dados estão atualizados
       onClose();
     },
     onError: (error) => {
@@ -404,6 +410,17 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         variant: "destructive",
         title: "Erro",
         description: "Pipeline e etapa são obrigatórios.",
+      });
+      return;
+    }
+
+    // NOVA VALIDAÇÃO: garantir que o stageId pertence ao pipelineId selecionado
+    const stage = availableStages.find(s => s.id === parseInt(stageId));
+    if (!stage || stage.pipelineId !== parseInt(pipelineId)) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "O estágio selecionado não pertence ao pipeline escolhido.",
       });
       return;
     }

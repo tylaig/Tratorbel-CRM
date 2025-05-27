@@ -764,6 +764,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Falha ao atualizar o lead" });
       }
       
+      // NOVO: Se o pipelineId foi alterado, mover todos os deals do lead para o novo pipeline e para o primeiro estágio
+      if (
+        validatedData.pipelineId !== undefined &&
+        Number(validatedData.pipelineId) !== Number(existingLead.pipelineId)
+      ) {
+        // Buscar todos os deals do lead
+        const deals = await storage.getDealsByLeadId(leadId);
+        // Buscar os estágios do novo pipeline
+        const stages = await storage.getPipelineStages(Number(validatedData.pipelineId));
+        // Pegar o primeiro estágio (menor ordem)
+        const firstStage = stages.sort((a, b) => (a.order || 0) - (b.order || 0))[0];
+        if (firstStage) {
+          // Atualizar todos os deals para o novo pipeline e primeiro estágio
+          await Promise.all(deals.map(deal =>
+            storage.updateDeal(deal.id, {
+              pipelineId: Number(validatedData.pipelineId),
+              stageId: firstStage.id
+            })
+          ));
+        }
+      }
+      
       console.log("Lead atualizado com sucesso:", JSON.stringify(updatedLead));
       res.json(updatedLead);
     } catch (error) {

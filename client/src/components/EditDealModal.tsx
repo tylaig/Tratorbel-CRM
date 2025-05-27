@@ -245,6 +245,9 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     onSuccess: (updatedLead) => {
       console.log("Lead atualizado com sucesso:", updatedLead);
       queryClient.invalidateQueries({ queryKey: [`/api/leads/${deal?.leadId}`] });
+      // NOVO: garantir atualização do Kanban após editar pipeline do lead
+      queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
+      queryClient.refetchQueries({ queryKey: ["/api/deals"] });
       // Após atualizar o lead com sucesso, atualizar o deal
       if (leadUpdateDataRef.current) {
         const dealUpdate: Partial<Deal> = {

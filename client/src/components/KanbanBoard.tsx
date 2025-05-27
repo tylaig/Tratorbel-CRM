@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import type { Deal } from "@shared/schema";
 
 import { Card } from "@/components/ui/card";
 import { 
@@ -171,13 +170,13 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
     }
     
     const dealId = parseInt(draggableId);
-    const deal = sourceStage.deals.find(d => d.id === dealId);
+    // Buscar o deal em qualquer coluna (não só na source)
+    const deal = boardData.flatMap(stage => stage.deals).find(d => d.id === dealId);
     
-    // NOVO: só permitir mover deals do pipeline ativo
-    if (!deal || deal.pipelineId !== activePipelineId) {
+    if (!deal) {
       toast({
-        title: "Movimentação não permitida",
-        description: "Só é possível mover negócios do pipeline ativo.",
+        title: "Negócio não encontrado",
+        description: "Não foi possível localizar o negócio para movimentação.",
         variant: "destructive",
       });
       return;
@@ -192,36 +191,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
     }
     
     // Reordenar localmente para feedback visual imediato
-    const updatedBoardData = [...boardData];
-    
-    // Remover o negócio do estágio de origem
-    const sourceBoardIndex = updatedBoardData.findIndex(stage => stage.id === sourceStage.id);
-    const [movedDeal] = updatedBoardData[sourceBoardIndex].deals.splice(source.index, 1);
-    
-    // Adicionar o negócio ao estágio de destino
-    const destBoardIndex = updatedBoardData.findIndex(stage => stage.id === destStage.id);
-    updatedBoardData[destBoardIndex].deals.splice(destination.index, 0, movedDeal);
-    
-    // Atualizar o estado local imediatamente para feedback visual
-    setBoardData(updatedBoardData);
-    
-    // Se for dentro do mesmo estágio, atualizar a ordem de todos os deals desse estágio
-    if (sourceStage.id === destStage.id) {
-      const orders = updatedBoardData[destBoardIndex].deals.map((d, idx) => ({ id: d.id, order: idx }));
-      try {
-        await apiRequest('/api/deals/order', 'PUT', { orders });
-        queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
-      } catch (error) {
-        toast({
-          title: "Erro ao atualizar ordem",
-          description: "Não foi possível atualizar a ordem dos negócios.",
-          variant: "destructive",
-        });
-        fetchUpdatedData();
-      }
-      return;
-    }
-    
+    // (Opcional: pode ser removido se não quiser feedback local)
     // Se for para outro estágio, atualizar o stageId e pipelineId
     try {
       await apiRequest(`/api/deals/${dealId}`, 'PUT', {
@@ -231,7 +201,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
       toast({
         title: "Negócio movido",
-        description: `"${deal.name}" foi movido para ${destStage.name}`,
+        description: `\"${deal.name}\" foi movido para ${destStage.name}`,
       });
     } catch (error) {
       console.error("Error updating deal stage:", error);
@@ -240,7 +210,6 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         description: "Não foi possível atualizar o estágio do negócio.",
         variant: "destructive",
       });
-      fetchUpdatedData();
     }
   };
   
@@ -309,9 +278,6 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
               ...selectedDeal
             }}
             pipelineStages={pipelineStages}
-            onSaved={() => {
-              fetchUpdatedData();
-            }}
           />
         )}
         
@@ -497,10 +463,6 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
                                 </span>
                               </div>
                             </div>
-                            {/* Exibir e-mail do criador do negócio, se disponível */}
-                            {deal.creatorUserEmail && (
-                              <div className="text-[8px] text-gray-400 dark:text-gray-500 truncate mt-0.5" title={`Criado por: ${deal.creatorUserEmail}`}>Criado por: {deal.creatorUserEmail}</div>
-                            )}
                             <div className="flex items-center justify-between mt-0.5 pt-0.5 border-t border-gray-100 dark:border-gray-700">
                               <span className="text-[9px] text-gray-500 dark:text-gray-400 flex items-center">
                                 <CalendarIcon className="w-2.5 h-2.5 mr-0.5" />

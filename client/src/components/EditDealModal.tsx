@@ -127,6 +127,7 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     enabled: !!pipelineId,
     staleTime: 0,
     refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   // Buscar os dados do lead associado
@@ -143,8 +144,10 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
     enabled: !!deal?.id
   });
 
-  // Usar stages específicas do pipeline selecionado ou todas as stages se nenhum pipeline específico
-  const filteredStages = pipelineId ? availableStages : pipelineStages;
+  // Usar stages específicas do pipeline selecionado ou filtrar pipelineStages pelo pipeline atual
+  const filteredStages = pipelineId 
+    ? availableStages.filter(stage => stage.pipelineId === parseInt(pipelineId))
+    : pipelineStages.filter(stage => deal?.pipelineId ? stage.pipelineId === deal.pipelineId : true);
 
   // Calcular o valor total da cotação quando os itens estiverem disponíveis
   useEffect(() => {
@@ -565,6 +568,8 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
                       setPipelineId(value);
                       // Ao mudar o pipeline, limpe a seleção do estágio
                       setStageId("");
+                      // Invalidar e recarregar as stages do novo pipeline
+                      queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages', value] });
                     }}>
                       <SelectTrigger id="deal-pipeline">
                         <SelectValue placeholder="Selecione um pipeline" />

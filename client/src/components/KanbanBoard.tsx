@@ -127,7 +127,13 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
       .map((stage) => {
         let stageDeals: Deal[] = [];
         if (stage.stageType === "completed") {
-          stageDeals = dealsData.filter(deal => (deal.stageId === stage.id || deal.saleStatus === "won") && deal.pipelineId === stage.pipelineId);
+          // Mostrar todos os ganhos, independente do pipeline
+          stageDeals = deals.concat(dealsData).filter(
+            (deal, idx, arr) =>
+              (deal.stageId === stage.id || deal.saleStatus === "won") &&
+              // Remover duplicatas caso o mesmo deal esteja em deals e dealsData
+              arr.findIndex(d => d.id === deal.id) === idx
+          );
         } else if (stage.stageType === "lost") {
           stageDeals = dealsData.filter(deal => (deal.stageId === stage.id || deal.saleStatus === "lost") && deal.pipelineId === stage.pipelineId);
         } else {
@@ -145,7 +151,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         return a.order - b.order;
       });
     return stagesWithDeals;
-  }, [pipelineStages, activePipelineId, filters, filteredDeals]);
+  }, [pipelineStages, activePipelineId, filters, filteredDeals, deals]);
   
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;

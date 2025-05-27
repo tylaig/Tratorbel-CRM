@@ -173,7 +173,13 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
     const dealId = parseInt(draggableId);
     const deal = sourceStage.deals.find(d => d.id === dealId);
     
-    if (!deal) {
+    // NOVO: só permitir mover deals do pipeline ativo
+    if (!deal || deal.pipelineId !== activePipelineId) {
+      toast({
+        title: "Movimentação não permitida",
+        description: "Só é possível mover negócios do pipeline ativo.",
+        variant: "destructive",
+      });
       return;
     }
     

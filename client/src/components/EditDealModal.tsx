@@ -345,9 +345,17 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         });
       }
 
-      // Invalidar consultas específicas para reduzir delay
+      // Invalidar consultas específicas para reduzir delay e garantir atualização em tempo real
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/pipeline-stages"] });
+      
+      // Se houve mudança de pipeline, invalidar especificamente ambos os pipelines
+      if (deal && pipelineId && deal.pipelineId !== parseInt(pipelineId)) {
+        queryClient.invalidateQueries({ queryKey: ["/api/deals", deal.pipelineId] });
+        queryClient.invalidateQueries({ queryKey: ["/api/deals", parseInt(pipelineId)] });
+        
+        console.log(`Invalidando cache dos pipelines ${deal.pipelineId} e ${pipelineId}`);
+      }
 
       // Fechar o modal imediatamente para melhor UX
       onClose();
@@ -463,7 +471,30 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         };
         
         console.log("Atualizando deal com dados:", dealUpdate);
-        updateDealMutation.mutate(dealUpdate);
+        updateDealMutation.mutate(dealUpdate, {
+          onSuccess: () => {
+            // Se o pipeline foi alterado, invalidar dados de AMBOS os pipelines
+            if (deal.pipelineId !== targetPipelineId) {
+              console.log(`Negócio movido do pipeline ${deal.pipelineId} para ${targetPipelineId} - atualizando ambos`);
+              
+              // Invalidar dados do pipeline antigo
+              queryClient.invalidateQueries({ queryKey: ['/api/deals', deal.pipelineId] });
+              
+              // Invalidar dados do pipeline novo
+              queryClient.invalidateQueries({ queryKey: ['/api/deals', targetPipelineId] });
+              
+              // Invalidar cache geral de deals para garantir atualização completa
+              queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+              
+              // Forçar recarregamento imediato
+              setTimeout(() => {
+                queryClient.refetchQueries({ queryKey: ['/api/deals', deal.pipelineId] });
+                queryClient.refetchQueries({ queryKey: ['/api/deals', targetPipelineId] });
+                queryClient.refetchQueries({ queryKey: ['/api/deals'] });
+              }, 100);
+            }
+          }
+        });
       }
     });
   };

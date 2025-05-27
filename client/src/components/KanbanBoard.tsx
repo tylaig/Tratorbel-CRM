@@ -118,9 +118,11 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
     const fetchDeals = async () => {
       if (!activePipelineId) return;
       let dealsData: Deal[] = [];
+      
+      // Sempre filtrar deals apenas do pipeline ativo para evitar mostrar dados de outros pipelines
       if (filteredDeals) {
-        // Se receber deals via props, use-os diretamente
-        dealsData = filteredDeals;
+        // Filtrar apenas negócios do pipeline ativo
+        dealsData = filteredDeals.filter(deal => deal.pipelineId === activePipelineId);
       } else {
         // Caso contrário, buscar manualmente como antes
         try {
@@ -158,7 +160,11 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
         }
       }
       
-      console.log("Fetched deals:", dealsData.length);
+      console.log(`Fetched deals para pipeline ${activePipelineId}:`, dealsData.length);
+      
+      // Garantir que apenas negócios do pipeline atual sejam processados
+      dealsData = dealsData.filter(deal => deal.pipelineId === activePipelineId);
+      console.log(`Deals filtrados para pipeline ${activePipelineId}:`, dealsData.length);
       
       // Preparar todos os negócios para processamento
       const processedDeals: { [id: number]: boolean } = {};

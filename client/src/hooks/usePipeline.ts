@@ -36,11 +36,12 @@ export function usePipeline(activePipelineId?: number | null) {
   });
   
   // Buscar negócios com configurações para garantir atualização imediata
-  const { data: allDeals = [], isLoading: isDealsLoading } = useQuery<ExtendedDeal[]>({
+  const { data: allDeals = [], isLoading: isDealsLoading, refetch: refetchDeals } = useQuery<ExtendedDeal[]>({
     queryKey: ['/api/deals', activePipelineId],
     staleTime: 0,                // Considerar dados obsoletos imediatamente (sempre buscar dados frescos)
     refetchOnMount: true,        // Recarregar quando o componente for montado
     refetchOnWindowFocus: true,  // Recarregar quando a janela ganhar foco
+    refetchInterval: 1000,       // Atualizar automaticamente a cada 1 segundo para mudanças em tempo real
   });
   
   // Buscar estágios do pipeline com configurações para garantir atualização imediata
@@ -201,15 +202,17 @@ export function usePipeline(activePipelineId?: number | null) {
     try {
       // Invalidar o cache para forçar uma nova requisição
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['/api/deals', activePipelineId] }),
-        queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages', activePipelineId] })
+        queryClient.invalidateQueries({ queryKey: ['/api/deals'] }), // Invalidar TODOS os deals
+        queryClient.invalidateQueries({ queryKey: ['/api/pipeline-stages'] }) // Invalidar TODOS os stages
       ]);
       
-      // Forçar recarregamento imediato dos dados
+      // Forçar recarregamento imediato dos dados do pipeline atual
       await Promise.all([
-        queryClient.refetchQueries({ queryKey: ['/api/deals', activePipelineId] }),
+        refetchDeals(),
         queryClient.refetchQueries({ queryKey: ['/api/pipeline-stages', activePipelineId] })
       ]);
+
+      console.log(`Pipeline ${activePipelineId} atualizado - deals recarregados`);
     } catch (error) {
       console.error("Erro ao atualizar dados do pipeline:", error);
     }

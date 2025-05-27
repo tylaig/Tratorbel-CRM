@@ -322,27 +322,6 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         description: "Informações atualizadas com sucesso.",
       });
 
-      // Verificar se o pipeline foi alterado e registrar atividade
-      if (deal && pipelineId && deal.pipelineId !== parseInt(pipelineId)) {
-        const oldPipelineName = pipelines.find((p: Pipeline) => p.id === deal.pipelineId)?.name || "Desconhecido";
-        const newPipelineName = pipelines.find((p: Pipeline) => p.id === parseInt(pipelineId))?.name || "Desconhecido";
-        createActivityMutation.mutate({
-          description: `Negócio movido do pipeline "${oldPipelineName}" para "${newPipelineName}"`,
-          dealId: deal.id ?? 0,
-          activityType: "pipeline_change"
-        });
-      }
-      // Verificar se o estágio foi alterado e registrar atividade
-      if (deal && stageId && deal.stageId !== parseInt(stageId)) {
-        const oldStageName = pipelineStages.find((s: PipelineStage) => s.id === deal.stageId)?.name || "Desconhecido";
-        const newStageName = pipelineStages.find((s: PipelineStage) => s.id === parseInt(stageId))?.name || "Desconhecido";
-        createActivityMutation.mutate({
-          description: `Negócio movido da etapa "${oldStageName}" para "${newStageName}"`,
-          dealId: deal.id ?? 0,
-          activityType: "stage_change"
-        });
-      }
-
       // Invalidar consultas específicas para reduzir delay e garantir atualização em tempo real
       queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/pipeline-stages"] });
@@ -363,14 +342,40 @@ export default function EditDealModal({ isOpen, onClose, deal, pipelineStages }:
         await queryClient.refetchQueries({ queryKey: ["/api/deals", parseInt(pipelineId)] });
       }
 
+      // Só criar atividades após o sucesso real da mutation
+      if (deal && pipelineId && deal.pipelineId !== parseInt(pipelineId)) {
+        const oldPipelineName = pipelines.find((p: Pipeline) => p.id === deal.pipelineId)?.name || "Desconhecido";
+        const newPipelineName = pipelines.find((p: Pipeline) => p.id === parseInt(pipelineId))?.name || "Desconhecido";
+        createActivityMutation.mutate({
+          description: `Negócio movido do pipeline \"${oldPipelineName}\" para \"${newPipelineName}\"`,
+          dealId: deal.id ?? 0,
+          activityType: "pipeline_change"
+        });
+      }
+      if (deal && stageId && deal.stageId !== parseInt(stageId)) {
+        const oldStageName = pipelineStages.find((s: PipelineStage) => s.id === deal.stageId)?.name || "Desconhecido";
+        const newStageName = pipelineStages.find((s: PipelineStage) => s.id === parseInt(stageId))?.name || "Desconhecido";
+        createActivityMutation.mutate({
+          description: `Negócio movido da etapa \"${oldStageName}\" para \"${newStageName}\"`,
+          dealId: deal.id ?? 0,
+          activityType: "stage_change"
+        });
+      }
+
       // Fechar o modal somente após garantir que os dados estão atualizados
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      let errorMsg = "Falha ao atualizar negócio. Por favor tente novamente.";
+      if (error?.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Falha ao atualizar negócio. Por favor tente novamente.",
+        description: errorMsg,
       });
       console.error("Erro ao atualizar deal:", error);
     },

@@ -9,11 +9,16 @@ import {
   MessagesSquareIcon,
   PlusIcon,
   Edit2Icon,
+  ArrowRightIcon,
+  DollarSignIcon,
+  CheckCircle2Icon,
+  XCircleIcon,
+  GripIcon
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +29,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatTimeAgo } from "@/lib/formatters";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 import EditStageModal from "./EditStageModal";
 import AddStageModal from "./AddStageModal";
@@ -104,6 +112,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   const [selectedStageForNewDeal, setSelectedStageForNewDeal] = useState<PipelineStage | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [targetStageInfo, setTargetStageInfo] = useState<{ id: number, type: string | null }>({ id: 0, type: null });
+  const [isDragging, setIsDragging] = useState(false);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -112,7 +121,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   // Se userId for null ou undefined, mostrar todos (admin)
   const filteredDeals = userId ? deals.filter(d => d.userId === userId) : deals;
   
-  // NOVO: useMemo para derivar boardData sempre que dados mudarem
+  // useMemo para derivar boardData sempre que dados mudarem
   const boardData: StageWithDeals[] = useMemo(() => {
     if (!activePipelineId) return [];
     let dealsData: Deal[] = [];
@@ -152,7 +161,12 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
     return stagesWithDeals;
   }, [pipelineStages, activePipelineId, filters, filteredDeals, deals]);
   
+  const onDragStart = () => {
+    setIsDragging(true);
+  };
+  
   const onDragEnd = async (result: DropResult) => {
+    setIsDragging(false);
     const { destination, source, draggableId } = result;
     
     // Se não tiver destino ou se o destino for o mesmo que a origem, não fazer nada
@@ -190,9 +204,6 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
       return; // Não continuar com a movimentação aqui, será feita após o modal
     }
     
-    // Reordenar localmente para feedback visual imediato
-    // (Opcional: pode ser removido se não quiser feedback local)
-    // Se for para outro estágio, atualizar o stageId e pipelineId
     try {
       await apiRequest(`/api/deals/${dealId}`, 'PUT', {
         stageId: destStage.id,
@@ -201,7 +212,7 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
       queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
       toast({
         title: "Negócio movido",
-        description: `\"${deal.name}\" foi movido para ${destStage.name}`,
+        description: `"${deal.name}" foi movido para ${destStage.name}`,
       });
     } catch (error) {
       console.error("Error updating deal stage:", error);
@@ -213,37 +224,45 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
     }
   };
   
-  const fetchUpdatedData = async () => {
-    queryClient.invalidateQueries({ queryKey: ['/api/deals'] });
+  const handleAddDeal = (stage: PipelineStage) => {
+    setSelectedStageForNewDeal(stage);
+    setIsAddDealModalOpen(true);
   };
   
-  // Helper para gerar badges de status mais compactos
+  // Helper para gerar badges de status
   const getStatusBadge = (status: string | null) => {
     if (!status) return null;
     
+    const statusMap: Record<string, { label: string, variant: "default" | "outline" | "secondary" | "destructive" }> = {
+      in_progress: { label: 'Em progresso', variant: 'secondary' },
+      waiting: { label: 'Aguardando', variant: 'outline' },
+      completed: { label: 'Concluído', variant: 'secondary' },
+      canceled: { label: 'Cancelado', variant: 'destructive' }
+    };
+    
+    const statusInfo = statusMap[status.toLowerCase()] || { label: status, variant: 'default' };
+    
     return (
-      <span className={`status-badge ${status.toLowerCase()} px-1 py-0 text-[8px] font-medium rounded-full border h-3.5 inline-flex items-center`}>
-        {status === 'in_progress' && 'Em prog.'}
-        {status === 'waiting' && 'Aguard.'}
-        {status === 'completed' && 'Concl.'}
-        {status === 'canceled' && 'Canc.'}
-      </span>
+      <Badge variant={statusInfo.variant} className="text-[9px] px-1.5 py-0 h-4">
+        {statusInfo.label}
+      </Badge>
     );
   };
   
   // Em caso de não ter estágios ou dados
   if (boardData.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-        <MessagesSquareIcon className="h-12 w-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Nenhum estágio encontrado</h3>
-        <p className="text-gray-500 dark:text-gray-400 mt-2 mb-4">
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-background">
+        <MessagesSquareIcon className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium text-foreground">Nenhum estágio encontrado</h3>
+        <p className="text-muted-foreground mt-2 mb-4">
           {activePipelineId 
             ? "Adicione estágios ao funil para começar a gerenciar seus negócios."
             : "Selecione um funil para visualizar os estágios."}
         </p>
         {activePipelineId && (
           <Button onClick={() => setIsAddStageModalOpen(true)}>
+            <PlusIcon className="h-4 w-4 mr-2" />
             Adicionar Estágio
           </Button>
         )}
@@ -252,249 +271,312 @@ export default function KanbanBoard({ pipelineStages, filters, activePipelineId,
   }
   
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex flex-col h-full">
-        {/* Botão oculto para ser clicado pelo Header para adicionar estágio */}
-        <button
-          id="add-stage-button"
-          className="hidden"
-          onClick={() => setIsAddStageModalOpen(true)}
-          aria-hidden="true"
-        />
-        
-        {/* Modais */}
-        {selectedDeal && (
-          <EditDealModal
-            isOpen={isEditDealModalOpen}
-            onClose={() => {
-              setIsEditDealModalOpen(false);
-              setSelectedDeal(null);
-            }}
-            deal={{
-              order: null,
-              userId: 0,
-              quoteValue: null,
-              salePerformance: null,
-              ...selectedDeal
-            }}
-            pipelineStages={pipelineStages}
-          />
-        )}
-        
-        <EditStageModal 
-          isOpen={isEditStageModalOpen}
-          onClose={() => setIsEditStageModalOpen(false)}
-          stage={selectedStage}
-        />
-        
-        <AddStageModal 
-          isOpen={isAddStageModalOpen}
-          onClose={() => setIsAddStageModalOpen(false)}
-          pipelineStages={pipelineStages}
-        />
-        
-        {selectedDeal && (
-          <DealOutcomeModal
-            isOpen={isOutcomeModalOpen}
-            onClose={() => {
-              setIsOutcomeModalOpen(false);
-              setSelectedDeal(null);
-              setTargetStageInfo({ id: 0, type: null });
-            }}
-            deal={{
-              order: null,
-              userId: 0,
-              quoteValue: null,
-              salePerformance: null,
-              ...selectedDeal
-            }}
-            targetStageId={targetStageInfo.id}
-            targetStageType={targetStageInfo.type as any}
-          />
-        )}
-        
-        {/* Espaço oculto para o botão de adicionar estágio */}
-        <div className="hidden">
+    <TooltipProvider delayDuration={300}>
+      <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <div className="flex flex-col h-full">
+          {/* Botão oculto para ser clicado pelo Header para adicionar estágio */}
           <button
             id="add-stage-button"
+            className="hidden"
             onClick={() => setIsAddStageModalOpen(true)}
             aria-hidden="true"
           />
-        </div>
-        
-        {/* Área principal de rolagem horizontal com os estágios */}
-        <div className="flex overflow-x-auto px-2 board-container flex-1 mt-2">
-          {boardData.map((stage) => (
-            <div 
-              key={stage.id} 
-              className="kanban-column flex-shrink-0 w-64 mx-1.5 flex flex-col"
-            >
-              {/* Cabeçalho da coluna - sticky */}
-              <div className={`p-2 rounded-t-lg border shadow-sm kanban-column-header ${
-                stage.stageType === "completed" 
-                  ? "bg-gradient-to-b from-green-100 to-green-50 border-green-300 dark:from-green-900/40 dark:to-green-900/20 dark:border-green-700" 
-                  : stage.stageType === "lost" 
-                    ? "bg-gradient-to-b from-red-100 to-red-50 border-red-300 dark:from-red-900/40 dark:to-red-900/20 dark:border-red-700"
-                    : "bg-gradient-to-b from-gray-100 to-gray-50 border-gray-300 dark:from-gray-900/40 dark:to-gray-900/20 dark:border-gray-700"
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {stage.stageType === "completed" && (
-                      <span className="h-2.5 w-2.5 bg-green-600 dark:bg-green-500 rounded-full"></span>
-                    )}
-                    {stage.stageType === "lost" && (
-                      <span className="h-2.5 w-2.5 bg-red-600 dark:bg-red-500 rounded-full"></span>
-                    )}
-                    {!stage.stageType && (
-                      <span className="h-2.5 w-2.5 bg-blue-600 dark:bg-blue-500 rounded-full"></span>
-                    )}
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{stage.name}</h3>
-                    <Badge variant="outline" className="rounded-full px-1.5 py-0 h-4 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-                      {stage.deals.length}
-                    </Badge>
+          
+          {/* Modais */}
+          {selectedDeal && (
+            <EditDealModal
+              isOpen={isEditDealModalOpen}
+              onClose={() => {
+                setIsEditDealModalOpen(false);
+                setSelectedDeal(null);
+              }}
+              deal={{
+                order: null,
+                userId: 0,
+                quoteValue: null,
+                salePerformance: null,
+                ...selectedDeal
+              }}
+              pipelineStages={pipelineStages}
+            />
+          )}
+          
+          <EditStageModal 
+            isOpen={isEditStageModalOpen}
+            onClose={() => setIsEditStageModalOpen(false)}
+            stage={selectedStage}
+          />
+          
+          <AddStageModal 
+            isOpen={isAddStageModalOpen}
+            onClose={() => setIsAddStageModalOpen(false)}
+            pipelineStages={pipelineStages}
+          />
+          
+          {selectedDeal && (
+            <DealOutcomeModal
+              isOpen={isOutcomeModalOpen}
+              onClose={() => {
+                setIsOutcomeModalOpen(false);
+                setSelectedDeal(null);
+                setTargetStageInfo({ id: 0, type: null });
+              }}
+              deal={{
+                order: null,
+                userId: 0,
+                quoteValue: null,
+                salePerformance: null,
+                ...selectedDeal
+              }}
+              targetStageId={targetStageInfo.id}
+              targetStageType={targetStageInfo.type as any}
+            />
+          )}
+          
+          <AddDealModal
+            isOpen={isAddDealModalOpen}
+            onClose={() => {
+              setIsAddDealModalOpen(false);
+              setSelectedStageForNewDeal(null);
+            }}
+            initialStageId={selectedStageForNewDeal?.id}
+            pipelineStages={pipelineStages}
+          />
+          
+          {/* Área principal de rolagem horizontal com os estágios */}
+          <div className="flex overflow-x-auto pb-4 px-2 board-container flex-1 mt-2 gap-3">
+            {boardData.map((stage) => (
+              <div 
+                key={stage.id} 
+                className="kanban-column flex-shrink-0 w-72 flex flex-col"
+              >
+                {/* Cabeçalho da coluna */}
+                <div className={`p-3 rounded-t-lg border shadow-sm kanban-column-header ${
+                  stage.stageType === "completed" 
+                    ? "bg-gradient-to-b from-green-50 to-green-100/30 border-green-200 dark:from-green-950/40 dark:to-green-900/20 dark:border-green-800" 
+                    : stage.stageType === "lost" 
+                      ? "bg-gradient-to-b from-red-50 to-red-100/30 border-red-200 dark:from-red-950/40 dark:to-red-900/20 dark:border-red-800"
+                      : "bg-gradient-to-b from-card to-background border-border"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {stage.stageType === "completed" && (
+                        <span className="h-3 w-3 bg-green-500 dark:bg-green-400 rounded-full"></span>
+                      )}
+                      {stage.stageType === "lost" && (
+                        <span className="h-3 w-3 bg-red-500 dark:bg-red-400 rounded-full"></span>
+                      )}
+                      {!stage.stageType && (
+                        <span className="h-3 w-3 bg-blue-500 dark:bg-blue-400 rounded-full"></span>
+                      )}
+                      <h3 className="font-semibold text-foreground">{stage.name}</h3>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="rounded-full px-2 py-0 h-5 text-xs font-medium bg-background/80 dark:bg-background/30">
+                        {stage.deals.length}
+                      </Badge>
+                      
+                      {!stage.isSystem && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreVerticalIcon className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedStage(stage);
+                                setIsEditStageModalOpen(true);
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              <Edit2Icon className="h-4 w-4" />
+                              <span>Editar Estágio</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    {!stage.isSystem && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 p-0.5">
-                            <MoreVerticalIcon className="h-3 w-3 text-gray-400" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              setSelectedStage(stage);
-                              setIsEditStageModalOpen(true);
-                            }}
-                            className="flex items-center gap-2"
-                          >
-                            <Edit2Icon className="h-4 w-4" />
-                            <span>Editar Estágio</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                  
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                      <DollarSignIcon className="h-3.5 w-3.5" />
+                      <span className="font-medium">{formatCurrency(stage.totalValue)}</span>
+                    </div>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 px-2 text-xs gap-1 bg-background/80 hover:bg-background"
+                          onClick={() => handleAddDeal(stage)}
+                        >
+                          <PlusIcon className="h-3.5 w-3.5" />
+                          <span>Negócio</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Adicionar novo negócio neste estágio</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{stage.deals.length} negócios</span>
-                  <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">{formatCurrency(stage.totalValue)}</span>
                 </div>
                 
-                {/* Botão de adicionar negócio removido da coluna */}
-              </div>
-              
-              {/* Área de cards/droppable - altura ajustada para rolagem */}
-              <Droppable droppableId={stage.id.toString()}>
-                {(provided, snapshot) => (
-                  <div
-                    className={`deal-list p-2 rounded-b-lg border border-t-0 ${
-                      snapshot.isDraggingOver
-                        ? "droppable-hover bg-yellow-50 dark:bg-yellow-900/20"
-                        : stage.stageType === "completed" 
-                          ? "bg-green-50 dark:bg-green-900/30 border-green-300" 
-                          : stage.stageType === "lost" 
-                            ? "bg-red-50 dark:bg-red-900/30 border-red-300"
-                            : "bg-gray-50 dark:bg-gray-900/20 border-gray-300"
-                    } flex-1 overflow-y-auto`}
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                  >
-                    {stage.deals.map((deal, index) => (
-                      <Draggable
-                        key={deal.id.toString()}
-                        draggableId={deal.id.toString()}
-                        index={index}
+                {/* Área de cards/droppable - altura ajustada para rolagem */}
+                <Droppable droppableId={stage.id.toString()}>
+                  {(provided, snapshot) => (
+                    <ScrollArea 
+                      className={`deal-list rounded-b-lg border border-t-0 ${
+                        snapshot.isDraggingOver
+                          ? "droppable-hover bg-yellow-50/70 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
+                          : stage.stageType === "completed" 
+                            ? "bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-800" 
+                            : stage.stageType === "lost" 
+                              ? "bg-red-50/50 dark:bg-red-950/20 border-red-200 dark:border-red-800"
+                              : "bg-card/30 dark:bg-card/10 border-border"
+                      } flex-1 h-[calc(100vh-220px)]`}
+                    >
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="p-2 min-h-[100px]"
                       >
-                        {(provided, snapshot) => (
-                          <Card
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={{
-                              ...provided.draggableProps.style,
-                              // Efeitos visuais durante o arraste
-                              opacity: snapshot.isDragging ? 0.9 : 1,
-                              boxShadow: snapshot.isDragging ? '0 8px 15px rgba(0, 0, 0, 0.15)' : '',
-                              transform: snapshot.isDragging && provided.draggableProps.style?.transform 
-                                ? `${provided.draggableProps.style.transform} rotate(1deg)` 
-                                : provided.draggableProps.style?.transform,
-                              zIndex: snapshot.isDragging ? 9999 : undefined,
-                            }}
-                            className={`mb-2 p-2 group border-l-4 ${
-                              snapshot.isDragging
-                                ? "shadow-lg dark:bg-gray-700 ring-2 ring-yellow-400 ring-opacity-50 deal-card-dragging"
-                                : "shadow-sm hover:shadow-md bg-gray-50 dark:bg-gray-800"
-                            } ${
-                              deal.status === "completed" 
-                                ? "border-l-green-500" 
-                                : deal.status === "canceled" 
-                                  ? "border-l-red-500"
-                                  : "border-l-yellow-500"
-                            } cursor-pointer rounded-md text-sm`}
-                            onClick={() => {
-                              setSelectedDeal(deal);
-                              setIsEditDealModalOpen(true);
-                            }}
-                          >
-                            <div className="flex items-center justify-between mb-0.5">
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[150px] text-[10px]">
-                                  {deal.name}
-                                </div>
-                              </div>
-                              <div>
-                                {getStatusBadge(deal.status)}
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-0.5">
-                              <div className="flex items-center text-[9px] text-gray-600 dark:text-gray-400">
-                                <User2Icon className="w-2.5 h-2.5 mr-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                                <span className="truncate">
-                                  {deal.leadData?.name || "N/D"}
-                                </span>
-                              </div>
-                              <div className="flex items-center text-[9px] text-gray-600 dark:text-gray-400">
-                                <Building className="w-2.5 h-2.5 mr-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                                <span className="truncate">
-                                  {deal.leadData?.companyName || "N/D"}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between mt-0.5 pt-0.5 border-t border-gray-100 dark:border-gray-700">
-                              <span className="text-[9px] text-gray-500 dark:text-gray-400 flex items-center">
-                                <CalendarIcon className="w-2.5 h-2.5 mr-0.5" />
-                                {formatTimeAgo(deal.updatedAt)}
-                              </span>
-                              <span className="px-1 py-0.5 text-[9px] font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded text-yellow-800 dark:text-yellow-300">
-                                {formatCurrency(deal.value || 0)}
-                              </span>
-                            </div>
-                          </Card>
+                        {stage.deals.length === 0 && !snapshot.isDraggingOver && (
+                          <div className="flex flex-col items-center justify-center h-24 text-center text-muted-foreground text-sm">
+                            <p>Nenhum negócio neste estágio</p>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="mt-2"
+                              onClick={() => handleAddDeal(stage)}
+                            >
+                              <PlusIcon className="h-3.5 w-3.5 mr-1" />
+                              Adicionar
+                            </Button>
+                          </div>
                         )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
+                        
+                        {stage.deals.map((deal, index) => (
+                          <Draggable
+                            key={deal.id.toString()}
+                            draggableId={deal.id.toString()}
+                            index={index}
+                          >
+                            {(provided, snapshot) => (
+                              <Card
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                style={{
+                                  ...provided.draggableProps.style,
+                                  // Efeitos visuais durante o arraste
+                                  opacity: snapshot.isDragging ? 0.9 : 1,
+                                  transform: snapshot.isDragging && provided.draggableProps.style?.transform 
+                                    ? `${provided.draggableProps.style.transform} rotate(1deg)` 
+                                    : provided.draggableProps.style?.transform,
+                                }}
+                                className={`mb-2 group border-l-4 ${
+                                  snapshot.isDragging
+                                    ? "shadow-lg dark:bg-card/90 ring-2 ring-primary/30 deal-card-dragging"
+                                    : "shadow-sm hover:shadow-md bg-background dark:bg-card/80"
+                                } ${
+                                  deal.status === "completed" 
+                                    ? "border-l-green-500" 
+                                    : deal.status === "canceled" 
+                                      ? "border-l-red-500"
+                                      : deal.status === "in_progress"
+                                        ? "border-l-blue-500"
+                                        : "border-l-yellow-500"
+                                } cursor-pointer rounded-md text-sm transition-all hover:translate-y-[-2px]`}
+                                onClick={() => {
+                                  setSelectedDeal(deal);
+                                  setIsEditDealModalOpen(true);
+                                }}
+                              >
+                                <div 
+                                  {...provided.dragHandleProps}
+                                  className="h-5 flex items-center justify-end px-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <GripIcon className="h-3 w-3 text-muted-foreground" />
+                                </div>
+                                
+                                <CardContent className="p-3 pt-0">
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <div className="flex-1">
+                                      <div className="font-medium text-foreground truncate max-w-[180px]">
+                                        {deal.name}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      {getStatusBadge(deal.status)}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 gap-1 mb-2">
+                                    <div className="flex items-center text-xs text-muted-foreground">
+                                      <User2Icon className="w-3 h-3 mr-1 text-primary/70 flex-shrink-0" />
+                                      <span className="truncate">
+                                        {deal.leadData?.name || "N/D"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center text-xs text-muted-foreground">
+                                      <Building className="w-3 h-3 mr-1 text-primary/70 flex-shrink-0" />
+                                      <span className="truncate">
+                                        {deal.leadData?.companyName || "N/D"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  
+                                  <Separator className="my-1.5" />
+                                  
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground flex items-center">
+                                      <CalendarIcon className="w-3 h-3 mr-1" />
+                                      {formatTimeAgo(deal.updatedAt)}
+                                    </span>
+                                    <Badge variant="outline" className="px-1.5 py-0.5 text-xs font-medium bg-primary/5 text-primary border-primary/20">
+                                      {formatCurrency(deal.value || 0)}
+                                    </Badge>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </Droppable>
+              </div>
+            ))}
+            
+            {/* Botão para adicionar novo estágio */}
+            {activePipelineId && (
+              <div className="flex-shrink-0 w-48 flex items-start pt-3">
+                <Button 
+                  variant="outline" 
+                  className="h-12 w-full border-dashed border-2 text-muted-foreground hover:text-foreground hover:border-border"
+                  onClick={() => setIsAddStageModalOpen(true)}
+                >
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Adicionar Estágio
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          {/* Indicador de modo de arrasto */}
+          {isDragging && (
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50">
+              <ArrowRightIcon className="h-4 w-4" />
+              <span className="text-sm font-medium">Arraste para mover o negócio</span>
             </div>
-          ))}
+          )}
         </div>
-        
-        {/* Modal de adição de negócio */}
-        <AddDealModal
-          isOpen={isAddDealModalOpen}
-          onClose={() => {
-            setIsAddDealModalOpen(false);
-            setSelectedStageForNewDeal(null);
-          }}
-          initialStageId={selectedStageForNewDeal?.id}
-          pipelineStages={pipelineStages}
-        />
-      </div>
-    </DragDropContext>
+      </DragDropContext>
+    </TooltipProvider>
   );
 }
